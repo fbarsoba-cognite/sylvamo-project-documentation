@@ -38,6 +38,7 @@ Data flows from source systems into CDF through a set of configured extractors:
 | **Fabric Connector** | Microsoft Fabric Lakehouse | ✅ Running | RAW: `raw_sylvamo_fabric` | UC1, UC2 |
 | **PI Extractor** | PI Server (S769PI01) | ✅ Running | Time Series | Process Data |
 | **SharePoint Extractor** | SharePoint Online | ✅ Running | RAW: `raw_sylvamo_pilot` | UC2 (Quality) |
+| **SAP OData Extractor** | SAP Gateway | ⏳ Pending SAP Fix | RAW: `raw_sylvamo_sap` | Master Data |
 | **SQL Extractor** | Proficy GBDB | ⏳ Configured | RAW: `raw_sylvamo_proficy` | UC2 (Lab) |
 
 ---
@@ -257,7 +258,136 @@ files:
 
 ---
 
-## 4. SQL Extractor (Proficy) ⏳
+## 4. SAP OData Extractor ⏳
+
+**Status:** CONFIGURED (Pending SAP Backend Fix)  
+**Purpose:** Extract SAP data (Business Partners, Materials, Work Orders) via OData Gateway
+
+### Architecture Overview
+
+The SAP OData extraction uses a **two-tier authentication** model:
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│ Cognite         │────►│ SAP Gateway     │────►│ SAP Backend     │
+│ Extractor       │     │ (Door 1)        │     │ (Door 2)        │
+│                 │     │ Port 8075       │     │ Client 300      │
+└─────────────────┘     └────────┬────────┘     └─────────────────┘
+                                 │
+                        RFC Destination (SM59)
+                        "The Bridge"
+```
+
+**Key Concept:** The Gateway accepts your credentials (Door 1), but then uses a pre-configured **RFC Bridge** to reach the Backend data (Door 2). If the bridge credentials are wrong, you get a `500 Internal Server Error`.
+
+### Configuration
+
+**File:** `config.sap-extractor.yml`
+
+```yaml
+version: 1
+type: local
+
+cognite:
+  project: sylvamo-dev
+  host: https://az-eastus-1.cognitedata.com
+  idp-authentication:
+    tenant: ${AZURE_TENANT_ID}
+    client-id: ${AZURE_CLIENT_ID}
+    secret: ${AZURE_CLIENT_SECRET}
+    scopes:
+      - https://az-eastus-1.cognitedata.com/.default
+
+sap:
+  - type: odata
+    source-name: sapsgvci
+    gateway-url: http://sapsgvci.sylvamo.com:8075/sap/opu/odata/sap/
+    client: "300"
+    username: 'COGNITE'
+    password: ${SAP_PASSWORD}
+    language: EN
+
+endpoints:
+  - name: BusinessPartnerDetails
+    source-name: sapsgvci
+    sap-service: ZCL_GW_CUSTOMER_SEARCH_SRV
+    sap-entity: BP_DetailsSet
+    destination:
+      type: raw
+      database: raw_sylvamo_sap
+      table: bp_details
+    filter: "comp eq 'DS75'"
+    sap-key:
+      - vendor
+      - comp
+    schedule:
+      type: interval
+      expression: 1h
+```
+
+### SAP Team Configuration Requirements
+
+The SAP Basis team must configure these components:
+
+| Step | Transaction | Action |
+|------|-------------|--------|
+| 1 | **SICF** | Activate OData ICF nodes, configure Service User for anonymous access if needed |
+| 2 | **SM59** | Configure RFC Destination (the "Bridge") with valid credentials for Client 300 |
+| 3 | **/IWFND/MAINT_SERVICE** | Register OData service, assign System Alias |
+| 4 | **Permissions** | Grant S_SERVICE, S_RFC, and data access roles to COGNITE user |
+| 5 | **ST22 & /IWFND/ERROR_LOG** | Monitor for Short Dumps or Gateway errors |
+
+### Cognite Team Configuration Requirements
+
+| Task | Details |
+|------|---------|
+| Gateway URL | `http://sapsgvci.sylvamo.com:8075/sap/opu/odata/sap/` |
+| SAP Client | Must specify `sap-client: 300` to route to correct data partition |
+| Authentication | Basic Auth with COGNITE credentials |
+| Entity Mapping | Define EntitySet and Primary Keys from SAP metadata |
+| Filtering | Use OData syntax: `$filter=comp eq 'DS75'` |
+
+### Connectivity Test Script
+
+```powershell
+# SAP OData Connectivity Test
+$user = "COGNITE"
+$pass = "${SAP_PASSWORD}"
+$url = "http://sapsgvci.sylvamo.com:8075/sap/opu/odata/sap/ZCL_GW_CUSTOMER_SEARCH_SRV/BP_DetailsSet?`$top=5&`$format=json"
+
+$pair = "$($user):$($pass)"
+$encodedCreds = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($pair))
+$headers = @{ 
+    Authorization = "Basic $encodedCreds"
+    Accept = "application/json"
+}
+
+try {
+    $response = Invoke-WebRequest -Uri $url -Headers $headers -Method Get
+    Write-Host "Success! Status: $($response.StatusCode)" -ForegroundColor Green
+} catch {
+    Write-Host "Failed: $($_.Exception.Message)" -ForegroundColor Red
+}
+```
+
+### Known Issues & Resolutions
+
+| Error | Cause | Resolution |
+|-------|-------|------------|
+| `Anmeldung fehlgeschlagen` (401) | Invalid Gateway credentials | Verify COGNITE username/password |
+| `500 Internal Server Error` | RFC Bridge credentials invalid | SAP team must fix SM59 RFC Destination |
+| `/IWFND/CM_BEC022` | "User or password incorrect for backend" | Update stored credentials in SM59 |
+| Empty response | Wrong SAP client or filter syntax | Add `sap-client=300`, verify filter |
+
+### Current Status
+
+- ✅ Gateway authentication working (COGNITE credentials accepted)
+- ⚠️ Backend connection pending (RFC Destination needs credential update)
+- ⏳ Waiting for SAP Basis team to fix SM59 bridge
+
+---
+
+## 5. SQL Extractor (Proficy) ⏳
 
 **Status:** CONFIGURED (Pending Execution)  
 **Purpose:** Extract lab test data from Proficy GBDB SQL Server
@@ -327,6 +457,7 @@ source:
 | sp-cdf-fabric-extractor-dev | `73a40d42-8cf4-4048-80d1-54c8d28cb58d` | Fabric Lakehouse | ✅ Active |
 | sp-cdf-pi-extractor-dev | `b7671a6c-8680-4b10-b8d0-141767de9877` | PI Server | ✅ Active |
 | sp-cdf-file-extractor-dev | `4050f0ee-519e-4485-ac2b-f3221071c92e` | SharePoint | ✅ Active |
+| sp-cdf-sap-extractor-dev | `778dcec6-a85a-4799-a78e-1aee9d7aa3d3` | SAP OData | ⏳ Pending SAP Fix |
 | sp-cdf-sql-extractor-dev | `3ec90782-5f9f-482d-9da2-46567276519b` | Proficy SQL | ⏳ Pending |
 
 All service principals are members of Azure AD Group: `93463766-2320-429d-8736-e417cba1b805`
