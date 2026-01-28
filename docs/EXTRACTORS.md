@@ -37,7 +37,7 @@ Data flows from source systems into CDF through a set of configured extractors:
 |-----------|--------|--------|-------------|----------|
 | **Fabric Connector** | Microsoft Fabric Lakehouse | ✅ Running | RAW: `raw_sylvamo_fabric` | UC1, UC2 |
 | **PI Extractor** | PI Server (S769PI01) | ✅ Running | Time Series | Process Data |
-| **SharePoint Extractor** | SharePoint Online | ⚠️ Blocked | Files/RAW | UC2 (Quality) |
+| **SharePoint Extractor** | SharePoint Online | ✅ Running | RAW: `raw_sylvamo_pilot` | UC2 (Quality) |
 | **SQL Extractor** | Proficy GBDB | ⏳ Configured | RAW: `raw_sylvamo_proficy` | UC2 (Lab) |
 
 ---
@@ -196,9 +196,9 @@ backfill:
 
 ---
 
-## 3. SharePoint Extractor ⚠️
+## 3. SharePoint Extractor ✅
 
-**Status:** BLOCKED (Waiting for Permissions)  
+**Status:** RUNNING  
 **Purpose:** Extract quality documents and lists from SharePoint Online
 
 ### Configuration
@@ -234,26 +234,11 @@ files:
   with-metadata: true
 ```
 
-### Blocking Issue
+### Extracted Data
 
-**Problem:** App Registration has Delegated permissions instead of Application permissions.
-
-**Current Permissions (WRONG):**
-- Files.Read.All (Delegated)
-- Sites.Read.All (Delegated)
-
-**Required Permissions:**
-- Sites.Read.All (**Application**)
-- Files.Read.All (**Application**)
-- Admin consent granted
-
-### Action Required
-
-1. Go to Azure Portal → App Registrations → `sp-cdf-file-extractor-dev`
-2. Navigate to **API permissions**
-3. Click **Add a permission** → **Microsoft Graph** → **Application permissions**
-4. Add: `Sites.Read.All` and `Files.Read.All`
-5. Click **Grant admin consent for Sylvamo**
+| RAW Table | Records | Purpose |
+|-----------|---------|---------|
+| `raw_sylvamo_pilot/sharepoint_roll_quality` | 21+ | Roll quality inspection reports |
 
 ### Service Principal
 
@@ -341,7 +326,7 @@ source:
 |------|--------|---------|--------|
 | sp-cdf-fabric-extractor-dev | `73a40d42-8cf4-4048-80d1-54c8d28cb58d` | Fabric Lakehouse | ✅ Active |
 | sp-cdf-pi-extractor-dev | `b7671a6c-8680-4b10-b8d0-141767de9877` | PI Server | ✅ Active |
-| sp-cdf-file-extractor-dev | `4050f0ee-519e-4485-ac2b-f3221071c92e` | SharePoint | ⚠️ Blocked |
+| sp-cdf-file-extractor-dev | `4050f0ee-519e-4485-ac2b-f3221071c92e` | SharePoint | ✅ Active |
 | sp-cdf-sql-extractor-dev | `3ec90782-5f9f-482d-9da2-46567276519b` | Proficy SQL | ⏳ Pending |
 
 All service principals are members of Azure AD Group: `93463766-2320-429d-8736-e417cba1b805`
@@ -391,8 +376,8 @@ PI Extractor        →     Time Series (sylvamo_assets)
 
 ### SharePoint Issues
 
-**Issue:** 403 Forbidden  
-**Solution:** Change to Application permissions (not Delegated)
+**Issue:** Missing data  
+**Solution:** Verify SharePoint list path and permissions
 
 ### SQL Extractor Issues
 
