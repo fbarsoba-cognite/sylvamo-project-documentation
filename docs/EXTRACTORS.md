@@ -38,7 +38,7 @@ Data flows from source systems into CDF through a set of configured extractors:
 | **Fabric Connector** | Microsoft Fabric Lakehouse | ✅ Running | RAW: `raw_sylvamo_fabric` | UC1, UC2 |
 | **PI Extractor** | PI Server (S769PI01) | ✅ Running | Time Series | Process Data |
 | **SharePoint Extractor** | SharePoint Online | ✅ Running | RAW: `raw_sylvamo_pilot` | UC2 (Quality) |
-| **SAP OData Extractor** | SAP Gateway | ⏳ Pending SAP Fix | RAW: `raw_sylvamo_sap` | Master Data |
+| **SAP OData Extractor** | SAP Gateway | ✅ Running | RAW: `raw_sylvamo_sap` | Master Data |
 | **SQL Extractor** | Proficy GBDB | ⏳ Configured | RAW: `raw_sylvamo_proficy` | UC2 (Lab) |
 
 ---
@@ -258,9 +258,9 @@ files:
 
 ---
 
-## 4. SAP OData Extractor ⏳
+## 4. SAP OData Extractor ✅
 
-**Status:** CONFIGURED (Pending SAP Backend Fix)  
+**Status:** RUNNING  
 **Purpose:** Extract SAP data (Business Partners, Materials, Work Orders) via OData Gateway
 
 ### Architecture Overview
@@ -382,8 +382,8 @@ try {
 ### Current Status
 
 - ✅ Gateway authentication working (COGNITE credentials accepted)
-- ⚠️ Backend connection pending (RFC Destination needs credential update)
-- ⏳ Waiting for SAP Basis team to fix SM59 bridge
+- ✅ Backend RFC connection configured (SM59 bridge operational)
+- ✅ Data extraction to `raw_sylvamo_sap` active
 
 ---
 
@@ -457,7 +457,7 @@ source:
 | sp-cdf-fabric-extractor-dev | `73a40d42-8cf4-4048-80d1-54c8d28cb58d` | Fabric Lakehouse | ✅ Active |
 | sp-cdf-pi-extractor-dev | `b7671a6c-8680-4b10-b8d0-141767de9877` | PI Server | ✅ Active |
 | sp-cdf-file-extractor-dev | `4050f0ee-519e-4485-ac2b-f3221071c92e` | SharePoint | ✅ Active |
-| sp-cdf-sap-extractor-dev | `778dcec6-a85a-4799-a78e-1aee9d7aa3d3` | SAP OData | ⏳ Pending SAP Fix |
+| sp-cdf-sap-extractor-dev | `778dcec6-a85a-4799-a78e-1aee9d7aa3d3` | SAP OData | ✅ Active |
 | sp-cdf-sql-extractor-dev | `3ec90782-5f9f-482d-9da2-46567276519b` | Proficy SQL | ⏳ Pending |
 
 All service principals are members of Azure AD Group: `93463766-2320-429d-8736-e417cba1b805`

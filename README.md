@@ -186,7 +186,7 @@ Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 | **Fabric Connector** | Microsoft Fabric Lakehouse | ✅ Running | `raw_sylvamo_fabric` |
 | **PI Extractor** | PI Server (75 tags) | ✅ Running | Time Series |
 | **SharePoint Extractor** | SharePoint Online | ✅ Running | `raw_sylvamo_pilot` |
-| **SAP OData Extractor** | SAP Gateway | ⏳ Pending SAP Fix | `raw_sylvamo_sap` |
+| **SAP OData Extractor** | SAP Gateway | ✅ Running | `raw_sylvamo_sap` |
 | **SQL Extractor** | Proficy GBDB | ⏳ Configured | `raw_sylvamo_proficy` |
 
 **[See Full Extractor Documentation →](docs/EXTRACTORS.md)**
