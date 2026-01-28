@@ -171,12 +171,24 @@ Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 | Document | Description |
 |----------|-------------|
 | [**Use Cases & Queries**](docs/USE_CASES_AND_QUERIES.md) | Verified use case scenarios with real data query examples |
+| [**Extractors**](docs/EXTRACTORS.md) | Extractor configurations and status (Fabric, PI, SharePoint, SQL) |
 | [**Data Pipeline & Sources**](docs/DATA_PIPELINE_AND_SOURCES.md) | Data sources, transformations, and refresh schedules |
 | [**Data Model Specification**](docs/DATA_MODEL_SPECIFICATION.md) | Complete spec with all containers, properties, and examples |
 | [Data Model Diagram](docs/SYLVAMO_MFG_DATA_MODEL_DIAGRAM.md) | Visual diagrams with Mermaid |
 | [Expert Scenarios](docs/USE_CASE_VALIDATION_EXPERT_SCENARIOS.md) | Industry use cases enabled by this model |
 | [ISA Alignment](docs/COGNITE_ISA_EXTENSION_AND_SYLVAMO_ALIGNMENT.md) | ISA-95/88 alignment analysis |
 | [Johan's Guidance](docs/JOHAN_ISA95_GUIDANCE_SUMMARY.md) | Expert recommendations from Cognite |
+
+## Extractors
+
+| Extractor | Source | Status | Data Target |
+|-----------|--------|--------|-------------|
+| **Fabric Connector** | Microsoft Fabric Lakehouse | ✅ Running | `raw_sylvamo_fabric` |
+| **PI Extractor** | PI Server (75 tags) | ✅ Running | Time Series |
+| **SharePoint Extractor** | SharePoint Online | ⚠️ Blocked | Files/RAW |
+| **SQL Extractor** | Proficy GBDB | ⏳ Configured | `raw_sylvamo_proficy` |
+
+**[See Full Extractor Documentation →](docs/EXTRACTORS.md)**
 
 ## Data Sources
 
