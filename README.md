@@ -11,9 +11,9 @@ The `sylvamo_mfg` data model implements ISA-95 and ISA-88 standards adapted for 
 | Component | Value |
 |-----------|-------|
 | **Space** | `sylvamo_mfg` |
-| **Data Model** | `sylvamo_manufacturing/v3` |
-| **Views** | 8 (Asset, Equipment, ProductDefinition, Recipe, Reel, Roll, Package, QualityResult) |
-| **Sample Data** | 38 nodes |
+| **Data Model** | `sylvamo_manufacturing/v4` |
+| **Views** | 9 (Asset, Equipment, ProductDefinition, Recipe, Reel, Roll, Package, QualityResult, MaterialCostVariance) |
+| **Sample Data** | 43 nodes |
 
 ## Entity Relationship Diagram
 
@@ -24,6 +24,7 @@ erDiagram
     Equipment ||--o{ Recipe : "runs"
     ProductDefinition ||--o{ Recipe : "defines"
     ProductDefinition ||--o{ Reel : "specifies"
+    ProductDefinition ||--o{ MaterialCostVariance : "cost impact"
     Reel ||--o{ Roll : "cut into"
     Reel ||--o{ QualityResult : "tested by"
     Roll ||--o{ QualityResult : "tested by"
@@ -82,6 +83,15 @@ erDiagram
         boolean isInSpec
         relation reel FK
     }
+
+    MaterialCostVariance {
+        string material PK
+        string materialType
+        float currentPPV
+        float priorPPV
+        float ppvChange
+        relation productDefinition FK
+    }
 ```
 
 ## Flow Diagram
@@ -133,8 +143,16 @@ flowchart TB
 
 **[See Full Query Examples →](docs/USE_CASES_AND_QUERIES.md)**
 
-### Use Case 1: Material Cost Analysis
-**Status:** Supported in `sylvamo_products` space (integration planned)
+### Use Case 1: Material Cost & PPV Analysis ✅
+**Objective:** Track purchase price variance for raw materials and link to products.
+
+| Scenario | Query | Status |
+|----------|-------|--------|
+| PPV Analysis by Material | List all materials with PPV changes | ✅ Verified |
+| Product Cost Impact | Link costs to ProductDefinition | ✅ Verified |
+| Period-over-Period | Compare current vs prior costs | ✅ Verified |
+
+**[See Full Query Examples →](docs/USE_CASES_AND_QUERIES.md)**
 
 ---
 
@@ -171,6 +189,7 @@ Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 | Roll | 11 | Cut from reels (8.5" and 6.0" widths) |
 | Package | 3 | Shipped, InTransit, Received |
 | QualityResult | 8 | Caliper, Moisture, Basis Weight, Brightness |
+| MaterialCostVariance | 5 | Pulp, Filler, Coating, Chemical costs |
 
 ## GraphQL Query Example
 

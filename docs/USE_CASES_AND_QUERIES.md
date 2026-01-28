@@ -12,8 +12,84 @@ This document demonstrates how the `sylvamo_mfg` data model supports Sylvamo's p
 
 | Use Case | Focus | Status |
 |----------|-------|--------|
-| **Use Case 1** | Material Cost & PPV Analysis | Supported (MaterialCostVariance in separate space) |
+| **Use Case 1** | Material Cost & PPV Analysis | ✅ Fully Supported |
 | **Use Case 2** | Paper Quality Association | ✅ Fully Supported |
+
+---
+
+## Use Case 1: Material Cost & PPV Analysis
+
+**Objective:** Track purchase price variance (PPV) for raw materials to identify cost drivers and optimize procurement decisions.
+
+### How the Model Supports Use Case 1
+
+| Requirement | Model Entity | Relationship |
+|-------------|--------------|--------------|
+| Track materials | `MaterialCostVariance` | Core entity for cost tracking |
+| Track costs over time | `snapshotDate` property | Period-over-period comparison |
+| Calculate PPV | `currentPPV`, `priorPPV`, `ppvChange` | Built-in variance tracking |
+| Link to products | `productDefinition` relation | Connect costs to finished goods |
+
+### Scenario: PPV Analysis by Material Type
+
+**Business Question:** What materials have the highest PPV increase, and which products are affected?
+
+**GraphQL Query:**
+```graphql
+{
+  listMaterialCostVariance {
+    items {
+      material
+      materialDescription
+      materialType
+      plant
+      currentQuantity
+      currentStandardCost
+      currentPPV
+      priorPPV
+      ppvChange
+      productDefinition {
+        name
+      }
+    }
+  }
+}
+```
+
+**Verified Result:**
+```
+MAT-PULP-SW-001: Softwood Pulp - Northern
+   Type: RAW | Plant: EASTOVER
+   Qty: 1,500 | Cost: $850,000
+   PPV: $25,000 (was $14,000) ↑ $11,000
+   Product: Bond 20lb
+
+MAT-PULP-HW-001: Hardwood Pulp - Southern
+   Type: RAW | Plant: EASTOVER
+   Qty: 1,200 | Cost: $600,000
+   PPV: $24,000 (was $11,000) ↑ $13,000
+   Product: Bond 20lb
+
+MAT-FILL-CA-001: Calcium Carbonate Filler
+   Type: ADDITIVE | Plant: EASTOVER
+   Qty: 300 | Cost: $45,000
+   PPV: $3,000 (was $2,800) ↑ $200
+
+MAT-COAT-ST-001: Surface Starch Coating
+   Type: COATING | Plant: EASTOVER
+   Qty: 150 | Cost: $67,500
+   PPV: $3,750 (was $3,500) ↑ $250
+   Product: Offset 50lb
+
+MAT-CHEM-RET-001: Retention Aid Chemical
+   Type: CHEMICAL | Plant: EASTOVER
+   Qty: 5,000 | Cost: $100,000
+   PPV: $5,000 (was $4,800) ↑ $200
+
+Total PPV Change: $24,650
+```
+
+**Value:** Immediate visibility into which materials are driving cost increases and which products are impacted.
 
 ---
 
@@ -299,17 +375,7 @@ ProductDefinition (Bond 20lb)
 | Roll | 11 | 8.5" and 6.0" widths |
 | Package | 3 | Shipped, InTransit, Received |
 | QualityResult | 8 | Caliper, Moisture, Basis Weight, Brightness |
-
----
-
-## Use Case 1: Material Cost (Future Integration)
-
-Use Case 1 (Material Cost & PPV) is currently implemented in the `sylvamo_products` space with the `MaterialCostVariance` entity.
-
-**Integration Option:** The `sylvamo_mfg` model can be extended to include material cost tracking by:
-1. Adding a `MaterialCost` container
-2. Linking costs to `ProductDefinition` and `Reel`
-3. Enabling cost-per-reel and cost-per-roll calculations
+| MaterialCostVariance | 5 | Pulp, Filler, Coating, Chemical costs |
 
 ---
 
