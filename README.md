@@ -119,6 +119,25 @@ flowchart TB
     Roll --> Package
 ```
 
+## Use Cases
+
+### Use Case 2: Paper Quality Association ✅
+**Objective:** Associate paper quality metrics with production data to track quality trends across plants.
+
+| Scenario | Query | Status |
+|----------|-------|--------|
+| Quality Traceability | Roll → Reel → Quality Tests | ✅ Verified |
+| Inter-Plant Tracking | Package status Eastover → Sumpter | ✅ Verified |
+| Recipe Compliance | Target vs Actual quality comparison | ✅ Verified |
+| Production Dashboard | Summary metrics across all entities | ✅ Verified |
+
+**[See Full Query Examples →](docs/USE_CASES_AND_QUERIES.md)**
+
+### Use Case 1: Material Cost Analysis
+**Status:** Supported in `sylvamo_products` space (integration planned)
+
+---
+
 ## Key Design Decisions
 
 Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
@@ -133,6 +152,7 @@ Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 
 | Document | Description |
 |----------|-------------|
+| [**Use Cases & Queries**](docs/USE_CASES_AND_QUERIES.md) | Verified use case scenarios with live query examples |
 | [**Data Model Specification**](docs/DATA_MODEL_SPECIFICATION.md) | Complete spec with all containers, properties, and examples |
 | [Data Model Diagram](docs/SYLVAMO_MFG_DATA_MODEL_DIAGRAM.md) | Visual diagrams with Mermaid |
 | [Expert Scenarios](docs/USE_CASE_VALIDATION_EXPERT_SCENARIOS.md) | Industry use cases enabled by this model |
