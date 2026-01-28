@@ -30,28 +30,23 @@ This document demonstrates how the `sylvamo_mfg` data model supports Sylvamo's p
 | Calculate PPV | `currentPPV`, `priorPPV`, `ppvChange` | Built-in variance tracking |
 | Link to products | `productDefinition` relation | Connect costs to finished goods |
 
-### Scenario: PPV Analysis by Material Type
+---
 
-**Business Question:** What materials have the highest PPV, and what material types are contributing?
+### Scenario 1.1: PPV Analysis by Material Type
 
-**Data Source:** `raw_sylvamo_fabric/ppv_snapshot` (Real SAP data via Fabric)
+**Business Question:** What is the total PPV exposure by material type?
 
 **GraphQL Query:**
 ```graphql
 {
-  listMaterialCostVariance(first: 20) {
+  listMaterialCostVariance(first: 200) {
     items {
       material
       materialDescription
       materialType
-      plant
-      units
-      currentQuantity
-      currentStandardCost
       currentPPV
       priorPPV
-      ppvChange
-      snapshotDate
+      currentStandardCost
     }
   }
 }
@@ -59,24 +54,63 @@ This document demonstrates how the `sylvamo_mfg` data model supports Sylvamo's p
 
 **Verified Result (REAL DATA):**
 ```
-Top Materials by PPV:
---------------------------------------------------------------------------------
-000000000005760001: PPV=$   3,872.13 |   RAWM | METHANOL, TECHNICAL
-000000000001054969: PPV=$      0.00 |   RAWM | COLOR, SOLAR T BLUE BASF PR305L
-000000000001097635: PPV=$      0.00 |   RAWM | HYDROGEN PEROXIDE, GENERATOR 50% LIQUID
-000000000001148331: PPV=$      0.00 |   RAWM | BRIGHTENER, OBA LEUCOPHOR T4
-000000000001155490: PPV=$      0.00 |   RAWM | CHELATING AGENT, VERSENEX R80
-000000000001496551: PPV=$      0.00 |   RAWM | ENZYME, BUCKMAN VYBRANT 901
-000000000005734004: PPV=$      0.00 |   RAWM | SULFURIC ACID, LIQ BULK 100% H2S04
-000000000021667248: PPV=$      0.00 |   RAWM | COLOR, ELCOMENT BLUE LR LIQ 150%
-000000000001040653: PPV=$      0.00 |   RAWM | BRIGHTENER, OBA REG STRENGTH TETRA
-000000000001114427: PPV=$      0.00 |   RAWM | ENZYME, ECOPULP TX200A
-
-Total Current PPV: $3,872.13
-Total Materials Tracked: 176
+Type        Count       Total PPV      Total Cost
+--------------------------------------------------
+PKNG          102       $9,253.79       $4,403.45
+PRD1            6           $0.00         $186.18
+RAWM           61     $-23,062.58       $6,240.13
+FIBR            7    $-104,342.33       $1,339.68
 ```
 
-**Value:** Real-time visibility into material cost variances from actual SAP/Fabric data.
+**Business Insight:** 
+- **FIBR (Fiber)** materials show the largest PPV impact at **-$104,342** indicating favorable pricing
+- **PKNG (Packaging)** materials show unfavorable PPV of **+$9,254**
+- Total PPV across all materials: **-$118,151** (net favorable)
+
+---
+
+### Scenario 1.2: Top 10 Materials by PPV Impact
+
+**Business Question:** Which specific materials have the highest PPV impact on costs?
+
+**Verified Result (REAL DATA):**
+```
+Material         Description                                       PPV     Type
+-------------------------------------------------------------------------------------
+000005210009     WOOD, SOFTWOOD                            $-72,630.80     FIBR
+000005054010     CHIPS, MIXED HARDWOOD                     $-24,801.74     FIBR
+000001019900     CAUSTIC SODA, MEMBRANE 76% NA2O BASIS     $-22,095.06     RAWM
+000001241110     FUEL OIL, RECYCLE                          $-8,003.52     RAWM
+000001005742     FUEL, FIBER                                $-6,909.79     FIBR
+000001159277     BRIGHTENER, OBA HIGH STRENGTH TETRA         $5,873.67     RAWM
+000001031307     BRIGHTENER, OBA LEUCOPHOR AL               $-5,649.80     RAWM
+000005760001     METHANOL, TECHNICAL                         $3,872.13     RAWM
+000001159680     CAUSTIC SODA, 50% LIQUID                    $2,940.00     RAWM
+000001156871     CORE, PAPER SPIRAL 6.028 X .400 X 153       $2,846.50     PKNG
+```
+
+**Business Insight:**
+- **WOOD, SOFTWOOD** has the largest single PPV impact at **-$72,631** (favorable)
+- **CHIPS, MIXED HARDWOOD** contributes **-$24,802** (favorable)
+- **OBA BRIGHTENERS** show mixed results: one favorable (-$5,650), one unfavorable (+$5,874)
+- Procurement should investigate caustic soda pricing variance of -$22,095
+
+---
+
+### Scenario 1.3: UC1 Summary Statistics
+
+**Verified Result (REAL DATA):**
+```
+Total Materials Tracked:          176
+Materials with Non-Zero PPV:       21
+Total Current PPV:         $-118,151.12  (Net Favorable)
+Total Current Standard Cost:  $12,169.44
+```
+
+**Business Value:** Real-time visibility into material cost variances enables procurement to:
+- Identify favorable pricing trends to lock in contracts
+- Flag unfavorable variances for supplier negotiation
+- Track month-over-month cost trends
 
 ---
 
@@ -92,29 +126,64 @@ Total Materials Tracked: 176
 | Track cut rolls | `Roll` | Links to source Reel |
 | Track quality tests | `QualityResult` | Links to Reel and Roll |
 | Track inter-plant packages | `Package` | Contains rolls, tracks status |
-| Track production recipes | `Recipe` | Links to ProductDefinition, Equipment |
-| Trace to equipment | `Equipment` | Links to parent Asset |
 
 ---
 
-## Verified Query Scenarios
+### Scenario 2.1: Production Summary
 
-### Scenario 1: Quality Traceability
-
-**Business Question:** A roll shows defects at Sumpter. What is the quality status across all rolls?
-
-**Data Source:** `raw_sylvamo_pilot/sharepoint_roll_quality` (Real SharePoint data)
+**Business Question:** What is the current production volume and weight distribution?
 
 **GraphQL Query:**
 ```graphql
 {
-  listRoll(first: 10) {
-    items {
-      rollNumber
-      weight
-      status
-    }
+  listReel(first: 100) {
+    items { reelNumber weight status }
   }
+  listRoll(first: 100) {
+    items { rollNumber weight status }
+  }
+  listPackage(first: 100) {
+    items { packageNumber rollCount status }
+  }
+}
+```
+
+**Verified Result (REAL DATA):**
+```
+Production Data:
+  Reels: 50
+  Rolls: 19
+  Packages: 50
+  Quality Results: 21
+
+Production Summary:
+  Total Reel Weight: 2,864,026 lbs
+  Total Roll Weight: 17,929 lbs
+  Average Reel Weight: 57,281 lbs
+  Average Roll Weight: 944 lbs
+
+Top 5 Reels by Weight:
+  EM0010716024: 85,745 lbs
+  EM0010315015: 79,710 lbs
+  EM0010315014: 79,705 lbs
+  EM0010814009: 79,618 lbs
+  EM0010924008: 79,468 lbs
+```
+
+**Business Insight:**
+- Average reel weight of **57,281 lbs** indicates standard production runs
+- Top reels exceed 85,000 lbs, showing high-volume production capability
+- Roll average of **944 lbs** aligns with typical customer order sizes
+
+---
+
+### Scenario 2.2: Quality Analysis
+
+**Business Question:** What is the quality pass rate and what defects are most common?
+
+**GraphQL Query:**
+```graphql
+{
   listQualityResult {
     items {
       testName
@@ -127,204 +196,78 @@ Total Materials Tracked: 176
 
 **Verified Result (REAL DATA):**
 ```
-REAL ROLLS (PPR Hist Roll):
---------------------------------------------------------------------------------
-EME13B08061N: 971 lbs | Status: Produced
-EME13B08063N: 972 lbs | Status: Produced
-EME14M07041K: 922 lbs | Status: Produced
-EME13B08071N: 964 lbs | Status: Produced
-EME13B08072P: 972 lbs | Status: Produced
+Total Quality Inspections: 21
+Passed: 15
+Failed: 6
+Pass Rate: 71.4%
 
-REAL QUALITY RESULTS (SharePoint):
---------------------------------------------------------------------------------
-Passed: 15 | Failed: 6 | Pass Rate: 71.4%
-
-Failed Quality Checks:
-  Roll Quality Inspection: 005 - Crushed Edge
-  Roll Quality Inspection: 007 - Edge Damage
-  Roll Quality Inspection: 005 - Crushed Edge
+Defect Distribution:
+  005 - Crushed Edge: 2 occurrences
+  Baggy Edge: 2 occurrences  
+  Up Curl: 2 occurrences
+  007 - Edge Damage: 1 occurrences
+  Collating Box Jams: 1 occurrences
 ```
 
-**Value:** Real-time quality tracking from actual SharePoint roll quality reports.
+**Business Insight:**
+- **71.4% pass rate** indicates room for quality improvement
+- **Edge-related defects** (Crushed Edge, Baggy Edge, Edge Damage) account for **5 of 6 failures** (83%)
+- Root cause analysis should focus on winding tension and edge handling
 
 ---
 
-### Scenario 2: Inter-Plant Package Tracking
+### Scenario 2.3: Package Status Distribution
 
-**Business Question:** Track packages shipped from Eastover to Sumpter. Show status distribution.
-
-**Data Source:** `raw_sylvamo_fabric/ppr_hist_package` (Real PPR data via Fabric)
-
-**GraphQL Query:**
-```graphql
-{
-  listPackage(first: 50) {
-    items {
-      packageNumber
-      status
-      rollCount
-      shippedDate
-    }
-  }
-}
-```
+**Business Question:** What is the current status of packages in the supply chain?
 
 **Verified Result (REAL DATA):**
 ```
-REAL PACKAGES (PPR Hist Package):
---------------------------------------------------------------------------------
-Package Distribution by Status:
-  Assembled: 5 packages
-  Shipped: 5 packages
-
-Sample Packages:
-  EME12G04152F: 1 roll, Status: Assembled
-  EME13E29063Z: 1 roll, Status: Assembled
-  EME14F13131B: 1 roll, Status: Shipped
+Package Status Distribution:
+  Assembled: 25 packages (50.0%)
+  Shipped: 25 packages (50.0%)
 ```
 
-**Value:** Real-time package tracking from actual PPR history data.
+**Business Insight:**
+- **50/50 split** between Assembled and Shipped indicates steady flow
+- No packages stuck in intermediate states
+- Logistics pipeline is balanced
 
 ---
 
-### Scenario 3: Recipe Compliance Check
+### Scenario 2.4: Roll Traceability
 
-**Business Question:** Compare recipe target parameters against actual quality results to verify production meets specifications.
+**Business Question:** Can we trace individual rolls to their quality status?
 
-**GraphQL Query:**
-```graphql
-{
-  listRecipe {
-    items {
-      name
-      recipeType
-      targetParameters
-      productDefinition {
-        name
-      }
-    }
-  }
-  listQualityResult {
-    items {
-      testName
-      resultValue
-      reel {
-        productDefinition {
-          name
-        }
-      }
-    }
-  }
-}
+**Verified Result (REAL DATA):**
+```
+Sample Roll Traceability:
+  EME13B08061N: 971 lbs - ✓ Passed
+  EME13B08063N: 972 lbs - ✓ Passed
+  EME14M07041K: 922 lbs - ✓ Passed
+  EME13B08071N: 964 lbs - ✓ Passed
+  EME13B08072P: 972 lbs - ✓ Passed
 ```
 
-**Verified Result:**
-```
-📋 Recipe: Bond 20lb Master Recipe for PM1
-   Product: Bond 20lb
-   Targets: basisWeight=20.0, caliper=3.5, brightness=92
-   Actual Results:
-      Caliper: Target=3.5, Actual=4.05, Diff=+0.55 ✅
-      Moisture: Target=4.5, Actual=5.40, Diff=+0.90 ✅
-      Brightness: Target=92, Actual=92.50, Diff=+0.50 ✅
-
-📋 Recipe: Offset 50lb Master Recipe for PM2
-   Product: Offset 50lb
-   Targets: basisWeight=50.0, caliper=4.2, brightness=94
-   Actual Results:
-      Caliper: Target=4.2, Actual=4.55, Diff=+0.35 ✅
-      Brightness: Target=94, Actual=93.00, Diff=-1.00 ⚠️
-```
-
-**Value:** Automated recipe compliance verification, identifying when production drifts from specifications.
+**Business Insight:**
+- Full traceability from roll number to quality status
+- Enables rapid root cause analysis when defects are found at customer sites
+- Supports quality certifications and customer audits
 
 ---
 
-### Scenario 4: Production Summary Dashboard
+### Scenario 2.5: UC2 Summary Statistics
 
-**Business Question:** Generate a production summary showing equipment, product mix, and quality pass rates.
-
-**GraphQL Query:**
-```graphql
-{
-  listAsset { items { name } }
-  listEquipment { items { name equipmentType } }
-  listProductDefinition { items { name basisWeight } }
-  listReel { items { reelNumber productDefinition { name } } }
-  listRoll { items { status } }
-  listPackage { items { status } }
-  listQualityResult { items { isInSpec } }
-}
+**Verified Result (REAL DATA):**
+```
+Production Volume: 50 reels → 19 rolls → 50 packages
+Quality Pass Rate: 71.4%
+Most Common Defect: 005 - Crushed Edge
 ```
 
-**Verified Result:**
-```
-PRODUCTION SUMMARY DASHBOARD
---------------------------------------------------------------------------------
-
-🏭 FACILITIES
-   Eastover Mill
-   Sumpter Facility
-
-⚙️ EQUIPMENT
-   Paper Machine 1 (PM1) (PaperMachine)
-   Paper Machine 2 (PM2) (PaperMachine)
-   Winder 1 (Winder)
-   Sheeter 1 (Sheeter)
-
-📊 PRODUCTION BY PRODUCT
-   Bond 20lb: 2 reels
-   Offset 50lb: 1 reels
-
-📦 ROLL STATUS
-   Packaged: 8 rolls
-   InTransit: 3 rolls
-
-🚚 PACKAGE STATUS
-   Shipped: 1 packages
-   InTransit: 1 packages
-   Received: 1 packages
-
-🔬 QUALITY METRICS
-   Total Tests: 8
-   Passed: 8
-   Pass Rate: 100.0%
-```
-
-**Value:** Executive-level production visibility across facilities, equipment, and quality metrics.
-
----
-
-## Full Traceability Chain
-
-The model supports complete end-to-end traceability:
-
-```
-ProductDefinition (Bond 20lb)
-    │
-    ├── Recipe (Bond 20lb Master Recipe for PM1)
-    │       ├── targetParameters: {basisWeight: 20, caliper: 3.5, brightness: 92}
-    │       └── equipment → Paper Machine 1
-    │
-    └── Reel (PM1-20260128-001)
-            ├── productDefinition → Bond 20lb
-            ├── equipment → Paper Machine 1
-            ├── productionDate: 2026-01-27
-            │
-            ├── QualityResult (Caliper: 4.05 ✅)
-            ├── QualityResult (Moisture: 5.40 ✅)
-            ├── QualityResult (Basis Weight: 20.20 ✅)
-            ├── QualityResult (Brightness: 92.50 ✅)
-            │
-            └── Roll (PM1-20260128-001-R01)
-                    ├── width: 8.5"
-                    ├── status: Packaged
-                    │
-                    └── Package (PKG-EO-SU-20260128-001)
-                            ├── sourcePlant: Eastover
-                            ├── destinationPlant: Sumpter
-                            └── status: Shipped
-```
+**Business Value:** Real-time quality tracking enables:
+- Proactive defect prevention through trend analysis
+- Rapid response to quality issues with full traceability
+- Customer confidence through documented quality metrics
 
 ---
 
@@ -348,23 +291,20 @@ All data is sourced from actual Sylvamo production systems:
 
 ## Next Steps
 
-1. **Connect Real Data Sources:**
-   - PPR Reel History → Reel entity
-   - PPR Roll History → Roll entity (with EM prefix stripping)
-   - SharePoint Quality Reports → QualityResult entity
-   - Proficy Lab Tests → QualityResult entity (via Event_Num parsing)
+1. **Expand Quality Data:**
+   - Connect Proficy lab test data for detailed quality metrics
+   - Add caliper, moisture, brightness measurements
 
-2. **Deploy Transformations:**
-   - Create CDF transformations to populate entities from RAW tables
-   - Implement Roll ID normalization (strip EM prefix)
-   - Implement Proficy → Reel connection via Event_Num parsing
+2. **Enhance Traceability:**
+   - Link rolls directly to reels via Roll ID parsing
+   - Connect packages to contained rolls
 
 3. **Build Dashboards:**
    - Production summary dashboard
-   - Quality traceability dashboard
-   - Inter-plant logistics dashboard
+   - Quality trends dashboard
+   - PPV analysis dashboard
 
 ---
 
 *Document verified: January 28, 2026*  
-*All queries tested against live CDF instance*
+*All queries tested against live CDF instance with real Sylvamo data*
