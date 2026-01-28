@@ -133,9 +133,11 @@ Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 
 | Document | Description |
 |----------|-------------|
-| [Data Model Diagram](docs/SYLVAMO_MFG_DATA_MODEL_DIAGRAM.md) | Full entity diagram with properties |
-| [Alignment Document](docs/COGNITE_ISA_EXTENSION_AND_SYLVAMO_ALIGNMENT.md) | ISA-95/88 alignment analysis |
-| [Johan's Guidance](docs/JOHAN_ISA95_GUIDANCE_SUMMARY.md) | Expert recommendations |
+| [**Data Model Specification**](docs/DATA_MODEL_SPECIFICATION.md) | Complete spec with all containers, properties, and examples |
+| [Data Model Diagram](docs/SYLVAMO_MFG_DATA_MODEL_DIAGRAM.md) | Visual diagrams with Mermaid |
+| [Expert Scenarios](docs/USE_CASE_VALIDATION_EXPERT_SCENARIOS.md) | Industry use cases enabled by this model |
+| [ISA Alignment](docs/COGNITE_ISA_EXTENSION_AND_SYLVAMO_ALIGNMENT.md) | ISA-95/88 alignment analysis |
+| [Johan's Guidance](docs/JOHAN_ISA95_GUIDANCE_SUMMARY.md) | Expert recommendations from Cognite |
 
 ## Sample Data
 
@@ -172,20 +174,3 @@ Internal use only - Cognite/Sylvamo
 ---
 
 *Created: January 28, 2026*
-
----
-
-## Feedback & Comments
-
-💬 **Have feedback on this data model?**
-
-- [Open a Discussion](https://github.com/fbarsoba-cognite/sylvamo-data-model/discussions) for general questions
-- [Create an Issue](https://github.com/fbarsoba-cognite/sylvamo-data-model/issues/new) for specific suggestions
-- [Submit a Pull Request](https://github.com/fbarsoba-cognite/sylvamo-data-model/pulls) for proposed changes
-
-### How to Comment on Specific Sections
-
-1. Click on a file (e.g., `docs/SYLVAMO_MFG_DATA_MODEL_DIAGRAM.md`)
-2. Click the line number you want to comment on
-3. Click the `...` menu → "Reference in new issue"
-4. This creates an issue linked to that specific line!
