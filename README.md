@@ -98,6 +98,46 @@ erDiagram
     }
 ```
 
+### Diagram Legend
+
+#### Relationship Symbols (Crow's Foot Notation)
+
+| Symbol | Meaning | Example |
+|--------|---------|---------|
+| `\|\|--o{` | **One-to-Many**: One parent has many children | Asset `\|\|--o{` Equipment means one Asset contains many Equipment |
+| `}o--\|\|` | **Many-to-One**: Many children belong to one parent | Roll `}o--\|\|` Package means many Rolls are bundled in one Package |
+| `\|\|` | **One** (exactly one) | The single line indicates "one" side |
+| `o{` | **Many** (zero or more) | The crow's foot (fork) indicates "many" side |
+
+#### Relationship Labels
+
+| Label | Business Meaning |
+|-------|------------------|
+| **"contains"** | Asset contains Equipment (physical hierarchy) |
+| **"produces"** | Equipment produces Reels |
+| **"runs"** | Equipment runs Recipes |
+| **"defines"** | ProductDefinition defines what a Recipe makes |
+| **"specifies"** | ProductDefinition specifies what a Reel is |
+| **"cost impact"** | MaterialCostVariance affects ProductDefinition costs |
+| **"cut into"** | Reel is cut into Rolls |
+| **"tested by"** | Reel/Roll is tested by QualityResult |
+| **"bundled in"** | Roll is bundled in Package |
+| **"sourcePlant"** | Package ships FROM this Asset |
+| **"destinationPlant"** | Package ships TO this Asset |
+
+#### Property Types
+
+| Notation | Meaning |
+|----------|---------|
+| `PK` | **Primary Key** - Unique identifier for the entity |
+| `FK` | **Foreign Key** - Reference to another entity |
+| `string` | Text value |
+| `float` | Decimal number |
+| `timestamp` | Date and time |
+| `boolean` | True/False |
+| `json` | Structured data object |
+| `relation` | Link to another entity |
+
 ## Flow Diagram
 
 ```mermaid
