@@ -197,13 +197,52 @@ Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 
 **[See Full Extractor Documentation →](docs/EXTRACTORS.md)**
 
-## Data Sources
+## Data Pipeline
 
-```
-SAP ERP ──────► Microsoft Fabric ──────► CDF RAW ──────► sylvamo_mfg Model
-PPR System ───►                                         
-SharePoint ───►                                         
-Proficy ──────►                                         
+```mermaid
+flowchart LR
+    subgraph Sources["📊 Source Systems"]
+        SAP["SAP ERP<br/>(Costs, Materials)"]
+        PPR["PPR System<br/>(Reels, Rolls, Packages)"]
+        SP["SharePoint<br/>(Quality Data)"]
+        PROF["Proficy GBDB<br/>(Production)"]
+        PI["PI Server<br/>(Process Tags)"]
+    end
+
+    subgraph Integration["🔄 Integration Layer"]
+        FAB["Microsoft Fabric<br/>Lakehouse"]
+        SPX["SharePoint<br/>Extractor"]
+        SQLX["SQL<br/>Extractor"]
+        PIX["PI<br/>Extractor"]
+    end
+
+    subgraph CDF["☁️ Cognite Data Fusion"]
+        subgraph RAW["RAW Databases"]
+            R1["raw_sylvamo_fabric"]
+            R2["raw_sylvamo_pilot"]
+            R3["raw_sylvamo_proficy"]
+            TS["Time Series"]
+        end
+        subgraph DM["sylvamo_mfg Model"]
+            V1["Asset / Equipment"]
+            V2["ProductDefinition / Recipe"]
+            V3["Reel / Roll / Package"]
+            V4["QualityResult"]
+            V5["MaterialCostVariance"]
+        end
+    end
+
+    SAP --> FAB
+    PPR --> FAB
+    FAB --> R1
+    SP --> SPX --> R2
+    PROF --> SQLX --> R3
+    PI --> PIX --> TS
+
+    R1 --> DM
+    R2 --> DM
+    R3 --> DM
+    TS --> DM
 ```
 
 | Source System | RAW Database | Target Entity |
