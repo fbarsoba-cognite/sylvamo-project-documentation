@@ -11,7 +11,7 @@ The `sylvamo_mfg` data model implements ISA-95 and ISA-88 standards adapted for 
 | Component | Value |
 |-----------|-------|
 | **Space** | `sylvamo_mfg` |
-| **Data Model** | `sylvamo_manufacturing/v7` |
+| **Data Model** | `sylvamo_manufacturing/v9` |
 | **Views** | 9 (Asset, Equipment, ProductDefinition, Recipe, Reel, Roll, Package, QualityResult, MaterialCostVariance) |
 | **View Versions** | All views now use typed relations for GraphQL traversal |
 | **Real Data** | 197 nodes (from actual Sylvamo systems) |
@@ -176,6 +176,7 @@ Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 
 | Document | Description |
 |----------|-------------|
+| [**Guide for Stakeholders**](docs/DATA_MODEL_FOR_STAKEHOLDERS.md) | Non-technical overview with flow diagrams and business examples |
 | [**Data Model Walkthrough**](docs/DATA_MODEL_WALKTHROUGH.md) | Step-by-step example tracing paper from production to delivery |
 | [**Use Cases & Queries**](docs/USE_CASES_AND_QUERIES.md) | Verified use case scenarios with real data query examples |
 | [**Extractors**](docs/EXTRACTORS.md) | Extractor configurations and status (Fabric, PI, SharePoint, SQL) |
