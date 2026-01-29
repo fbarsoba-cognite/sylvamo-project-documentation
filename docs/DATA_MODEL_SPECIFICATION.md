@@ -9,12 +9,71 @@
 
 ## Table of Contents
 
-1. [Overview](#overview)
-2. [Containers](#containers)
-3. [Views](#views)
-4. [Relationships](#relationships)
-5. [Sample Data](#sample-data)
-6. [GraphQL API](#graphql-api)
+1. [Key Implementation Notes](#key-implementation-notes)
+2. [Overview](#overview)
+3. [Containers](#containers)
+4. [Views](#views)
+5. [Relationships](#relationships)
+6. [Sample Data](#sample-data)
+7. [GraphQL API](#graphql-api)
+8. [Data Connections & Contextualization](#data-connections--contextualization)
+
+---
+
+## Key Implementation Notes
+
+### Two-Plant Context
+
+| Plant | Role | Data Produced |
+|-------|------|---------------|
+| **Eastover Mill** | Paper production | Scanner/QCS data (continuous), Proficy lab data, Reels, Rolls, Packages |
+| **Sumpter Facility** | Sheeting plant (receives rolls) | SharePoint quality reports (inspection data) |
+
+**Business Goal:** Predict if rolls are of sufficient quality **before shipping** from Eastover to avoid transportation costs for rolls that will be rejected at Sumpter.
+
+### Roll ID Mapping (Critical)
+
+**Issue:** Different systems use different roll ID formats.
+
+| System | Format | Example |
+|--------|--------|---------|
+| SharePoint | No prefix | `E15M06073A` |
+| PPR History | EM prefix | `EME15M06073A` |
+
+**Solution:** Strip `EM` prefix from PPR roll IDs when joining to SharePoint data.
+
+```sql
+-- Join PPR rolls to SharePoint quality reports
+SELECT sp.*, ppr.*
+FROM sharepoint_quality sp
+JOIN ppr_hist_roll ppr 
+  ON REPLACE(ppr.roll_number, 'EM', '') = sp.roll_id
+```
+
+### Quality Report → Multiple Rolls
+
+**Important:** A single SharePoint Quality Report can reference **up to 6 rolls**.
+
+| Column | Description |
+|--------|-------------|
+| `title` | Roll 1 ID (primary) |
+| `roll_id_no_2` | Roll 2 ID |
+| `roll_id_no_3` | Roll 3 ID |
+| `roll_id_no_4` | Roll 4 ID |
+| `roll_id_no_5` | Roll 5 ID |
+| `roll_id_no_6` | Roll 6 ID |
+
+### Reel Timestamp Calculation
+
+**Source:** `ppr_hist_reel` table
+
+| Field | Description |
+|-------|-------------|
+| `reel_turnup_time` | When reel production started |
+| `reel_time_in_minutes` | Duration of production |
+| Calculated End Time | `reel_turnup_time + reel_time_in_minutes` |
+
+**Use for:** Matching PI time series data to reels based on production time window.
 
 ---
 
