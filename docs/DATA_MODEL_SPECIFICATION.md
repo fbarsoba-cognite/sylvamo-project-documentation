@@ -2,7 +2,7 @@
 
 **Space:** `sylvamo_mfg`  
 **Data Model:** `sylvamo_manufacturing`  
-**Version:** `v7`  
+**Version:** `v9`  
 **Date:** 2026-01-28
 
 ---
@@ -408,6 +408,86 @@ version: v7
 
 ---
 
+## Data Connections & Contextualization
+
+### Connecting PI Time Series to Reels via Event_Num
+
+The `event_num` field is the **key connection point** between Proficy lab tests, PI time series data, and production reels.
+
+#### Event_Num Format
+
+```
+26-01-22027
+│  │  └─── Reel sequence number (connects to PPR reel data)
+│  └────── Paper machine (01 = PM1, 02 = PM2)
+└───────── Year (2026)
+```
+
+#### Connection Flow
+
+```
+┌─────────────────────┐
+│  PI Time Series     │
+│  (Scanner data)     │──────────────────────────────┐
+│  Continuous reading │                              │
+└─────────────────────┘                              │
+                                                     ▼
+┌─────────────────────┐     parse sequence     ┌──────────┐
+│  Proficy Lab Test   │─────────────────────▶  │   REEL   │
+│  event_num:         │     "22027"            │          │
+│  "26-01-22027"      │                        │SequenceID│
+└─────────────────────┘                        └────┬─────┘
+                                                    │
+                                           cut into │
+                                                    ▼
+                                              ┌──────────┐
+                                              │  ROLLS   │
+                                              │          │
+                                              └──────────┘
+```
+
+#### Key Fields for Connection
+
+| Source System | Field | Connects To | Method |
+|---------------|-------|-------------|--------|
+| **Proficy** | `event_num` | Reel | Parse sequence number (3rd segment) |
+| **PPR** | `reel_number` | Contains sequence | String match |
+| **PI** | Time series | Reel | Via equipment + timestamp window |
+
+#### SQL Join Example
+
+```sql
+-- Connect Proficy lab tests to PPR reels
+SELECT lt.*, r.reel_number, r.reel_manufactured_date
+FROM lab_tests lt
+JOIN ppr_hist_reel r 
+  ON r.reel_number LIKE '%' || split_part(lt.event_num, '-', 3)
+  AND EXTRACT(YEAR FROM r.reel_manufactured_date) = 
+      (2000 + CAST(split_part(lt.event_num, '-', 1) AS INT))
+```
+
+#### Important Notes
+
+1. **Lab tests (Proficy)** are performed on **REELS** (before cutting into rolls)
+2. **PI Scanner** provides continuous measurement on the same reel
+3. Lab tests **VERIFY** that scanner (PI) data is accurate
+4. To trace from lab test to rolls: `LabTest → Reel → Roll(s)`
+5. The `event_num` format `YY-PM-XXXXXXX` is the **key for reel connection**
+
+### PI Time Series Contextualization
+
+| PI Tag Pattern | Entity | Connection Method |
+|----------------|--------|-------------------|
+| `PM1.*` | Equipment (PM1) | Tag name prefix |
+| `CALIPER.*` | QualityResult | Test type mapping |
+| `MOISTURE.*` | QualityResult | Test type mapping |
+
+**Current State:** PI time series are stored as **legacy time series** with metadata linking to equipment.
+
+**Future Enhancement:** Add direct relationships from time series to Reel entities based on production timestamps.
+
+---
+
 ## Version History
 
 | Version | Date | Changes |
@@ -419,6 +499,8 @@ version: v7
 | v5 | 2026-01-28 | Fixed view version references |
 | v6 | 2026-01-28 | All typed relations fixed (Package→Asset, Recipe/Reel→Equipment v2) |
 | v7 | 2026-01-28 | Added Roll→Package relation ("bundled in") |
+| v8 | 2026-01-28 | Added Asset hierarchy (parent/children relations) |
+| v9 | 2026-01-28 | Updated all views to align with Asset v2 hierarchy |
 
 ---
 
