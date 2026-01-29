@@ -1,7 +1,7 @@
 # Data Pipeline & Sources
 
-**Date:** 2026-01-28  
-**Model:** `sylvamo_mfg/sylvamo_manufacturing/v4`
+**Date:** 2026-01-29  
+**Model:** `sylvamo_mfg/sylvamo_manufacturing/v9`
 
 ---
 
@@ -32,17 +32,19 @@ This document describes the data sources and transformations that populate the `
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                           CDF RAW DATABASES                                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  raw_sylvamo_fabric/                                                         │
-│    ├── ppv_snapshot          → MaterialCostVariance                          │
+│  raw_ext_fabric_ppr/                                                         │
 │    ├── ppr_hist_reel         → Reel                                          │
 │    ├── ppr_hist_roll         → Roll                                          │
 │    └── ppr_hist_package      → Package                                       │
 │                                                                              │
-│  raw_sylvamo_pilot/                                                          │
-│    └── sharepoint_roll_quality → QualityResult                               │
+│  raw_ext_fabric_ppv/                                                         │
+│    └── ppv_snapshot          → MaterialCostVariance                          │
 │                                                                              │
-│  raw_sylvamo_proficy/                                                        │
-│    └── events_tests          → QualityResult (lab tests)                     │
+│  raw_ext_sharepoint/                                                         │
+│    └── roll_quality          → QualityResult                                 │
+│                                                                              │
+│  raw_ext_sql_proficy/                                                        │
+│    └── tests                 → QualityResult (lab tests)                     │
 └────────────────────────────────────────────────────────────────────────────┘
          │
          ▼ [Transformations]
@@ -63,7 +65,7 @@ This document describes the data sources and transformations that populate the `
 
 | RAW Table | Description | Refresh |
 |-----------|-------------|---------|
-| `raw_sylvamo_fabric/ppv_snapshot` | Material cost and PPV data | Daily |
+| `raw_ext_fabric_ppv/ppv_snapshot` | Material cost and PPV data | Daily |
 
 **Key Fields:**
 - `material` - SAP material number
@@ -78,9 +80,9 @@ This document describes the data sources and transformations that populate the `
 
 | RAW Table | Description | Records |
 |-----------|-------------|---------|
-| `raw_sylvamo_fabric/ppr_hist_reel` | Paper reel production history | 100+ |
-| `raw_sylvamo_fabric/ppr_hist_roll` | Cut roll history | 19+ |
-| `raw_sylvamo_fabric/ppr_hist_package` | Package/shipping history | 100+ |
+| `raw_ext_fabric_ppr/ppr_hist_reel` | Paper reel production history | 61,000+ |
+| `raw_ext_fabric_ppr/ppr_hist_roll` | Cut roll history | 200,000+ |
+| `raw_ext_fabric_ppr/ppr_hist_package` | Package/shipping history | 50,000+ |
 
 **Reel Key Fields:**
 - `reel_number` - Unique reel identifier (e.g., EM0010110008)
@@ -111,7 +113,7 @@ This document describes the data sources and transformations that populate the `
 
 | RAW Table | Description | Records |
 |-----------|-------------|---------|
-| `raw_sylvamo_pilot/sharepoint_roll_quality` | Roll quality inspection reports | 21+ |
+| `raw_ext_sharepoint/roll_quality` | Roll quality inspection reports | 21+ |
 
 **Key Fields:**
 - `title` - Roll ID being inspected
@@ -125,8 +127,8 @@ This document describes the data sources and transformations that populate the `
 
 | RAW Table | Description | Status |
 |-----------|-------------|--------|
-| `raw_sylvamo_proficy/events_tests` | Lab test results | Planned |
-| `raw_sylvamo_proficy/tests` | Test definitions | Planned |
+| `raw_ext_sql_proficy/tests` | Lab test results | Configured |
+| `raw_ext_sql_proficy/events` | Production events | Configured |
 
 ---
 
@@ -134,72 +136,72 @@ This document describes the data sources and transformations that populate the `
 
 ### Transform 1: RAW → Reel
 
-**Source:** `raw_sylvamo_fabric/ppr_hist_reel`  
+**Source:** `raw_ext_fabric_ppr/ppr_hist_reel`  
 **Target:** `sylvamo_mfg:Reel/v2`
 
 ```sql
 -- Transformation: populate_reels
 SELECT
-  CONCAT('reel:', reel_number) AS externalId,
-  reel_number AS reelNumber,
-  TO_TIMESTAMP(reel_manufactured_date, 'YYYYMMDD') AS productionDate,
-  CAST(reel_finished_weight AS FLOAT) AS weight,
-  CAST(reel_reel_width_num AS FLOAT) AS width,
-  CAST(reel_actual_diameter_num AS FLOAT) AS diameter,
-  reel_status_ind AS status,
+  CONCAT('reel:', REEL_NUMBER) AS externalId,
+  REEL_NUMBER AS reelNumber,
+  TO_TIMESTAMP(REEL_MANUFACTURED_DATE, 'YYYYMMDD') AS productionDate,
+  CAST(REEL_FINISHED_WEIGHT AS FLOAT) AS weight,
+  CAST(REEL_REEL_WIDTH_NUM AS FLOAT) AS width,
+  CAST(REEL_ACTUAL_DIAMETER_NUM AS FLOAT) AS diameter,
+  REEL_STATUS_IND AS status,
   -- Product mapping based on basis weight
   CASE 
-    WHEN reel_average_basis_weight < 22 THEN 'product:wove-20'
+    WHEN REEL_AVERAGE_BASIS_WEIGHT < 22 THEN 'product:wove-20'
     ELSE 'product:wove-24'
   END AS productDefinition_externalId,
   'equip:emp01' AS equipment_externalId
-FROM `raw_sylvamo_fabric`.`ppr_hist_reel`
+FROM `raw_ext_fabric_ppr`.`ppr_hist_reel`
 ```
 
 ### Transform 2: RAW → Roll
 
-**Source:** `raw_sylvamo_fabric/ppr_hist_roll`  
+**Source:** `raw_ext_fabric_ppr/ppr_hist_roll`  
 **Target:** `sylvamo_mfg:Roll/v2`
 
 ```sql
 -- Transformation: populate_rolls
 SELECT
-  CONCAT('roll:', roll_number) AS externalId,
-  roll_number AS rollNumber,
-  CAST(roll_width_num AS FLOAT) AS width,
-  CAST(roll_original_diameter AS FLOAT) AS diameter,
-  CAST(roll_current_weight AS FLOAT) AS weight,
+  CONCAT('roll:', ROLL_NUMBER) AS externalId,
+  ROLL_NUMBER AS rollNumber,
+  CAST(ROLL_WIDTH_NUM AS FLOAT) AS width,
+  CAST(ROLL_ORIGINAL_DIAMETER AS FLOAT) AS diameter,
+  CAST(ROLL_CURRENT_WEIGHT AS FLOAT) AS weight,
   'Produced' AS status,
   'A' AS qualityGrade,
-  CONCAT('reel:', roll_reel_number) AS reel_externalId
-FROM `raw_sylvamo_fabric`.`ppr_hist_roll`
+  CONCAT('reel:', ROLL_REEL_NUMBER) AS reel_externalId
+FROM `raw_ext_fabric_ppr`.`ppr_hist_roll`
 ```
 
 ### Transform 3: RAW → Package
 
-**Source:** `raw_sylvamo_fabric/ppr_hist_package`  
+**Source:** `raw_ext_fabric_ppr/ppr_hist_package`  
 **Target:** `sylvamo_mfg:Package/v2`
 
 ```sql
 -- Transformation: populate_packages
 SELECT
-  CONCAT('pkg:', pack_package_number) AS externalId,
-  pack_package_number AS packageNumber,
-  CAST(pack_number_rolls_in_package AS INT) AS rollCount,
+  CONCAT('pkg:', PACK_PACKAGE_NUMBER) AS externalId,
+  PACK_PACKAGE_NUMBER AS packageNumber,
+  CAST(PACK_NUMBER_ROLLS_IN_PACKAGE AS INT) AS rollCount,
   CASE 
-    WHEN pack_ship_date IS NOT NULL AND TRIM(pack_ship_date) != '' THEN 'Shipped'
-    WHEN pack_assembled_date IS NOT NULL THEN 'Assembled'
+    WHEN PACK_SHIP_DATE IS NOT NULL AND TRIM(PACK_SHIP_DATE) != '' THEN 'Shipped'
+    WHEN PACK_ASSEMBLED_DATE IS NOT NULL THEN 'Assembled'
     ELSE 'Created'
   END AS status,
-  TO_TIMESTAMP(pack_ship_date, 'YYYYMMDD') AS shippedDate,
+  TO_TIMESTAMP(PACK_SHIP_DATE, 'YYYYMMDD') AS shippedDate,
   'asset:eastover' AS sourcePlant_externalId,
   'asset:sumpter' AS destinationPlant_externalId
-FROM `raw_sylvamo_fabric`.`ppr_hist_package`
+FROM `raw_ext_fabric_ppr`.`ppr_hist_package`
 ```
 
 ### Transform 4: RAW → MaterialCostVariance
 
-**Source:** `raw_sylvamo_fabric/ppv_snapshot`  
+**Source:** `raw_ext_fabric_ppv/ppv_snapshot`  
 **Target:** `sylvamo_mfg:MaterialCostVariance/v1`
 
 ```sql
@@ -223,12 +225,12 @@ SELECT
   CAST(current_ppv AS FLOAT) - CAST(prior_ppv AS FLOAT) AS ppvChange,
   TO_TIMESTAMP(ppv_snapshot_date) AS snapshotDate,
   CAST(ppv_surrogate_key AS STRING) AS surrogateKey
-FROM `raw_sylvamo_fabric`.`ppv_snapshot`
+FROM `raw_ext_fabric_ppv`.`ppv_snapshot`
 ```
 
 ### Transform 5: RAW → QualityResult
 
-**Source:** `raw_sylvamo_pilot/sharepoint_roll_quality`  
+**Source:** `raw_ext_sharepoint/roll_quality`  
 **Target:** `sylvamo_mfg:QualityResult/v2`
 
 ```sql
@@ -240,7 +242,7 @@ SELECT
   COALESCE(defect, 'No defects') AS resultText,
   CASE WHEN was_the_roll_rejected = 'Yes' THEN FALSE ELSE TRUE END AS isInSpec,
   CONCAT('roll:', title) AS roll_externalId
-FROM `raw_sylvamo_pilot`.`sharepoint_roll_quality`
+FROM `raw_ext_sharepoint`.`roll_quality`
 ```
 
 ---
@@ -280,13 +282,13 @@ FROM `raw_sylvamo_pilot`.`sharepoint_roll_quality`
 | Asset | 2 | Static (Eastover, Sumpter) |
 | Equipment | 3 | Static (EMP01, EMW01, Sheeter) |
 | ProductDefinition | 2 | Derived from basis weight ranges |
-| Reel | 50 | `ppr_hist_reel` |
-| Roll | 19 | `ppr_hist_roll` |
-| Package | 50 | `ppr_hist_package` |
-| QualityResult | 21 | `sharepoint_roll_quality` |
-| MaterialCostVariance | 176 | `ppv_snapshot` |
-| **TOTAL** | **197** | Real production data |
+| Reel | 61,000+ | `raw_ext_fabric_ppr/ppr_hist_reel` |
+| Roll | 200,000+ | `raw_ext_fabric_ppr/ppr_hist_roll` |
+| Package | 50,000+ | `raw_ext_fabric_ppr/ppr_hist_package` |
+| QualityResult | 21 | `raw_ext_sharepoint/roll_quality` |
+| MaterialCostVariance | 176 | `raw_ext_fabric_ppv/ppv_snapshot` |
+| **TOTAL** | **300,000+** | Real production data |
 
 ---
 
-*Document created: January 28, 2026*
+*Document updated: January 29, 2026*

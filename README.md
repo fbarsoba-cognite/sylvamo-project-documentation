@@ -231,11 +231,24 @@ Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 
 | Extractor | Source | Status | Data Target |
 |-----------|--------|--------|-------------|
-| **Fabric Connector** | Microsoft Fabric Lakehouse | ✅ Running | `raw_sylvamo_fabric` |
-| **PI Extractor** | PI Server (75 tags) | ✅ Running | Time Series |
-| **SharePoint Extractor** | SharePoint Online | ✅ Running | `raw_sylvamo_pilot` |
-| **SAP OData Extractor** | SAP Gateway | ✅ Running | `raw_sylvamo_sap` |
-| **SQL Extractor** | Proficy GBDB | ⏳ Configured | `raw_sylvamo_proficy` |
+| **Fabric Connector** | Microsoft Fabric Lakehouse | ✅ Running | `raw_ext_fabric_ppr`, `raw_ext_fabric_ppv` |
+| **PI Extractor** | PI Server (75 tags) | ✅ Running | Time Series, `raw_ext_pi` |
+| **SharePoint Extractor** | SharePoint Online | ✅ Running | `raw_ext_sharepoint` |
+| **SAP OData Extractor** | SAP Gateway | ✅ Running | `raw_ext_sap` |
+| **SQL Extractor** | Proficy GBDB | ⏳ Configured | `raw_ext_sql_proficy` |
+
+### RAW Database Naming Convention
+
+All extractor-managed databases use the prefix `raw_ext_<extractor>_<source>`:
+
+| Database | Extractor | Description |
+|----------|-----------|-------------|
+| `raw_ext_fabric_ppr` | Fabric Connector | Paper Production Reporting (Reels, Rolls, Packages) |
+| `raw_ext_fabric_ppv` | Fabric Connector | Purchase Price Variance / Cost data |
+| `raw_ext_pi` | PI Extractor | Time series metadata |
+| `raw_ext_sap` | SAP OData | SAP master data |
+| `raw_ext_sql_proficy` | SQL Extractor | Proficy lab test results |
+| `raw_ext_sharepoint` | SharePoint Extractor | Documents and quality reports |
 
 **[See Full Extractor Documentation →](docs/EXTRACTORS.md)**
 
@@ -260,9 +273,9 @@ flowchart LR
 
     subgraph CDF["☁️ Cognite Data Fusion"]
         subgraph RAW["RAW Databases"]
-            R1["raw_sylvamo_fabric"]
-            R2["raw_sylvamo_pilot"]
-            R3["raw_sylvamo_proficy"]
+            R1["raw_ext_fabric_ppr"]
+            R2["raw_ext_sharepoint"]
+            R3["raw_ext_sql_proficy"]
             TS["Time Series"]
         end
         subgraph DM["sylvamo_mfg Model"]
@@ -289,11 +302,11 @@ flowchart LR
 
 | Source System | RAW Database | Target Entity |
 |---------------|--------------|---------------|
-| SAP (via Fabric) | `raw_sylvamo_fabric/ppv_snapshot` | MaterialCostVariance |
-| PPR (via Fabric) | `raw_sylvamo_fabric/ppr_hist_reel` | Reel |
-| PPR (via Fabric) | `raw_sylvamo_fabric/ppr_hist_roll` | Roll |
-| PPR (via Fabric) | `raw_sylvamo_fabric/ppr_hist_package` | Package |
-| SharePoint | `raw_sylvamo_pilot/sharepoint_roll_quality` | QualityResult |
+| SAP (via Fabric) | `raw_ext_fabric_ppv/ppv_snapshot` | MaterialCostVariance |
+| PPR (via Fabric) | `raw_ext_fabric_ppr/ppr_hist_reel` | Reel |
+| PPR (via Fabric) | `raw_ext_fabric_ppr/ppr_hist_roll` | Roll |
+| PPR (via Fabric) | `raw_ext_fabric_ppr/ppr_hist_package` | Package |
+| SharePoint | `raw_ext_sharepoint/roll_quality` | QualityResult |
 
 **[See Full Data Pipeline Documentation →](docs/DATA_PIPELINE_AND_SOURCES.md)**
 
@@ -304,12 +317,12 @@ flowchart LR
 | Asset | 2 | Eastover Mill, Sumpter Facility |
 | Equipment | 3 | EMP01, EMW01, Sheeter 1 |
 | ProductDefinition | 2 | Wove Paper 20lb/24lb |
-| Reel | 50 | `raw_sylvamo_fabric/ppr_hist_reel` |
-| Roll | 19 | `raw_sylvamo_fabric/ppr_hist_roll` |
-| Package | 50 | `raw_sylvamo_fabric/ppr_hist_package` |
-| QualityResult | 21 | `raw_sylvamo_pilot/sharepoint_roll_quality` |
-| MaterialCostVariance | 176 | `raw_sylvamo_fabric/ppv_snapshot` |
-| **TOTAL** | **197** | Real production data |
+| Reel | 61,000+ | `raw_ext_fabric_ppr/ppr_hist_reel` |
+| Roll | 200,000+ | `raw_ext_fabric_ppr/ppr_hist_roll` |
+| Package | 50,000+ | `raw_ext_fabric_ppr/ppr_hist_package` |
+| QualityResult | 21 | `raw_ext_sharepoint/roll_quality` |
+| MaterialCostVariance | 176 | `raw_ext_fabric_ppv/ppv_snapshot` |
+| **TOTAL** | **300,000+** | Real production data |
 
 ## GraphQL Query Example
 
@@ -332,4 +345,4 @@ Internal use only - Cognite/Sylvamo
 
 ---
 
-*Created: January 28, 2026*
+*Updated: January 29, 2026*

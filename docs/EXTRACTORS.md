@@ -1,6 +1,6 @@
 # Extractors Configuration
 
-**Date:** 2026-01-28  
+**Date:** 2026-01-29  
 **Purpose:** Documentation of all extractors feeding data into the `sylvamo_mfg` model
 
 ---
@@ -10,24 +10,42 @@
 Data flows from source systems into CDF through a set of configured extractors:
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           SOURCE SYSTEMS                                     │
-├─────────────────┬─────────────────┬─────────────────┬──────────────────────┤
-│   PI Server     │   Fabric        │   SharePoint    │   Proficy GBDB       │
-│   (Time Series) │   (Lakehouse)   │   (Documents)   │   (Lab Data)         │
-└────────┬────────┴────────┬────────┴────────┬────────┴──────────┬───────────┘
-         │                 │                 │                   │
-    PI Extractor     Fabric Connector   SharePoint Extractor  SQL Extractor
-         │                 │                 │                   │
-         ▼                 ▼                 ▼                   ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              CDF                                             │
-│  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐                    │
-│  │ Time Series   │  │ RAW Databases │  │ Files         │                    │
-│  │ sylvamo_assets│  │ raw_sylvamo_* │  │ SharePoint    │                    │
-│  └───────────────┘  └───────────────┘  └───────────────┘                    │
-└─────────────────────────────────────────────────────────────────────────────┘
+SOURCE SYSTEMS                                      
++----------------+----------------+----------------+-------------------+
+| PI Server      | Fabric         | SharePoint     | Proficy GBDB      |
+| (Time Series)  | (Lakehouse)    | (Documents)    | (Lab Data)        |
++-------+--------+-------+--------+-------+--------+--------+----------+
+        |                |                |                 |
+   PI Extractor    Fabric Connector  SharePoint Ext    SQL Extractor
+        |                |                |                 |
+        v                v                v                 v
++-------------------------------------------------------------------------+
+|                           CDF                                            |
+|  +---------------+   +-------------------+   +-----------------+         |
+|  | Time Series   |   | RAW Databases     |   | Files           |         |
+|  | sylvamo_assets|   | raw_ext_*         |   | SharePoint docs |         |
+|  +---------------+   +-------------------+   +-----------------+         |
++-------------------------------------------------------------------------+
 ```
+
+---
+
+## RAW Database Naming Convention
+
+All extractor-managed RAW databases use the prefix `raw_ext_`:
+
+```
+raw_ext_<extractor_type>_<source>
+```
+
+| Database | Extractor | Description |
+|----------|-----------|-------------|
+| `raw_ext_fabric_ppr` | Fabric Connector | Paper Production Reporting (Reels, Rolls, Packages) |
+| `raw_ext_fabric_ppv` | Fabric Connector | Purchase Price Variance / Cost data |
+| `raw_ext_pi` | PI Extractor | Time series metadata |
+| `raw_ext_sap` | SAP OData | SAP master data (BP, Materials, Work Orders) |
+| `raw_ext_sql_proficy` | SQL Extractor | Proficy lab test results |
+| `raw_ext_sharepoint` | SharePoint Extractor | Documents and quality reports |
 
 ---
 
@@ -35,11 +53,11 @@ Data flows from source systems into CDF through a set of configured extractors:
 
 | Extractor | Source | Status | Data Target | Use Case |
 |-----------|--------|--------|-------------|----------|
-| **Fabric Connector** | Microsoft Fabric Lakehouse | ✅ Running | RAW: `raw_sylvamo_fabric` | UC1, UC2 |
-| **PI Extractor** | PI Server (S769PI01) | ✅ Running | Time Series | Process Data |
-| **SharePoint Extractor** | SharePoint Online | ✅ Running | RAW: `raw_sylvamo_pilot` | UC2 (Quality) |
-| **SAP OData Extractor** | SAP Gateway | ✅ Running | RAW: `raw_sylvamo_sap` | Master Data |
-| **SQL Extractor** | Proficy GBDB | ⏳ Configured | RAW: `raw_sylvamo_proficy` | UC2 (Lab) |
+| **Fabric Connector** | Microsoft Fabric Lakehouse | ✅ Running | `raw_ext_fabric_ppr`, `raw_ext_fabric_ppv` | UC1, UC2 |
+| **PI Extractor** | PI Server (S769PI01, S769PI03) | ✅ Running | Time Series, `raw_ext_pi` | Process Data |
+| **SharePoint Extractor** | SharePoint Online | ✅ Running | `raw_ext_sharepoint` | UC2 (Quality) |
+| **SAP OData Extractor** | SAP Gateway | ✅ Running | `raw_ext_sap` | Master Data |
+| **SQL Extractor** | Proficy GBDB | ⏳ Configured | `raw_ext_sql_proficy` | UC2 (Lab) |
 
 ---
 
@@ -69,35 +87,45 @@ cognite:
 source:
   abfss-prefix: "abfss://ws_enterprise_prod@onelake.dfs.fabric.microsoft.com/LH_SILVER_ppreo.Lakehouse"
   data-set-id: "2565293360230286"
+  read_batch_size: 100000  # IMPORTANT: Default is 1000 rows!
   
   raw-tables:
     # PPR Production Data
     - table-name: ppr_hist_reel
-      db-name: raw_sylvamo_fabric
+      db-name: raw_ext_fabric_ppr
       raw-path: "Tables/HIST_REEL"
     
     - table-name: ppr_hist_roll
-      db-name: raw_sylvamo_fabric
+      db-name: raw_ext_fabric_ppr
       raw-path: "Tables/HIST_ROLL"
     
     - table-name: ppr_hist_package
-      db-name: raw_sylvamo_fabric
+      db-name: raw_ext_fabric_ppr
       raw-path: "Tables/HIST_PACKAGE"
     
     # SAP Cost Data
     - table-name: ppv_snapshot
-      db-name: raw_sylvamo_fabric
+      db-name: raw_ext_fabric_ppv
       raw-path: "Tables/enterprise/ppv_snapshot"
 ```
+
+### Important: read_batch_size
+
+The Fabric connector has a **default limit of 1,000 rows**. Set `read_batch_size: 100000` to extract all data:
+
+| Table | Fabric Rows | Default Extract | With read_batch_size |
+|-------|-------------|-----------------|----------------------|
+| HIST_REEL | ~61,000 | 1,000 | 61,000 |
+| HIST_ROLL | ~200,000+ | 1,000 | All |
 
 ### Extracted Tables
 
 | Table | RAW Database | Records | Use Case |
 |-------|--------------|---------|----------|
-| `ppr_hist_reel` | `raw_sylvamo_fabric` | 100+ | UC2: Reel production |
-| `ppr_hist_roll` | `raw_sylvamo_fabric` | 19+ | UC2: Roll production |
-| `ppr_hist_package` | `raw_sylvamo_fabric` | 100+ | UC2: Package tracking |
-| `ppv_snapshot` | `raw_sylvamo_fabric` | 200+ | UC1: Material costs |
+| `ppr_hist_reel` | `raw_ext_fabric_ppr` | 61,000+ | UC2: Reel production |
+| `ppr_hist_roll` | `raw_ext_fabric_ppr` | 200,000+ | UC2: Roll production |
+| `ppr_hist_package` | `raw_ext_fabric_ppr` | 50,000+ | UC2: Package tracking |
+| `ppv_snapshot` | `raw_ext_fabric_ppv` | 200+ | UC1: Material costs |
 
 ### Service Principal
 
@@ -239,7 +267,8 @@ files:
 
 | RAW Table | Records | Purpose |
 |-----------|---------|---------|
-| `raw_sylvamo_pilot/sharepoint_roll_quality` | 21+ | Roll quality inspection reports |
+| `raw_ext_sharepoint/roll_quality` | 21+ | Roll quality inspection reports |
+| `raw_ext_sharepoint/documents` | - | General SharePoint documents |
 
 ### Service Principal
 
@@ -314,7 +343,7 @@ endpoints:
     sap-entity: BP_DetailsSet
     destination:
       type: raw
-      database: raw_sylvamo_sap
+      database: raw_ext_sap
       table: bp_details
     filter: "comp eq 'DS75'"
     sap-key:
@@ -383,7 +412,7 @@ try {
 
 - ✅ Gateway authentication working (COGNITE credentials accepted)
 - ✅ Backend RFC connection configured (SM59 bridge operational)
-- ✅ Data extraction to `raw_sylvamo_sap` active
+- ✅ Data extraction to `raw_ext_sap` active
 
 ---
 
@@ -416,7 +445,7 @@ source:
   
   queries:
     - name: tests
-      database: raw_sylvamo_proficy
+      database: raw_ext_sql_proficy
       table: tests
       query: |
         SELECT [Test_Id], [Canceled], [Result_On], [Entry_On], [Entry_By],
@@ -429,9 +458,9 @@ source:
 
 | GBDB Table | RAW Table | Purpose |
 |------------|-----------|---------|
-| `Tests` | `raw_sylvamo_proficy.tests` | Lab test results |
-| `Events` | `raw_sylvamo_proficy.events` | Production events |
-| `Samples` | `raw_sylvamo_proficy.samples` | Sample tracking |
+| `Tests` | `raw_ext_sql_proficy.tests` | Lab test results |
+| `Events` | `raw_ext_sql_proficy.events` | Production events |
+| `Samples` | `raw_ext_sql_proficy.samples` | Sample tracking |
 
 ### Service Principal
 
@@ -469,20 +498,29 @@ All service principals are members of Azure AD Group: `93463766-2320-429d-8736-e
 ```
 Extractor                 RAW Database                    Model Entity
 ─────────────────────────────────────────────────────────────────────────
-Fabric Connector    →     raw_sylvamo_fabric
-                            ├── ppv_snapshot         →    MaterialCostVariance
+Fabric Connector    →     raw_ext_fabric_ppr
                             ├── ppr_hist_reel        →    Reel
                             ├── ppr_hist_roll        →    Roll
                             └── ppr_hist_package     →    Package
 
-SharePoint Extractor →    raw_sylvamo_pilot
-                            └── sharepoint_roll_quality → QualityResult
+                    →     raw_ext_fabric_ppv
+                            └── ppv_snapshot         →    MaterialCostVariance
 
-SQL Extractor       →     raw_sylvamo_proficy
+SharePoint Extractor →    raw_ext_sharepoint
+                            └── roll_quality         →    QualityResult
+
+SQL Extractor       →     raw_ext_sql_proficy
                             └── tests                →    QualityResult (lab)
 
+SAP OData Extractor →     raw_ext_sap
+                            ├── bp_details           →    (Business Partners)
+                            ├── materials            →    (Material Master)
+                            └── work_orders          →    (Work Orders)
+
 PI Extractor        →     Time Series (sylvamo_assets)
-                            └── 75 tags              →    Process monitoring
+                            └── 75+ tags             →    Process monitoring
+                    →     raw_ext_pi
+                            └── *_metadata           →    Tag metadata
 ```
 
 ---
