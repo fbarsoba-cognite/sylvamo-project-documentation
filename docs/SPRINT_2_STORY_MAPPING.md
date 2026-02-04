@@ -5,6 +5,33 @@
 
 ---
 
+## Sprint 2 Demo Goal
+
+The Sprint 2 demo showcases the **CDF Search Experience** - enabling users to navigate from an Asset to all its related data in one place.
+
+### Target Experience
+
+```
+User searches for "Paper Machine 1" in CDF Search
+    └── Asset: PM1 (#1 Paper Machine)
+        ├── Events: Work orders, production events (filter by type)
+        ├── Time Series: PI scanner data, Proficy readings
+        ├── Files: P&IDs, engineering drawings
+        └── Child Assets: Winders, equipment hierarchy
+```
+
+### How Stories Enable This
+
+| Capability | Stories | What It Enables |
+|------------|---------|-----------------|
+| **Events on Assets** | SVQS-146, SVQS-148 | See work orders and production events when viewing PM1/PM2 |
+| **Event Filtering** | SVQS-145 | Filter events by type (maintenance vs. production) |
+| **Time Series on Assets** | SVQS-143 | See PI scanner data and Proficy readings on PM1/PM2 |
+| **Files on Assets** | SVQS-151, SVQS-152 | See P&IDs and documents when viewing Eastover Mill |
+| **P&ID Navigation** | SVQS-144 | Click equipment in P&ID → jump to asset (blocked) |
+
+---
+
 ## Story Status
 
 | Story | Description | Status | Notes |
