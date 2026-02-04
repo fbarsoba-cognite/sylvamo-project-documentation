@@ -212,10 +212,23 @@ Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 4. **Package** entity for inter-plant traceability (Sylvamo extension)
 5. **Recipe** entity following ISA-88 (general, site, master, control types)
 
+## Sprint 2 Plan (Current)
+
+**Sprint Duration:** February 2 - February 13, 2026
+
+| Workstream | Focus | Status |
+|------------|-------|--------|
+| Search Experience | Link Events, Files, TimeSeries to Assets | In Progress |
+| UC2 Data Quality | Reel/Roll scheduling, turnupTime, quality data | Investigation |
+| Data Completeness | PPR limits, Sumter assets, PPV source | Blocked (SAP freeze) |
+
+**[See Full Sprint 2 Plan →](docs/SPRINT_2_PLAN.md)**
+
 ## Documentation
 
 | Document | Description |
 |----------|-------------|
+| [**Sprint 2 Plan**](docs/SPRINT_2_PLAN.md) | Current sprint implementation plan with contextualization roadmap |
 | [**Guide for Stakeholders**](docs/DATA_MODEL_FOR_STAKEHOLDERS.md) | Non-technical overview with flow diagrams and business examples |
 | [**Data Model Walkthrough**](docs/DATA_MODEL_WALKTHROUGH.md) | Step-by-step example tracing paper from production to delivery |
 | [**Use Cases & Queries**](docs/USE_CASES_AND_QUERIES.md) | Verified use case scenarios with real data query examples |
@@ -346,4 +359,4 @@ Internal use only - Cognite/Sylvamo
 
 ---
 
-*Updated: January 29, 2026*
+*Updated: February 4, 2026*
