@@ -451,6 +451,38 @@ graph TD
 
 ---
 
+## Jira Stories (17 active)
+
+### Original Stories (Planning Meeting - Feb 2)
+
+| Jira Key | Summary |
+|----------|---------|
+| [SVQS-142](https://cognitedata.atlassian.net/browse/SVQS-142) | Deliver Data Model V1 to support Use Case 2 development |
+| [SVQS-143](https://cognitedata.atlassian.net/browse/SVQS-143) | Contextualize PI scanner tags for Use Case 2 |
+| [SVQS-144](https://cognitedata.atlassian.net/browse/SVQS-144) | Contextualize 2-3 P&ID documents (major equipment only) |
+| [SVQS-145](https://cognitedata.atlassian.net/browse/SVQS-145) | Add type field to Events for filtering in Search |
+| [SVQS-146](https://cognitedata.atlassian.net/browse/SVQS-146) | Contextualize work orders to major equipment assets |
+| [SVQS-147](https://cognitedata.atlassian.net/browse/SVQS-147) | Demonstrate Use Case 2 progress via Streamlit diagnostic app |
+
+### New Stories (Plan Breakdown - Feb 4)
+
+| Jira Key | Summary | Phase |
+|----------|---------|-------|
+| [SVQS-148](https://cognitedata.atlassian.net/browse/SVQS-148) | Contextualize Proficy Events to Paper Machine Assets | Phase 1 |
+| ~~SVQS-149~~ | ~~Enable WorkOrder Extended Asset Relation~~ | **DUPLICATE of SVQS-146** |
+| [SVQS-150](https://cognitedata.atlassian.net/browse/SVQS-150) | Enable ProductionEvent Asset Relation (mfg_extended) | Phase 1 |
+| [SVQS-151](https://cognitedata.atlassian.net/browse/SVQS-151) | Add Files Reverse Relation to Asset View | Phase 3 |
+| [SVQS-152](https://cognitedata.atlassian.net/browse/SVQS-152) | Link Files to Assets via Metadata Parsing | Phase 3 |
+| [SVQS-153](https://cognitedata.atlassian.net/browse/SVQS-153) | UC2: Add Schedule for Reel/Roll Transformations | Phase 5 |
+| [SVQS-154](https://cognitedata.atlassian.net/browse/SVQS-154) | UC2: Investigate turnupTime Property | Phase 5 |
+| [SVQS-155](https://cognitedata.atlassian.net/browse/SVQS-155) | Data Completeness: Fix PPR Roll Extractor Limit | Phase 6 |
+| [SVQS-156](https://cognitedata.atlassian.net/browse/SVQS-156) | Data Completeness: Add Missing PPR Tables | Phase 6 |
+| [SVQS-157](https://cognitedata.atlassian.net/browse/SVQS-157) | Data Completeness: Add Sumter Assets | Phase 6 |
+| [SVQS-158](https://cognitedata.atlassian.net/browse/SVQS-158) | Data Completeness: Add Asset Search Field | Phase 6 |
+| [SVQS-159](https://cognitedata.atlassian.net/browse/SVQS-159) | Validate Search Experience: End-to-End Demo | Phase 4 |
+
+---
+
 ## Meeting References
 
 - Sprint 2 Planning: Feb 2, 2026

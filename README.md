@@ -222,13 +222,14 @@ Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 | UC2 Data Quality | Reel/Roll scheduling, turnupTime, quality data | Investigation |
 | Data Completeness | PPR limits, Sumter assets, PPV source | Blocked (SAP freeze) |
 
-**[See Full Sprint 2 Plan →](docs/SPRINT_2_PLAN.md)**
+**[See Full Sprint 2 Plan →](docs/SPRINT_2_PLAN.md)** | **[Story Mapping →](docs/SPRINT_2_STORY_MAPPING.md)**
 
 ## Documentation
 
 | Document | Description |
 |----------|-------------|
 | [**Sprint 2 Plan**](docs/SPRINT_2_PLAN.md) | Current sprint implementation plan with contextualization roadmap |
+| [**Sprint 2 Story Mapping**](docs/SPRINT_2_STORY_MAPPING.md) | Mapping between plan phases and Jira stories (17 active) |
 | [**Guide for Stakeholders**](docs/DATA_MODEL_FOR_STAKEHOLDERS.md) | Non-technical overview with flow diagrams and business examples |
 | [**Data Model Walkthrough**](docs/DATA_MODEL_WALKTHROUGH.md) | Step-by-step example tracing paper from production to delivery |
 | [**Use Cases & Queries**](docs/USE_CASES_AND_QUERIES.md) | Verified use case scenarios with real data query examples |
