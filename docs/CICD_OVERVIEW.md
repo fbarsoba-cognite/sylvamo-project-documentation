@@ -4,6 +4,16 @@
 
 ---
 
+> **TL;DR - The Big Picture**
+> 
+> - CDF is a cloud service (like Salesforce or Snowflake) - we deploy to it using a CLI tool
+> - The CLI tool is called **Cognite Toolkit** (`cdf` command)
+> - We run `cdf build` to validate, `cdf deploy --dry-run` to preview, `cdf deploy` to apply
+> - Authentication uses a **service principal** (like a robot account) with client ID + secret
+> - Secrets are stored in **ADO Variable Groups** and injected into pipelines automatically
+
+---
+
 ## Sylvamo Repository
 
 The Toolkit configuration for Sylvamo is managed in Azure DevOps:
@@ -30,6 +40,10 @@ CDF is an **external SaaS endpoint**:
 - Pipelines connect via **HTTPS** using **OAuth2 client credentials**
 - Treat it like any external API with a CLI deploy tool
 
+> **Key Point: What does this mean?**
+> 
+> Think of CDF like deploying to AWS or Azure - it's just an API endpoint in the cloud. Your pipeline authenticates with credentials, then sends commands to create/update resources. Nothing runs "inside" your network.
+
 ---
 
 ## The CI/CD Tech Stack
@@ -47,6 +61,10 @@ CDF is an **external SaaS endpoint**:
 - GitLab CI/CD → `.gitlab-ci.yml`
 
 **Languages:** Python (CLI runtime), YAML (configs + pipelines)
+
+> **Key Point: What do I need to know?**
+> 
+> You don't need to write Python code. The Toolkit is a pre-built CLI - you just call it from your pipeline. All configuration is in YAML files.
 
 ---
 
@@ -68,6 +86,10 @@ CDF is an **external SaaS endpoint**:
 - Which modules to deploy (`selected:` list)
 
 **Created via:** `cdf modules init <organization_dir>`
+
+> **Key Point: One repo, multiple environments**
+> 
+> The same code deploys to dev, staging, and prod. The only difference is which `config.<env>.yaml` file is used - each points to a different CDF project.
 
 ---
 
@@ -101,6 +123,13 @@ CDF is an **external SaaS endpoint**:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+> **Key Point: Two-step safety net**
+> 
+> 1. **PR stage:** `--dry-run` shows what WOULD change (like `terraform plan`)
+> 2. **Merge stage:** `deploy` actually applies changes (like `terraform apply`)
+> 
+> Nothing changes in CDF until code is merged to main.
+
 ---
 
 ## Authentication Model
@@ -127,6 +156,15 @@ SylvamoCorp Project → Variable Groups (project-level):
 Secret values marked as **secret** in ADO → injected as env vars at pipeline runtime.
 
 > **Note:** Sylvamo stores credentials at the **project level** in the SylvamoCorp ADO project, making them available to all pipelines in the Industrial-Data-Landscape-IDL repository.
+
+> **Key Point: How authentication works**
+> 
+> 1. ADO stores credentials in a **Variable Group** (like a secure key-value store)
+> 2. Pipeline links to that Variable Group
+> 3. ADO automatically injects the values as **environment variables** when the job runs
+> 4. The `cdf` CLI reads those env vars to authenticate
+> 
+> You never see the secrets in code - they're injected at runtime.
 
 ---
 
@@ -155,6 +193,11 @@ Pipeline Step          Pipeline Step          Pipeline Step
 
 Toolkit uses `${VAR_NAME}` placeholders in YAML configs.
 
+> **Key Point: Which option to use?**
+> 
+> - **Option A (Variable Groups):** Simpler, good for most cases. Sylvamo uses this.
+> - **Option B (Key Vault):** More complex, but better if you have centralized secret management policies requiring Key Vault.
+
 ---
 
 ## Key Takeaways for Platform Teams
@@ -174,6 +217,10 @@ Toolkit uses `${VAR_NAME}` placeholders in YAML configs.
 ---
 
 ## Sample ADO Pipeline (Dry-Run)
+
+> **What this pipeline does:**
+> 
+> Runs on every PR to validate changes before merge. If it fails, the PR cannot be merged.
 
 ```yaml
 trigger:
@@ -199,6 +246,10 @@ steps:
 ---
 
 ## Sample ADO Pipeline (Deploy)
+
+> **What this pipeline does:**
+> 
+> Runs automatically when code is merged to main. Actually deploys changes to CDF.
 
 ```yaml
 trigger:
