@@ -4,6 +4,16 @@
 
 ---
 
+## Sylvamo Repository
+
+The Toolkit configuration for Sylvamo is managed in Azure DevOps:
+
+**[Industrial-Data-Landscape-IDL](https://dev.azure.com/SylvamoCorp/_git/Industrial-Data-Landscape-IDL)**
+
+Credentials are stored as **project-level Variable Groups** in the SylvamoCorp ADO project.
+
+---
+
 ## What is CDF from a CI/CD Perspective?
 
 CDF is an **external SaaS endpoint**:
@@ -106,15 +116,17 @@ CDF is an **external SaaS endpoint**:
 | `IDP_CLIENT_SECRET` | Service Principal Secret |
 | `IDP_TENANT_ID` | Entra ID Tenant |
 
-**Azure DevOps pattern:**
+**Sylvamo ADO Configuration:**
 ```
-Variable Groups (per environment):
+SylvamoCorp Project → Variable Groups (project-level):
   ├── dev-toolkit-credentials
   ├── staging-toolkit-credentials
   └── prod-toolkit-credentials
 ```
 
-Secret values marked as **secret** in ADO → injected as env vars at runtime.
+Secret values marked as **secret** in ADO → injected as env vars at pipeline runtime.
+
+> **Note:** Sylvamo stores credentials at the **project level** in the SylvamoCorp ADO project, making them available to all pipelines in the Industrial-Data-Landscape-IDL repository.
 
 ---
 

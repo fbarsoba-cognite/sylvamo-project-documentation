@@ -344,6 +344,8 @@ flowchart LR
 
 CDF is deployed using the **Cognite Toolkit CLI** (`cdf`) through standard CI/CD pipelines.
 
+**Sylvamo Repository:** [Industrial-Data-Landscape-IDL](https://dev.azure.com/SylvamoCorp/_git/Industrial-Data-Landscape-IDL) (Azure DevOps)
+
 ### Tech Stack
 
 | Component | Technology |
@@ -384,7 +386,7 @@ Pipelines authenticate via **OAuth2 client credentials** (Entra ID service princ
 | `IDP_CLIENT_SECRET` | Service Principal Secret |
 | `IDP_TENANT_ID` | Entra ID Tenant |
 
-Secrets stored in ADO Variable Groups or Azure Key Vault, injected as env vars at runtime.
+Secrets stored in **project-level Variable Groups** in the SylvamoCorp ADO project, injected as env vars at runtime.
 
 **[See Full CI/CD Documentation →](docs/CICD_OVERVIEW.md)**
 
