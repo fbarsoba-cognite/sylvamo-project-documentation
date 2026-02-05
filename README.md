@@ -248,6 +248,7 @@ Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 | [**Data Model Walkthrough**](docs/DATA_MODEL_WALKTHROUGH.md) | Step-by-step example tracing paper from production to delivery |
 | [**Use Cases & Queries**](docs/USE_CASES_AND_QUERIES.md) | Verified use case scenarios with real data query examples |
 | [**Extractors**](docs/EXTRACTORS.md) | Extractor configurations and status (Fabric, PI, SharePoint, SQL) |
+| [**CI/CD Overview**](docs/CICD_OVERVIEW.md) | CI/CD pipeline setup for CDF deployments (ADO, GitHub, GitLab) |
 | [**Data Pipeline & Sources**](docs/DATA_PIPELINE_AND_SOURCES.md) | Data sources, transformations, and refresh schedules |
 | [**Data Model Specification**](docs/DATA_MODEL_SPECIFICATION.md) | Complete spec with all containers, properties, and examples |
 | [Data Model Diagram](docs/SYLVAMO_MFG_DATA_MODEL_DIAGRAM.md) | Visual diagrams with Mermaid |
@@ -338,6 +339,54 @@ flowchart LR
 | SharePoint | `raw_ext_sharepoint/roll_quality` | QualityResult |
 
 **[See Full Data Pipeline Documentation →](docs/DATA_PIPELINE_AND_SOURCES.md)**
+
+## CI/CD for CDF
+
+CDF is deployed using the **Cognite Toolkit CLI** (`cdf`) through standard CI/CD pipelines.
+
+### Tech Stack
+
+| Component | Technology |
+|-----------|------------|
+| **Deploy Tool** | Cognite Toolkit CLI (`cdf`) |
+| **Package** | `cognite-toolkit` (pip) or Docker `cognite/toolkit:<version>` |
+| **Key Commands** | `cdf build`, `cdf deploy --dry-run`, `cdf deploy` |
+| **Platforms** | GitHub Actions, Azure DevOps, GitLab CI/CD |
+
+### CI/CD Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  FEATURE BRANCH (PR)                                            │
+│    cdf build → cdf deploy --dry-run                             │
+│    ✓ Validates config, shows what WOULD change                  │
+└─────────────────────────────────────────────────────────────────┘
+                              │ merge
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  MAIN BRANCH                                                    │
+│    cdf build → cdf deploy                                       │
+│    ✓ Applies changes to CDF                                     │
+│    Environment promotion: DEV → STAGING → PROD (with approvals) │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Authentication
+
+Pipelines authenticate via **OAuth2 client credentials** (Entra ID service principal):
+
+| Environment Variable | Description |
+|---------------------|-------------|
+| `LOGIN_FLOW` | `client_credentials` |
+| `CDF_CLUSTER` | e.g., `westeurope-1` |
+| `CDF_PROJECT` | e.g., `sylvamo-dev` |
+| `IDP_CLIENT_ID` | Service Principal App ID |
+| `IDP_CLIENT_SECRET` | Service Principal Secret |
+| `IDP_TENANT_ID` | Entra ID Tenant |
+
+Secrets stored in ADO Variable Groups or Azure Key Vault, injected as env vars at runtime.
+
+**[See Full CI/CD Documentation →](docs/CICD_OVERVIEW.md)**
 
 ## Real Data Statistics
 
