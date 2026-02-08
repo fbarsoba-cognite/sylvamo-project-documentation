@@ -285,8 +285,6 @@ For more detailed information, see:
 - **[CI/CD System Explanation](CICD_SYSTEM_EXPLANATION.md)** - Comprehensive guide on how the CI/CD system works, use case, code flow, and pipeline details
 - **[ADO Pipeline Setup](ADO_PIPELINE_SETUP.md)** - Implementation summary, setup steps, and manual configuration guide
 - **[Clone ADO Repository](ADO_CLONE_REPO.md)** - Programmatic repository cloning guide
-- **[CI/CD Testing Guide](CICD_TESTING_GUIDE.md)** - Step-by-step guide for testing pipelines, code promotion, and validating deployments across dev, staging, and production
-- **[CI/CD Testing Guide](CICD_TESTING_GUIDE.md)** - Step-by-step guide for testing pipelines, code promotion, and validating deployments across dev, staging, and production
 
 ---
 
