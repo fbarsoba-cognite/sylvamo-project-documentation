@@ -106,216 +106,73 @@ This section documents the Microsoft Fabric workspaces and lakehouses that serve
 
 ## 3. Source Systems & Full Pipeline Mapping
 
-> Each subsection below covers one source system end-to-end: extractor info, connection details, and every table with its transformation and data model target — all in one place.
+> **One table to rule them all.** Every RAW table in one flat view — source system, extractor, raw location, transformation, and data model target. Scroll or Ctrl+F to find anything.
 
 ### Legend
-- ✅ = Complete and working
-- 🔶 = Partial / needs validation
-- ❌ = Missing / not implemented
-- 🔲 = Planned / not started
-- ❓ = Unknown / needs investigation
-- ⚠️ = RAW database naming inconsistency — see [Section 6](#6-raw-database-naming-issues)
 
----
+✅ End-to-end | 🔶 Partial / issues | ❌ Missing | 🔲 Planned | ❓ Unknown | ⚠️ DB naming issue ([Section 6](#6-raw-database-naming-issues))
 
-### 3.1 Fabric — PPR Production Data (LH_SILVER_ppreo → raw_ext_fabric_ppr)
+### Master Pipeline Table
 
-| | |
-|---|---|
-| **Source System** | Microsoft Fabric Lakehouse (PPR) |
-| **System Type** | Lakehouse |
-| **Extractor** | `fabric-connector-ppr` |
-| **Extractor Status** | ✅ Running |
-| **Service Principal** | `sp-cdf-fabric-extractor-dev` (`73a40d42-8cf4-4048-80d1-54c8d28cb58d`) |
-| **RAW Database** | `raw_ext_fabric_ppr` ⚠️ (some configs still write to old `raw_sylvamo_fabric`) |
-| **Workspace** | `ws_enterprise_prod` |
-| **Lakehouse** | `LH_SILVER_ppreo` |
-| **ABFSS** | `abfss://ws_enterprise_prod@onelake.dfs.fabric.microsoft.com/LH_SILVER_ppreo.Lakehouse` |
-| **CDF Dataset ID** | `2565293360230286` |
+| # | Source System | Extractor | Ext. Status | RAW Database | RAW Table | Description | Expected Rows | Transformation | Target View | Pipeline Status | Notes |
+|---|-------------|-----------|-------------|-------------|-----------|-------------|---------------|----------------|-------------|-----------------|-------|
+| | **FABRIC — PPR** (LH_SILVER_ppreo, `ws_enterprise_prod`) | | | | | | | | | | **SP:** `sp-cdf-fabric-extractor-dev` |
+| 1 | Fabric (PPR) | `fabric-connector-ppr` | ✅ Running | ⚠️ `raw_sylvamo_fabric` → should be `raw_ext_fabric_ppr` | `ppr_hist_reel` | Reel production history — parent unit (reel_number, manufactured_date, basis_weight, caliper, moisture, weight, status) | ~61,000 | `populate_Reel` | `Reel` (mfg_core) | 🔶 DB mismatch | Config writes to wrong DB |
+| 2 | Fabric (PPR) | `fabric-connector-ppr` | ✅ Running | `raw_ext_fabric_ppr` ✅ | `ppr_hist_roll` | Roll history — child of reel (roll_number, reel_number, basis_weight, caliper, width, weight, producing_machine) | ~2,300,000 | `populate_Roll` | `Roll` (mfg_core) | ✅ End-to-end | md5-key + incremental-field. SVQS-155 resolved |
+| 3 | Fabric (PPR) | `fabric-connector-ppr` | ✅ Running | ⚠️ `raw_sylvamo_fabric` | `ppr_hist_package` | Package/shipping units (package_number, rolls_in_package, assembled_date, ship_date, inventory_point) | ~50,000 | ❌ None | ❌ None | 🔶 Extractor only | **GAP:** Package view exists in mfg_data |
+| 4 | Fabric (PPR) | `fabric-connector-ppr` | ✅ Running | ⚠️ `raw_sylvamo_fabric` | `ppr_hist_roll_quality` | Roll quality measurements and test results (quality metrics, flags) | ❓ | ❌ None | ❌ None | 🔶 Extractor only | Trailing space in Fabric table name! Different from SP `roll_quality` |
+| 5 | Fabric (PPR) | `fabric-connector-ppr` | ✅ Running | ⚠️ `raw_sylvamo_fabric` | `ppr_hist_blend` | Blend/recipe compositions (blend compositions, material mix ratios) | ❓ | ❌ None | ❌ None | 🔶 Extractor only | Could map to `Recipe` in mfg_data? |
+| 6 | Fabric (PPR) | `fabric-connector-ppr` | ✅ Running | ⚠️ `raw_sylvamo_fabric` | `ppr_hist_material` | Material info from PPR (material codes, descriptions) | ❓ | ❌ None | ❌ None | 🔶 Extractor only | Overlaps with SAP `materials` |
+| 7 | Fabric (PPR) | `fabric-connector-ppr` | ✅ Running | ⚠️ `raw_sylvamo_fabric` | `ppr_hist_order_item` | Customer order line items (order items, customer order references) | ❓ | ❌ None | ❌ None | 🔶 Extractor only | Could relate to shipments/trends (SOW) |
+| 8 | Fabric (PPR) | `fabric-connector-ppr` | ✅ Running | ⚠️ `raw_sylvamo_fabric` | `ppr_production_total` | Aggregated production metrics (daily/shift summaries) | ❓ | ❌ None | ❌ None | 🔶 Extractor only | Reporting/KPI data |
+| 9 | Fabric (PPR) | `fabric-connector-ppr` | ✅ Running | ⚠️ `raw_sylvamo_fabric` | `ppr_mill` | Mill reference data (mill codes, names, locations) | ❓ | ❌ None | ❌ None | 🔶 Extractor only | Dimension table for lookups |
+| | **FABRIC — PPV** (LH_SILVER_ppreo, `ws_enterprise_prod`) | | | | | | | | | | **SP:** `sp-cdf-fabric-extractor-dev` |
+| 10 | Fabric (PPV) | `fabric-connector-ppv` | ✅ Running | `raw_ext_fabric_ppv` ✅ | `ppv_snapshot` | Material cost / purchase price variance (material, description, type, plant, standard_cost, ppv, snapshot_date) | ~200+ | `populate_Event_PPV` | `Event` (mfg_core) | ✅ End-to-end | |
+| 11 | Fabric (PPV) | `fabric-connector-ppv` | ✅ Running | `raw_ext_fabric_ppv` ✅ | `ppv_snapshot` | *(same table, second transform)* | *(same)* | `populate_CostEvent` | `CostEvent` (mfg_ext) | ✅ End-to-end | Extended view |
+| | **FABRIC — SAP ECC** (lh_gold_pm + LH_SILVER_sapecc) | | | | | | | | | | **SP:** `sp-cdf-fabric-extractor-dev`. Plants: 0769=Eastover, 0519=Sumter |
+| 12 | Fabric (SAP ECC) | `fabric-connector-sapecc` | ✅ DONE | `raw_ext_fabric_sapecc` ✅ | `sapecc_work_orders` | SAP Work Order List — IW28 transaction (all plants, filter in transform) | ~407,000 | `populate_Event_WorkOrders` | `Event` (mfg_core) | ✅ End-to-end | Extracted 2026-02-03 from lh_gold_pm |
+| 13 | Fabric (SAP ECC) | `fabric-connector-sapecc` | ✅ DONE | `raw_ext_fabric_sapecc` ✅ | `sapecc_work_orders` | *(same table, second transform)* | *(same)* | `populate_WorkOrder` | `WorkOrder` (mfg_ext) | ✅ End-to-end | Extended view |
+| 14 | Fabric (SAP ECC) | `fabric-connector-sapecc` | ✅ DONE | `raw_ext_fabric_sapecc` ✅ | `sapecc_aufk` | Order Master Data — AUFNR, WERKS, KTEXT, AUTYP | ~4,500,000 | ❌ (used in join) | `Operation` (pending) | 🔶 Needs join transform | From LH_SILVER_sapecc (DEV) |
+| 15 | Fabric (SAP ECC) | `fabric-connector-sapecc` | ✅ DONE | `raw_ext_fabric_sapecc` ✅ | `sapecc_afko` | Order Header Data — AUFNR, AUFPL (links AUFK↔AFVC) | ~4,500,000 | ❌ (used in join) | `Operation` (pending) | 🔶 Needs join transform | From LH_SILVER_sapecc (DEV) |
+| 16 | Fabric (SAP ECC) | `fabric-connector-sapecc` | 🔶 In Progress | `raw_ext_fabric_sapecc` | `sapecc_afvc` | Order Operations — AUFPL, VORNR, STEUS, LTXA1 | ~7,200,000 | ❌ (used in join) | `Operation` (mfg_ext) | 🔶 Extraction in progress | From LH_SILVER_sapecc (DEV) |
+| | **SAP GATEWAY (OData)** | | | | | | | | | | **SP:** `sp-cdf-sap-extractor-dev`. Gateway: `sapsgvci.sylvamo.com:8075` |
+| 17 | SAP Gateway | `sap-odata-extractor` | ✅ Running | ⚠️ `raw_sylvamo_sap` → should be `raw_ext_sap` | `bp_details` | Business Partner / Customer details (filter: comp eq 'DS75') | ❓ | ❌ None | ❌ None | 🔶 Extracted, unused | DB naming mismatch |
+| 18 | SAP Gateway | `sap-odata-extractor` | ✅ Running | `raw_ext_sap` | `asset_hierarchy` | SAP Functional Locations — asset tree (may be split: `sap_floc_eastover` + `sap_floc_sumter`) | ❓ | `populate_Asset` | `Asset` (mfg_core) | ✅ End-to-end | Verify actual RAW table names |
+| 19 | SAP Gateway | `sap-odata-extractor` | ✅ Running | `raw_ext_sap` | `materials` | Material master data (material codes, descriptions) | ❓ | `populate_Material` | `Material` (mfg_core) | ✅ End-to-end | |
+| 20 | SAP Gateway | `sap-odata-extractor` | ✅ Running | `raw_ext_sap` | `work_orders` | Work orders via OData | ❓ | ❌ (superseded?) | — | ❓ Superseded? | Replaced by `sapecc_work_orders` from Fabric? |
+| 21 | SAP Gateway | `sap-odata-extractor` | ✅ Running | `raw_ext_sap` | `production_orders` | Production orders | ❓ | `populate_Event_ProductionOrders`, `populate_ProductionOrder` | `Event`, `ProductionOrder` | ✅ End-to-end | From lakehouse |
+| | **PROFICY GBDB** (SQL Server) | | | | | | | | | | **SP:** `sp-cdf-sql-extractor-dev`. ODBC Driver 17 |
+| 22 | Proficy GBDB | `sql-extractor-proficy` | ✅ Running | `raw_ext_sql_proficy` | `events_tests` | Production events + test results (actual Proficy readings) | ❓ | `populate_Event_Proficy` | `Event` (mfg_core) | ✅ End-to-end | |
+| 23 | Proficy GBDB | `sql-extractor-proficy` | ✅ Running | `raw_ext_sql_proficy` | `events_tests` | *(same table)* | *(same)* | `populate_ProductionEvent` | `ProductionEvent` (mfg_ext) | ✅ End-to-end | Extended view |
+| 24 | Proficy GBDB | `sql-extractor-proficy` | ✅ Running | `raw_ext_sql_proficy` | `events_tests` | *(same table)* | *(same)* | `populate_ProficyDatapoints` | Time Series Datapoints | ✅ End-to-end | Readings as TS |
+| 25 | Proficy GBDB | `sql-extractor-proficy` | ✅ Running | `raw_ext_sql_proficy` | `tag_info` | Tag/sensor metadata (tag names, units, descriptions) | ❓ | `create_ProficyTimeSeries_CDF`, `populate_ProficyTimeSeries` | CDF TS, `MfgTimeSeries` (mfg_core) | ✅ End-to-end | |
+| 26 | Proficy GBDB | `sql-extractor-proficy` | ✅ Running | `raw_ext_sql_proficy` | `tests` | Lab test definitions (Test_Id, Sample_Id, Var_Id, Event_Num, Result) | ❓ | ❌ None | ❌ None | 🔶 Extractor only | Could map to `LabTest` in mfg_data |
+| 27 | Proficy GBDB | `sql-extractor-proficy` | ✅ Running | `raw_ext_sql_proficy` | `samples` | Sample tracking data (sample metadata) | ❓ | ❌ None | ❌ None | 🔶 Extractor only | Could map to `LabTest` in mfg_data |
+| 28 | Proficy GBDB | `sql-extractor-proficy` | ✅ Running | `raw_ext_sql_proficy` | `key_columns` | GBDB key column metadata | ❓ | ❌ None | ❌ None | 🔶 Extracted | Internal metadata — likely not needed |
+| 29 | Proficy GBDB | `sql-extractor-proficy` | ✅ Running | `raw_ext_sql_proficy` | `event_tables` | GBDB event table metadata | ❓ | ❌ None | ❌ None | 🔶 Extracted | Internal metadata — likely not needed |
+| 30 | Proficy GBDB | `sql-extractor-proficy` | ✅ Running | `raw_ext_sql_proficy` | `all_tables` | GBDB all table metadata | ❓ | ❌ None | ❌ None | 🔶 Extracted | Internal metadata — likely not needed |
+| | **PI SERVERS** (Historians) | | | | | | | | | | **SP:** `sp-cdf-pi-extractor-dev`. TS space: `sylvamo_assets`. Backfill: 365d |
+| 31 | PI (Eastover) | `pi-extractor-eastover` | ✅ Running | `raw_ext_pi` | `s769pi01_metadata` | PI tag metadata — S769PI01.sylvamo.com (~75 tags: levels, O2 reactor, temp, bleach) | ~75 tags | `populate_TimeSeries` | `MfgTimeSeries` (mfg_core) | ✅ TS direct to CDF | Investigate metadata table usefulness |
+| 32 | PI (PM) | `pi-extractor-pm` | ✅ Running | `raw_ext_pi` | `s769pi03_metadata` | PI tag metadata — S769PI03 | ❓ | `populate_TimeSeries` | `MfgTimeSeries` (mfg_core) | ✅ TS direct to CDF | "Not relevant data?" — needs review |
+| 33 | PI (S519) | `pi-extractor-s519` | ✅ Running | `raw_ext_pi` | `s519pip1_metadata` | PI tag metadata — S519PIP1 (Sheeters) | ❓ | `populate_TimeSeries` | `MfgTimeSeries` (mfg_core) | ✅ TS direct to CDF | **Is this Sumter?** Missing data reported |
+| | **SHAREPOINT ONLINE** | | | | | | | | | | **SP:** `sp-cdf-file-extractor-dev`. Site: Sumter/Shared Documents |
+| 34 | SharePoint | `sharepoint-extractor` | ✅ Running | `raw_ext_sharepoint` | `documents` | SharePoint files (shift reports, SOPs, KOPs, manuals, P&IDs, TCCs) | ❓ | `populate_Files` (via `_cdf.files`) | `CogniteFile` (CDM) | 🔶 Indirect | Marked "duplicate" — clarify |
+| 35 | SharePoint | `sharepoint-extractor` | ✅ Running | `raw_ext_sharepoint` | `roll_quality` | Roll quality inspection reports (roll ID, defect code, rejected?, location, inspector) | 21+ | `populate_RollQuality` | `RollQuality` (mfg_core) | ✅ End-to-end | Different from PPR `ppr_hist_roll_quality` |
 
-| Fabric Table | RAW Table Name | RAW Database | Description | Expected Rows | Transformation | Target View(s) | Pipeline Status | Notes |
-|-------------|---------------|-------------|-------------|---------------|----------------|-----------------|-----------------|-------|
-| `HIST_REEL` | `ppr_hist_reel` | ⚠️ `raw_sylvamo_fabric` (old config) / `raw_ext_fabric_ppr` (expected) | Reel production history — parent unit. Contains: reel_number, manufactured_date, basis_weight, caliper, moisture, weight, status, width, diameter | ~61,000 | `populate_Reel` | `Reel` (mfg_core) | 🔶 **DB name mismatch** | Old config writes to `raw_sylvamo_fabric`, transforms read `raw_ext_fabric_ppr` |
-| `HIST_ROLL` | `ppr_hist_roll` | `raw_ext_fabric_ppr` ✅ | Roll production history — child of reel, cut from parent. Contains: roll_number, reel_number (parent), basis_weight, caliper, width, weight, producing_machine, manufacturing_date | ~2,300,000 | `populate_Roll` | `Roll` (mfg_core) | ✅ End-to-end | Full extraction config uses `md5-key: true` + `incremental-field: ROLL_MANUFACTURING_DATE`. SVQS-155 resolved. |
-| `HIST_PACKAGE` | `ppr_hist_package` | ⚠️ `raw_sylvamo_fabric` (old config) | Package/shipping units. Contains: package_number, rolls_in_package, assembled_date, ship_date, inventory_point | ~50,000 | ❌ No transformation | ❌ No target view | 🔶 Extractor only | **GAP:** `Package` view exists in mfg_data but no transform wired |
-| `HIST_ROLL_QUALITY` | `ppr_hist_roll_quality` | ⚠️ `raw_sylvamo_fabric` (old config) | Roll quality measurements and test results. Contains: quality metrics, test results, flags | ❓ | ❌ No transformation | ❌ No target view | 🔶 Extractor only | **Note:** Fabric table name has trailing space! Different from SharePoint `roll_quality` |
-| `HIST_BLEND` | `ppr_hist_blend` | ⚠️ `raw_sylvamo_fabric` (old config) | Blend/recipe compositions. Contains: blend compositions, material mix ratios | ❓ | ❌ No transformation | ❌ No target view | 🔶 Extractor only | Could map to `Recipe` in mfg_data? |
-| `HIST_MATERIAL` | `ppr_hist_material` | ⚠️ `raw_sylvamo_fabric` (old config) | Material information from PPR. Contains: material codes, descriptions | ❓ | ❌ No transformation | ❌ No target view | 🔶 Extractor only | Overlaps with SAP `materials` — which is source-of-truth? |
-| `HIST_ORDER_ITEM` | `ppr_hist_order_item` | ⚠️ `raw_sylvamo_fabric` (old config) | Customer order line items. Contains: order items, customer order references | ❓ | ❌ No transformation | ❌ No target view | 🔶 Extractor only | Could relate to shipments/trends (SOW)? |
-| `PRODUCTION_TOTAL` | `ppr_production_total` | ⚠️ `raw_sylvamo_fabric` (old config) | Aggregated production metrics. Contains: daily/shift production summaries | ❓ | ❌ No transformation | ❌ No target view | 🔶 Extractor only | Reporting/KPI data |
-| `MILL` | `ppr_mill` | ⚠️ `raw_sylvamo_fabric` (old config) | Mill reference/dimension data. Contains: mill codes, names, locations | ❓ | ❌ No transformation | ❌ No target view | 🔶 Extractor only | Dimension table for lookups |
+### Pipeline Summary
 
-**Summary:** Only **2 of 9** PPR tables have transformations (`ppr_hist_reel`, `ppr_hist_roll`). Of those, only `ppr_hist_roll` uses the correct RAW DB name. The `ppr_hist_reel` config still writes to the old `raw_sylvamo_fabric` database.
+| Status | Count | Details |
+|--------|-------|---------|
+| ✅ End-to-end | 15 | Full pipeline: extractor → RAW → transform → model |
+| 🔶 Partial | 16 | Extracted but: wrong DB (⚠️), no transform, or transform pending |
+| ❌ Missing | 0 | — |
+| 🔲 Planned | 0 | — |
+| ❓ Unknown | 1 | `work_orders` via OData — possibly superseded |
 
-**Join Key to Proficy:** PPR `reel_number` (e.g., EM0010126020) → `substring(reel_number, 5)` maps to Proficy `Event_Num` (e.g., 25-011217025). See: `PPR_PROFICY_NAMING_CONVENTION.md`
-
----
-
-### 3.2 Fabric — PPV Cost Data (LH_SILVER_ppreo → raw_ext_fabric_ppv)
-
-| | |
-|---|---|
-| **Source System** | Microsoft Fabric Lakehouse (PPV) |
-| **System Type** | Lakehouse |
-| **Extractor** | `fabric-connector-ppv` |
-| **Extractor Status** | ✅ Running |
-| **Service Principal** | `sp-cdf-fabric-extractor-dev` (`73a40d42-8cf4-4048-80d1-54c8d28cb58d`) |
-| **RAW Database** | `raw_ext_fabric_ppv` |
-| **Workspace / Lakehouse** | `ws_enterprise_prod` / `LH_SILVER_ppreo` |
-| **Fabric Path** | `Tables/enterprise/ppv_snapshot` |
-
-| Fabric Table | RAW Table Name | RAW Database | Description | Expected Rows | Transformation | Target View(s) | Pipeline Status | Notes |
-|-------------|---------------|-------------|-------------|---------------|----------------|-----------------|-----------------|-------|
-| `enterprise/ppv_snapshot` | `ppv_snapshot` | `raw_ext_fabric_ppv` ✅ | Material cost and purchase price variance. Contains: material, material_description, material_type, plant, gl_account, current/prior quantity, standard_cost, unit_cost, ppv, snapshot_date, surrogate_key | ~200+ | `populate_Event_PPV` (mfg_core) | `Event` (mfg_core) | ✅ End-to-end | |
-| | | | | | `populate_CostEvent` (mfg_ext) | `CostEvent` (mfg_ext) | ✅ End-to-end | Extended view |
-
-**Summary:** Full coverage. Single table mapped to both core and extended models.
-
----
-
-### 3.3 Fabric — SAP ECC Work Orders & Operations (lh_gold_pm + LH_SILVER_sapecc → raw_ext_fabric_sapecc)
-
-| | |
-|---|---|
-| **Source System** | Microsoft Fabric Lakehouse (SAP ECC) |
-| **System Type** | Lakehouse |
-| **Extractor** | `fabric-connector-sapecc` |
-| **Extractor Status** | ✅ DONE (iw28, AUFK, AFKO) / 🔶 In Progress (AFVC) |
-| **Service Principal** | `sp-cdf-fabric-extractor-dev` (`73a40d42-8cf4-4048-80d1-54c8d28cb58d`) |
-| **RAW Database** | `raw_ext_fabric_sapecc` |
-| **Source 1 (IW28)** | CoE workspace / `lh_gold_pm` — ABFSS: `abfss://e0366989-5d8c-4d3c-8803-ddc874400cf5@onelake.dfs.fabric.microsoft.com/a4e491e5-289b-4fa1-961e-3f8239e398cc` |
-| **Source 2 (AUFK/AFKO/AFVC)** | `ws_enterprise_dev` / `LH_SILVER_sapecc` — ABFSS: `abfss://ws_enterprise_dev@onelake.dfs.fabric.microsoft.com/LH_SILVER_sapecc.Lakehouse` |
-| **Plant Filter** | `WERKS IN ('0769', '0519') AND AUTYP = '30'` (applied in transformation, not extractor) |
-
-| Fabric Table | Source Lakehouse | RAW Table Name | RAW Database | Description | Expected Rows | Extraction Status | Transformation | Target View(s) | Pipeline Status |
-|-------------|-----------------|---------------|-------------|-------------|---------------|-------------------|----------------|-----------------|-----------------|
-| `iw28` | lh_gold_pm | `sapecc_work_orders` | `raw_ext_fabric_sapecc` | SAP Work Order List (IW28 transaction). Contains all maintenance work orders across all plants. **Must filter by plant in transformation.** | ~407,000 | ✅ **DONE** (2026-02-03) | `populate_Event_WorkOrders` (mfg_core) | `Event` (mfg_core) | ✅ End-to-end |
-| | | | | | | | `populate_WorkOrder` (mfg_ext) | `WorkOrder` (mfg_ext) | ✅ End-to-end |
-| `AUFK` | LH_SILVER_sapecc (DEV) | `sapecc_aufk` | `raw_ext_fabric_sapecc` | Order Master Data. Contains: `AUFNR` (order#), `WERKS` (plant), `KTEXT` (description), `AUTYP` (order type) | ~4,500,000 | ✅ **DONE** | ❌ (used in join) | — | 🔶 Raw data available, needs join transform |
-| `AFKO` | LH_SILVER_sapecc (DEV) | `sapecc_afko` | `raw_ext_fabric_sapecc` | Order Header Data. Contains: `AUFNR`, `AUFPL` (routing#). Links AUFK to AFVC. | ~4,500,000 | ✅ **DONE** | ❌ (used in join) | — | 🔶 Raw data available, needs join transform |
-| `AFVC` | LH_SILVER_sapecc (DEV) | `sapecc_afvc` | `raw_ext_fabric_sapecc` | Order Operations (individual tasks). Contains: `AUFPL` (routing), `VORNR` (operation#), `STEUS` (control key), `LTXA1` (description) | ~7,200,000 | 🔶 **In Progress** | ❌ (used in join) | `Operation` (mfg_ext) | 🔶 Transform needed |
-
-**Planned Transformation (after AFVC extraction):**
-```sql
-SELECT aufk.AUFNR AS ordem,
-       aufk.WERKS AS planta,
-       aufk.KTEXT AS descricao_ordem,
-       afvc.VORNR AS operacao,
-       afvc.STEUS AS chave_controle,
-       afvc.LTXA1 AS descricao_operacao
-FROM `raw_ext_fabric_sapecc`.`sapecc_aufk` aufk
-INNER JOIN `raw_ext_fabric_sapecc`.`sapecc_afko` afko 
-  ON afko.AUFNR = aufk.AUFNR
-INNER JOIN `raw_ext_fabric_sapecc`.`sapecc_afvc` afvc 
-  ON afvc.AUFPL = afko.AUFPL
-WHERE aufk.WERKS IN ('0769', '0519')
-  AND aufk.AUTYP = '30'
-```
-
-**Summary:** iw28 work orders fully extracted and transformations exist. AUFK/AFKO/AFVC for Operations are being extracted (AFVC in progress). Join transformation needs to be created once all 3 tables are in CDF.
-
----
-
-### 3.4 SAP Gateway (OData → raw_ext_sap)
-
-| | |
-|---|---|
-| **Source System** | SAP Gateway (OData) |
-| **System Type** | ERP |
-| **Extractor** | `sap-odata-extractor` |
-| **Extractor Status** | ✅ Running |
-| **Service Principal** | `sp-cdf-sap-extractor-dev` (`778dcec6-a85a-4799-a78e-1aee9d7aa3d3`) |
-| **RAW Database** | `raw_ext_sap` ⚠️ (OData config writes to old `raw_sylvamo_sap`) |
-| **Gateway URL** | `http://sapsgvci.sylvamo.com:8075/sap/opu/odata/sap/` |
-| **SAP Client** | `100` (in OData config) / `300` (in earlier docs — **verify!**) |
-
-| OData Service | OData Entity | RAW Table | RAW Database | Description | Expected Rows | Transformation | Target View(s) | Pipeline Status | Notes |
-|-------------|-------------|-----------|-------------|-------------|---------------|----------------|-----------------|-----------------|-------|
-| `ZCL_GW_CUSTOMER_SEARCH_SRV` | `BP_DetailsSet` | `bp_details` | ⚠️ `raw_sylvamo_sap` (config) / `raw_ext_sap` (expected) | Business Partner / Customer details. Filter: `comp eq 'DS75'` | ❓ | ❌ No transformation | ❌ No target view | 🔶 Extracted but unused | **DB naming mismatch!** |
-| *(configured elsewhere)* | — | `asset_hierarchy` / `sap_floc_eastover` + `sap_floc_sumter` | `raw_ext_sap` | SAP Functional Locations (asset tree) | ❓ | `populate_Asset` | `Asset` (mfg_core) | ✅ End-to-end | Verify: are there 2 tables per site? |
-| *(configured elsewhere)* | — | `materials` | `raw_ext_sap` | Material master data | ❓ | `populate_Material` | `Material` (mfg_core) | ✅ End-to-end | |
-| *(configured elsewhere)* | — | `work_orders` | `raw_ext_sap` | Maintenance work orders (via OData) | ❓ | ❌ (superseded?) | — | ❓ | **Superseded by** `sapecc_work_orders` from Fabric? |
-| *(configured elsewhere)* | — | `production_orders` | `raw_ext_sap` | Production orders | ❓ | `populate_Event_ProductionOrders` (mfg_core), `populate_ProductionOrder` (mfg_ext) | `Event`, `ProductionOrder` | ✅ End-to-end | From lakehouse per user note |
-
-**SAP OData Services TODO (from config comments):**
-
-| Service (Planned) | Purpose | Status |
-|-------------------|---------|--------|
-| `ZCL_GW_BOM_SRV` (or similar) | Bill of Materials | ❓ Ask SAP team |
-| `ZCL_GW_MATERIAL_SRV` (or similar) | Material Costs | ❓ Ask SAP team |
-| `ZCL_GW_FLOC_SRV` (or similar) | Functional Locations / Asset Hierarchy | ❓ Ask SAP team |
-| `ZPM_WORKORDER_SRV` (or similar) | Work Orders | ❓ Possibly superseded by Fabric |
-
----
-
-### 3.5 Proficy GBDB (SQL Server → raw_ext_sql_proficy)
-
-| | |
-|---|---|
-| **Source System** | Proficy GBDB |
-| **System Type** | Historian DB (SQL Server) |
-| **Extractor** | `sql-extractor-proficy` |
-| **Extractor Status** | ✅ Running |
-| **Service Principal** | `sp-cdf-sql-extractor-dev` (`3ec90782-5f9f-482d-9da2-46567276519b`) |
-| **RAW Database** | `raw_ext_sql_proficy` |
-| **Connection** | ODBC Driver 17 for SQL Server → Proficy GBDB |
-
-| GBDB Table | RAW Table | Description | Data Content | Transformation | Target View(s) | Pipeline Status | Notes |
-|-----------|-----------|-------------|-------------|----------------|-----------------|-----------------|-------|
-| `Tests` | `tests` | Lab test definitions | `Test_Id`, `Canceled`, `Result_On`, `Entry_On`, `Entry_By`, `Sample_Id`, `Var_Id`, `Event_Num`, `Result`, `Result_String` | ❌ No transformation | ❌ No target view | 🔶 Extractor only | Reference data for events_tests. Could map to `LabTest` in mfg_data |
-| `Events+Tests` | `events_tests` | Production events with test results | Combined event + test data. Actual Proficy readings | `populate_Event_Proficy` (mfg_core) | `Event` (mfg_core) | ✅ End-to-end | |
-| | | | | `populate_ProductionEvent` (mfg_ext) | `ProductionEvent` (mfg_ext) | ✅ End-to-end | Extended view |
-| | | | | `populate_ProficyDatapoints` | Time Series Datapoints | ✅ End-to-end | Readings as TS |
-| `Samples` | `samples` | Sample tracking data | Sample metadata | ❌ No transformation | ❌ No target view | 🔶 Extractor only | Could map to `LabTest` in mfg_data |
-| `tag_info` query | `tag_info` | Tag/sensor metadata | Tag names, units, descriptions for Proficy sensors | `create_ProficyTimeSeries_CDF` | CDF Time Series | ✅ End-to-end | Creates CDF TS resources |
-| | | | | `populate_ProficyTimeSeries` | `MfgTimeSeries` (mfg_core) | ✅ End-to-end | Into data model |
-| *(metadata)* | `key_columns` | Key column definitions | Internal GBDB metadata | ❌ | ❌ | 🔶 Extracted | Likely not needed in model |
-| *(metadata)* | `event_tables` | Event table definitions | Internal GBDB metadata | ❌ | ❌ | 🔶 Extracted | Likely not needed in model |
-| *(metadata)* | `all_tables` | All table definitions | Internal GBDB metadata | ❌ | ❌ | 🔶 Extracted | Likely not needed in model |
-
-**Summary:** Core event/TS data has full coverage. `tests`, `samples` are extracted but unconsumed — potential sources for `LabTest` view.
-
----
-
-### 3.6 PI Servers (Historians → CDF Time Series + raw_ext_pi)
-
-| | |
-|---|---|
-| **Source System** | PI Servers (Eastover: S769PI01, PM: S769PI03, S519: S519PIP1) |
-| **System Type** | Historian |
-| **Extractors** | `pi-extractor-eastover`, `pi-extractor-pm`, `pi-extractor-s519` |
-| **Extractor Status** | ✅ Running (all 3) |
-| **Service Principal** | `sp-cdf-pi-extractor-dev` (`b7671a6c-8680-4b10-b8d0-141767de9877`) |
-| **RAW Database** | `raw_ext_pi` (metadata only) + CDF Time Series (actual values) |
-| **TS Space** | `sylvamo_assets` |
-| **Backfill** | 365 days, step-size 168 hours (1 week) |
-
-| PI Server | Server FQDN | RAW Metadata Table | Tags Extracted | Tag Categories | Pipeline Status | Notes |
-|-----------|------------|-------------------|----------------|----------------|-----------------|-------|
-| S769PI01 (Eastover) | `S769PI01.sylvamo.com` | `s769pi01_metadata` | ~75 tags | Level indicators (321LI411), O2 Reactor (401AB148, 401AC146, 401FC105, 401FC106), Temperature (401TC125, 401TC126), Bleaching, Calculated production rates | ✅ TS direct to CDF | Metadata table — investigate if useful |
-| S769PI03 (PM) | *(PI server)* | `s769pi03_metadata` | ❓ | ❓ | ✅ TS direct to CDF | "Not relevant data?" — needs review |
-| S519PIP1 (Sumter?) | *(PI server)* | `s519pip1_metadata` | ❓ | Sheeters | ✅ TS direct to CDF | **Is this Sumter?** Missing data reported |
-
-**Note:** PI extractors push time series values **directly to CDF Time Series** (not via RAW). The `_metadata` tables in `raw_ext_pi` contain tag metadata only. The `populate_TimeSeries` transformation maps CDF TS into the data model.
-
----
-
-### 3.7 SharePoint Online (→ raw_ext_sharepoint + CDF Files)
-
-| | |
-|---|---|
-| **Source System** | SharePoint Online |
-| **System Type** | Document Management |
-| **Extractor** | `sharepoint-extractor` |
-| **Extractor Status** | ✅ Running |
-| **Service Principal** | `sp-cdf-file-extractor-dev` (`4050f0ee-519e-4485-ac2b-f3221071c92e`) |
-| **RAW Database** | `raw_ext_sharepoint` |
-| **SharePoint Site** | `https://sylvamo.sharepoint.com/sites/Sumter/Shared%20Documents` |
-
-| RAW Table | Description | Data Content | Expected Rows | Transformation | Target View(s) | Pipeline Status | Notes |
-|-----------|-------------|-------------|---------------|----------------|-----------------|-----------------|-------|
-| `documents` | SharePoint document files | File metadata (shift reports, SOPs, KOPs, machine manuals, P&IDs, TCCs) | ❓ | `populate_Files` (reads `_cdf.files`) | `CogniteFile` (CDM) | 🔶 Indirect | Extractor → CDF Files → Transform reads `_cdf.files`. Marked as "duplicate" — clarify |
-| `roll_quality` | Roll quality inspection reports from SharePoint list | `title` (roll ID), `defect` code, `was_the_roll_rejected`, `location`, `who_is_entering`, `created_by` (equipment) | 21+ | `populate_RollQuality` | `RollQuality` (mfg_core) | ✅ End-to-end | Different from PPR `ppr_hist_roll_quality`! |
+> **Key notes:**
+> - **PPR Join Key to Proficy:** `reel_number` (e.g., EM0010126020) → `substring(5)` maps to Proficy `Event_Num`. See `PPR_PROFICY_NAMING_CONVENTION.md`
+> - **SAP ECC planned join:** AUFK + AFKO + AFVC → `Operation` view (filter: `WERKS IN ('0769','0519') AND AUTYP = '30'`)
+> - **PI extractors** push time series **directly to CDF TS** (not via RAW). Metadata tables in `raw_ext_pi` are tag metadata only.
 
 ---
 
