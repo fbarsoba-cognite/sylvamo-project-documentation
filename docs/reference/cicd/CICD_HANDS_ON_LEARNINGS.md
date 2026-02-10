@@ -28,8 +28,6 @@ We migrated from environment-specific branches (`dev`, `staging`, `prod`) to a t
 - **Environment-specific configs:** `config.dev.yaml`, `config.staging.yaml`, `config.prod.yaml`
 - **Same code, different targets:** Each config points to a different CDF project
 
-**Note:** Dev, staging, and prod are deployment environments (CDF projects), not mills or physical sites. Mills are separate organizational units.
-
 **Why trunk-based?**
 
 - Simplifies merges and reduces branch drift
