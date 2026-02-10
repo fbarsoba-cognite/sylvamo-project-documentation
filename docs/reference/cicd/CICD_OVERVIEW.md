@@ -32,6 +32,17 @@
 | — | [ADO_CLONE_REPO.md](ADO_CLONE_REPO.md) | Clone ADO repo |
 | — | [images/](images/README.md) | Pipeline screenshots |
 
+### 1-Hour Presentation Outline
+
+| Time | Phase | Topic |
+|------|-------|-------|
+| 0–15 min | 1. Overview | Intro, CDF as SaaS, flow (PR dry-run → merge deploy), auth, repo structure |
+| 15–35 min | 2. Setup Guide | Variable groups, pipelines (PR Validation, Deploy, Promote-to-Prod), branch policy, config checks |
+| 35–55 min | 3. Hands-on | Feature branch → PR → validation → merge → deploy; CDF IAM (restricted capabilities) |
+| 55–60 min | Q&A | Wrap-up |
+
+**Skip or shorten:** CICD_SYSTEM_EXPLANATION, ADO_CLONE_REPO walkthrough, full troubleshooting scenarios—link for later.
+
 ---
 
 ## Sylvamo Repository
