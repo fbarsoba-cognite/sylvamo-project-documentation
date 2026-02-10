@@ -70,13 +70,32 @@ Our implementation uses two separate pipelines for deployment:
 - Manual trigger allows on-demand promotions when needed
 - Keeps Production isolated from accidental merges
 
-**Flow diagram:**
+**Pipeline architecture diagram:**
 
+```mermaid
+flowchart TB
+    subgraph PR [PR to main]
+        PRBranch[Feature Branch]
+        DryRunDev[Validate Dev Dry Run]
+        DryRunStaging[Validate Staging Dry Run]
+        PRBranch --> DryRunDev --> DryRunStaging
+    end
+
+    subgraph Merge [Merge to main]
+        DeployDev[Deploy to Dev]
+        DeployStaging[Deploy to Staging]
+        DeployDev --> DeployStaging
+    end
+
+    subgraph Prod [Production - Separate]
+        PromoteProd[Promote to Prod Pipeline]
+        Approval[Approval Gate]
+        DeployProd[Deploy to Prod]
+        PromoteProd --> Approval --> DeployProd
+    end
 ```
-Feature Branch → PR → Dry-Run (Dev + Staging) → Merge → Deploy Dev → Deploy Staging
-                                                                           │
-Production: Promote-to-Prod Pipeline (weekly/manual) → Approval → Deploy Prod
-```
+
+> **Tip:** Add screenshots of your pipelines (e.g., pipeline list, run view) to [`images/`](images/README.md) to enrich this doc.
 
 ---
 
@@ -125,7 +144,11 @@ Each CDF project needs its own IAM groups. We copied groups from `sylvamo-dev` t
 
 ### Restricted Capabilities in Staging/Production
 
-**Problem:** Staging and production CDF projects (`sylvamo-test`, `sylvamo-prod`) restrict WRITE access to legacy APIs:
+**Problem:** Staging and production CDF projects (`sylvamo-test`, `sylvamo-prod`) restrict WRITE access to legacy APIs.
+
+**What this means:** These projects have project-level policies that make certain older ("legacy") CDF APIs read-only. No IAM group—including your deployment service principal—can be granted WRITE access to those APIs in those projects. Dev (`sylvamo-dev`) does not have this restriction, so the same Group YAML that works in dev fails in staging/prod. The restriction is typically set by Cognite or by your organization for security or governance reasons in higher environments.
+
+**Restricted APIs:**
 
 - `annotationsAcl` – WRITE, SUGGEST, REVIEW not allowed
 - `assetsAcl` – WRITE not allowed

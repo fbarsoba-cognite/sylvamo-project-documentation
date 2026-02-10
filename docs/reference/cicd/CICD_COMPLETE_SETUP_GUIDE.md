@@ -71,7 +71,36 @@ Nothing changes in CDF until code is merged to main.
 
 ### Pipeline Architecture (Sylvamo Implementation)
 
-At Sylvamo, the deploy pipeline deploys to **Dev and Staging only**. Production uses a **separate pipeline** (promote-to-prod) that runs weekly or manually, with an approval gate. See [Step 4.4: Create Promote-to-Production Pipeline](#44-create-promote-to-production-pipeline) and [CI/CD Hands-On Learnings](CICD_HANDS_ON_LEARNINGS.md) for details.
+At Sylvamo, the deploy pipeline deploys to **Dev and Staging only**. Production uses a **separate pipeline** (promote-to-prod) that runs weekly or manually, with an approval gate.
+
+```mermaid
+flowchart TB
+    subgraph PR [PR Validation]
+        PRBranch[Feature Branch]
+        DryRunDev[Validate Dev]
+        DryRunStaging[Validate Staging]
+        PRBranch --> DryRunDev --> DryRunStaging
+    end
+
+    subgraph Deploy [Deploy - Auto on Merge]
+        DeployDev[Deploy to Dev]
+        DeployStaging[Deploy to Staging]
+        DeployDev --> DeployStaging
+    end
+
+    subgraph Prod [Production - Separate]
+        PromoteProd[Promote to Prod]
+        Approval[Approval Gate]
+        DeployProd[Deploy to Prod]
+        PromoteProd --> Approval --> DeployProd
+    end
+
+    PR -->|merge| Deploy
+```
+
+> **Tip:** Add screenshots of your pipelines to [`images/`](images/README.md) (e.g., Pipelines list, Variable groups, Branch policy).
+
+See [Step 4.4: Create Promote-to-Production Pipeline](#44-create-promote-to-production-pipeline) and [CI/CD Hands-On Learnings](CICD_HANDS_ON_LEARNINGS.md) for details.
 
 ---
 

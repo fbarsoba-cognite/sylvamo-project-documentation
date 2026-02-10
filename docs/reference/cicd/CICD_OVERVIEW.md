@@ -95,6 +95,23 @@ CDF is an **external SaaS endpoint**:
 
 ## CI/CD Flow Overview
 
+```mermaid
+flowchart LR
+    subgraph PR [PR Stage]
+        A[Feature Branch] --> B[cdf build]
+        B --> C[cdf deploy --dry-run]
+    end
+
+    subgraph Merge [Merge Stage]
+        D[main] --> E[cdf build]
+        E --> F[cdf deploy]
+    end
+
+    PR -->|merge| Merge
+```
+
+**Detailed flow:**
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        FEATURE BRANCH                           │
