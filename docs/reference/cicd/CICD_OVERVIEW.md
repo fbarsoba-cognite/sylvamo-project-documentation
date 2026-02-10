@@ -14,6 +14,26 @@
 
 ---
 
+> **📋 Learning & Presentation Reference**
+> 
+> **Present in this order:** Overview → Complete Setup Guide → Hands-on session.
+
+| Order | Document | Purpose |
+|-------|----------|----------|
+| 1 | [CICD_OVERVIEW.md](CICD_OVERVIEW.md) | Phase 1 – Concepts (this page) |
+| 2 | [CICD_COMPLETE_SETUP_GUIDE.md](CICD_COMPLETE_SETUP_GUIDE.md) | Phase 2 – Setup steps |
+| 2b | [CICD_COMPLETE_SETUP_GUIDE_SPEAKER_NOTES.md](CICD_COMPLETE_SETUP_GUIDE_SPEAKER_NOTES.md) | Speaker notes for Phase 2 |
+| 3 | [CICD_HANDS_ON_SPEAKER_NOTES.md](CICD_HANDS_ON_SPEAKER_NOTES.md) | Hands-on session (follow-along) |
+| — | [CICD_HANDS_ON_LEARNINGS.md](CICD_HANDS_ON_LEARNINGS.md) | Real-world learnings |
+| — | [CICD_PIPELINE_TROUBLESHOOTING.md](CICD_PIPELINE_TROUBLESHOOTING.md) | Troubleshooting |
+| — | [CICD_SYSTEM_EXPLANATION.md](CICD_SYSTEM_EXPLANATION.md) | Deep dive |
+| — | [CICD_TESTING_GUIDE.md](CICD_TESTING_GUIDE.md) | Testing procedures |
+| — | [ADO_PIPELINE_SETUP.md](ADO_PIPELINE_SETUP.md) | ADO pipeline setup |
+| — | [ADO_CLONE_REPO.md](ADO_CLONE_REPO.md) | Clone ADO repo |
+| — | [images/](images/README.md) | Pipeline screenshots |
+
+---
+
 ## Sylvamo Repository
 
 The Toolkit configuration for Sylvamo is managed in Azure DevOps:
