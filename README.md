@@ -263,6 +263,7 @@ Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 
 | Document | Description |
 |----------|-------------|
+| [**Architecture Decisions & Roadmap**](docs/internal/plans/ARCHITECTURE_DECISIONS_AND_ROADMAP.md) | Model comparison, ISA-95 alignment, roadmap for Sylvamo meeting |
 | [**Sprint 2 Plan**](docs/internal/sprint-planning/SPRINT_2_PLAN.md) | Current sprint implementation plan with contextualization roadmap |
 | [**Sprint 2 Story Mapping**](docs/internal/sprint-planning/SPRINT_2_STORY_MAPPING.md) | Mapping between plan phases and Jira stories (17 active) |
 | [ISA Alignment](docs/internal/plans/COGNITE_ISA_EXTENSION_AND_SYLVAMO_ALIGNMENT.md) | ISA-95/88 alignment analysis |

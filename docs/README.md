@@ -24,8 +24,9 @@
   - [Sprint 2 Plan](internal/sprint-planning/SPRINT_2_PLAN.md)
   - [Sprint 2 Story Mapping](internal/sprint-planning/SPRINT_2_STORY_MAPPING.md)
 - **Plans & Alignment**
-  - [ISA Extension & Sylvamo Alignment](internal/plans/COGNITE_ISA_EXTENSION_AND_SYLVAMO_ALIGNMENT.md)
-  - [Johan ISA95 Guidance Summary](internal/plans/JOHAN_ISA95_GUIDANCE_SUMMARY.md)
+ - [**Architecture Decisions & Roadmap**](internal/plans/ARCHITECTURE_DECISIONS_AND_ROADMAP.md) – Meeting prep: model comparison, ISA-95 alignment, roadmap
+ - [ISA Extension & Sylvamo Alignment](internal/plans/COGNITE_ISA_EXTENSION_AND_SYLVAMO_ALIGNMENT.md)
+ - [Johan ISA95 Guidance Summary](internal/plans/JOHAN_ISA95_GUIDANCE_SUMMARY.md)
 
 ### Project Documents
 - Coming soon
