@@ -20,6 +20,14 @@
 9. [Impact Assessment](#9-impact-assessment)
 10. [Recommendations](#10-recommendations)
 
+**Appendices:**
+- [A: Cognite ISA Manufacturing Extension Entities](#appendix-a-cognite-isa-manufacturing-extension-entities)
+- [B: sylvamo_mfg_core Container Properties](#appendix-b-sylvamo_mfg_core-container-properties)
+- [C: CDM Interface Implementation](#appendix-c-cdm-interface-implementation)
+- [D: Entity Relationship Diagram](#appendix-d-entity-relationship-diagram)
+- [E: Toolkit Module Structure](#appendix-e-toolkit-module-structure)
+- [F: Transformation Summary](#appendix-f-transformation-summary)
+
 ---
 
 ## 1. Executive Summary
@@ -629,6 +637,172 @@ Full list of entities in the [Cognite ISA Manufacturing Extension](https://githu
 | linearFootage | int32 | Linear footage |
 | paperMachine / producingMachine | text | Machine identifiers |
 | reel | direct | Parent Reel |
+
+---
+
+## Appendix C: CDM Interface Implementation
+
+```mermaid
+classDiagram
+    direction TB
+    
+    class CogniteDescribable {
+        name
+        description
+        tags
+        aliases
+    }
+    
+    class CogniteSourceable {
+        sourceId
+        source
+        sourceCreatedTime
+    }
+    
+    class CogniteAsset {
+        parent
+        root
+        path
+        assetClass
+    }
+    
+    class CogniteActivity {
+        startTime
+        endTime
+        assets
+    }
+    
+    class CogniteTimeSeries {
+        isStep
+        type
+        unit
+    }
+    
+    CogniteDescribable <|-- Asset
+    CogniteSourceable <|-- Asset
+    CogniteAsset <|-- Asset
+    
+    CogniteDescribable <|-- Event
+    CogniteSourceable <|-- Event
+    CogniteActivity <|-- Event
+    
+    CogniteDescribable <|-- Reel
+    CogniteSourceable <|-- Reel
+    
+    CogniteDescribable <|-- Roll
+    CogniteSourceable <|-- Roll
+    
+    CogniteDescribable <|-- MfgTimeSeries
+    CogniteSourceable <|-- MfgTimeSeries
+    CogniteTimeSeries <|-- MfgTimeSeries
+```
+
+---
+
+## Appendix D: Entity Relationship Diagram
+
+```mermaid
+erDiagram
+    Asset ||--o{ Asset : "parent-children"
+    Asset ||--o{ MfgTimeSeries : "timeSeries"
+    Asset ||--o{ Reel : "reels"
+    Asset ||--o{ Event : "events"
+    Asset ||--o{ CogniteFile : "files"
+    
+    Reel ||--o{ Roll : "rolls"
+    Reel ||--o{ Event : "events"
+    Reel ||--o{ RollQuality : "qualityResults"
+    
+    Roll ||--o{ Event : "events"
+    Roll ||--o{ RollQuality : "qualityResults"
+    
+    Asset {
+        string name
+        string assetType
+        string sapFunctionalLocation
+        string plantCode
+    }
+    
+    Event {
+        string eventType
+        string eventSubtype
+        timestamp startTime
+        timestamp endTime
+        float resultValue
+    }
+    
+    Reel {
+        string reelNumber
+        timestamp productionDate
+        float weight
+        string gradeCode
+    }
+    
+    Roll {
+        string rollNumber
+        float weight
+        string qualityGrade
+    }
+    
+    MfgTimeSeries {
+        string measurementType
+        string piTagName
+        timeseries timeSeries
+    }
+    
+    Material {
+        string materialCode
+        string materialType
+    }
+    
+    RollQuality {
+        string testName
+        float resultValue
+        boolean isInSpec
+    }
+```
+
+---
+
+## Appendix E: Toolkit Module Structure
+
+```
+sylvamo/modules/
+├── mfg_core/              # Core manufacturing model (deployed)
+│   ├── data_modeling/
+│   │   ├── containers/    # 7 containers
+│   │   ├── views/         # 7 views
+│   │   └── data_models/
+│   └── transformations/   # 17 transformations
+├── mfg_extended/          # Extended model (planned - Phase 2)
+│   ├── data_modeling/
+│   │   ├── containers/    # Equipment, ProductDefinition, Recipe
+│   │   └── views/
+│   └── transformations/
+├── mfg_data/              # Legacy model (sylvamo_mfg v10 - PoC)
+└── mfg_location/          # Location filter configuration
+```
+
+---
+
+## Appendix F: Transformation Summary
+
+| Transformation | Source | Target | Records |
+|----------------|--------|--------|---------|
+| tr_populate_Asset | raw_ext_sap.asset_hierarchy | Asset | 44,898 |
+| tr_populate_Reel | raw_ext_fabric_ppr.ppr_hist_reel | Reel | 83,600+ |
+| tr_populate_Roll | raw_ext_fabric_ppr.ppr_hist_roll | Roll | 1,000+ |
+| tr_populate_Material | raw_ext_sap.materials | Material | TBD |
+| tr_populate_TimeSeries | _cdf.timeseries | MfgTimeSeries | 3,532 |
+| tr_populate_Event_Proficy | raw_ext_sql_proficy.events_tests | Event | ~61 |
+| tr_populate_Event_WorkOrders | raw_ext_fabric_sapecc.work_orders | Event | ~223 |
+| tr_populate_Event_ProductionOrders | raw_ext_sap.production_orders | Event | ~50,000 |
+| tr_populate_Event_PPV | raw_ext_fabric_ppv.ppv_snapshot | Event | ~716 |
+| tr_populate_RollQuality | raw_ext_sharepoint.roll_quality | RollQuality | TBD |
+| tr_populate_Files | _cdf.files | CogniteFile | 97 |
+| tr_create_ProficyTimeSeries_CDF | raw_ext_sql_proficy | CDF TimeSeries | - |
+| tr_populate_ProficyTimeSeries | raw_ext_sql_proficy | MfgTimeSeries | - |
+| + 4 more Proficy transformations | | | |
 
 ---
 

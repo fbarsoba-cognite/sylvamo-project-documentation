@@ -39,21 +39,22 @@ For architecture discussions and stakeholder meetings, follow this order:
 - Resolution plan
 
 ### 5. Architecture Decisions
-**Document:** [ARCHITECTURE_DECISION_RECORD.md - Section 7](ARCHITECTURE_DECISION_RECORD.md#7-architecture-decisions)
+**Document:** [ARCHITECTURE_DECISIONS_AND_ROADMAP.md - Section 3](ARCHITECTURE_DECISIONS_AND_ROADMAP.md#3-architecture-decisions-made)
 
-- ADR-001: CDM Interfaces
-- ADR-002: Unified Event Entity
-- ADR-003: SAP Functional Location as Asset Hierarchy
-- ADR-004: Reel as ISA-95 Batch
-- ADR-005: Separate Schema/Instance Spaces
+- ADR-1: CDM Asset + Equipment Instead of ISA Organizational Hierarchy
+- ADR-2: Unified Event Entity
+- ADR-3: Reel = ISA Batch, Roll = ISA MaterialLot
+- ADR-4: Schema/Instance Space Separation
+- ADR-5: MfgTimeSeries with `timeseries` Property Type
 
 ### 6. Roadmap and Next Steps
-**Document:** [MODEL_EVOLUTION_ROADMAP.md](MODEL_EVOLUTION_ROADMAP.md)
+**Document:** [ARCHITECTURE_DECISIONS_AND_ROADMAP.md - Section 8](ARCHITECTURE_DECISIONS_AND_ROADMAP.md#8-roadmap-path-to-full-isa-95-alignment)
 
-- Phase 2: Equipment, Activity specializations (Feb 2026)
-- Phase 3: Package, ProductDefinition, consolidation (Q1-Q2 2026)
-- Phase 4: Full ISA alignment (Q3 2026)
-- Success metrics and risks
+- Phase 1: Foundation (Complete) - Asset, Events, Reel/Roll, TimeSeries
+- Phase 2: Equipment and Products (Feb-Apr 2026)
+- Phase 3: ISA Level Overlay (Apr-Jun 2026)
+- Phase 4: Advanced ISA-88/95 (Jun-Oct 2026)
+- Impact Assessment and Recommendations
 
 ---
 
@@ -72,8 +73,7 @@ Current State → Model Comparison → ISA Alignment → Gaps → Decisions → 
 
 | Document | Description | Audience |
 |----------|-------------|----------|
-| [**ARCHITECTURE_DECISION_RECORD.md**](ARCHITECTURE_DECISION_RECORD.md) | Model comparison, ISA-95 alignment, 5 ADRs | Technical + Stakeholders |
-| [**MODEL_EVOLUTION_ROADMAP.md**](MODEL_EVOLUTION_ROADMAP.md) | Phased roadmap with timelines and metrics | All |
+| [**ARCHITECTURE_DECISIONS_AND_ROADMAP.md**](ARCHITECTURE_DECISIONS_AND_ROADMAP.md) | **Main document** - Model comparison, ISA-95 alignment, 5 ADRs, roadmap, recommendations | All |
 | [**DATA_MODEL_SPECIFICATION.md**](DATA_MODEL_SPECIFICATION.md) | Complete technical spec with containers and properties | Technical |
 | [**DATA_MODEL_FOR_STAKEHOLDERS.md**](DATA_MODEL_FOR_STAKEHOLDERS.md) | Non-technical overview with business examples | Business |
 | [**DATA_MODEL_WALKTHROUGH.md**](DATA_MODEL_WALKTHROUGH.md) | Step-by-step traceability example | All |
@@ -90,12 +90,17 @@ Current State → Model Comparison → ISA Alignment → Gaps → Decisions → 
 - [Walkthrough](DATA_MODEL_WALKTHROUGH.md) - End-to-end example
 
 ### For Architecture Decisions
-- [Architecture Decision Record](ARCHITECTURE_DECISION_RECORD.md) - All ADRs
-- [Model Evolution Roadmap](MODEL_EVOLUTION_ROADMAP.md) - Future plans
+- [Architecture Decisions](ARCHITECTURE_DECISIONS_AND_ROADMAP.md#3-architecture-decisions-made) - All 5 ADRs
+- [Recommendations](ARCHITECTURE_DECISIONS_AND_ROADMAP.md#10-recommendations) - Strategic guidance
 
 ### For ISA-95 Alignment
-- [Architecture Decision Record - ISA Section](ARCHITECTURE_DECISION_RECORD.md#3-isa-95isa-88-alignment)
-- [Roadmap - ISA Compliance Checklist](MODEL_EVOLUTION_ROADMAP.md#isa-compliance-checklist)
+- [Entity Comparison](ARCHITECTURE_DECISIONS_AND_ROADMAP.md#4-entity-comparison-current-vs-isa-95-target) - Current vs Target
+- [Cognite ISA Extension](ARCHITECTURE_DECISIONS_AND_ROADMAP.md#6-cognite-isa-manufacturing-extension-the-target-framework) - Target framework
+- [Alignment Analysis](ARCHITECTURE_DECISIONS_AND_ROADMAP.md#7-alignment-analysis-core-model-vs-isa-extension) - What aligns, what needs work
+
+### For Roadmap
+- [Phase Overview](ARCHITECTURE_DECISIONS_AND_ROADMAP.md#8-roadmap-path-to-full-isa-95-alignment) - Full roadmap with Gantt chart
+- [Impact Assessment](ARCHITECTURE_DECISIONS_AND_ROADMAP.md#9-impact-assessment) - What stays, what changes
 
 ---
 
