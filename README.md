@@ -253,7 +253,7 @@ Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 | [**Data Model Walkthrough**](docs/reference/data-model/DATA_MODEL_WALKTHROUGH.md) | Step-by-step example tracing paper from production to delivery |
 | [Data Model Diagram](docs/reference/data-model/SYLVAMO_MFG_DATA_MODEL_DIAGRAM.md) | Visual diagrams with Mermaid |
 | [**Appendix: sylvamo_mfg_core**](docs/reference/data-model/APPENDIX_MFG_CORE_MODEL.md) | CDM-integrated data model (Draft for Discussion) |
-| [**Architecture Decisions & Roadmap**](docs/reference/data-model/ARCHITECTURE_DECISIONS_AND_ROADMAP.md) | Architecture decisions, ISA-95 alignment analysis, and evolution roadmap |
+| [**Architecture Decisions & Roadmap**](docs/reference/data-model/ARCHITECTURE_DECISIONS_AND_ROADMAP.md) | **Main doc** - ISA-95 alignment, 5 ADRs, roadmap, recommendations |
 | [**Extractors**](docs/reference/extractors/EXTRACTORS.md) | Extractor configurations and status (Fabric, PI, SharePoint, SQL) |
 | [**CI/CD Overview**](docs/reference/extractors/CICD_OVERVIEW.md) | CI/CD pipeline setup for CDF deployments (ADO, GitHub, GitLab) |
 | [**Data Pipeline & Sources**](docs/reference/extractors/DATA_PIPELINE_AND_SOURCES.md) | Data sources, transformations, and refresh schedules |
@@ -264,7 +264,6 @@ Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 
 | Document | Description |
 |----------|-------------|
-| [**Architecture Decisions & Roadmap**](docs/internal/plans/ARCHITECTURE_DECISIONS_AND_ROADMAP.md) | Model comparison, ISA-95 alignment, roadmap for Sylvamo meeting |
 | [**Sprint 2 Plan**](docs/internal/sprint-planning/SPRINT_2_PLAN.md) | Current sprint implementation plan with contextualization roadmap |
 | [**Sprint 2 Story Mapping**](docs/internal/sprint-planning/SPRINT_2_STORY_MAPPING.md) | Mapping between plan phases and Jira stories (17 active) |
 | [ISA Alignment](docs/internal/plans/COGNITE_ISA_EXTENSION_AND_SYLVAMO_ALIGNMENT.md) | ISA-95/88 alignment analysis |
@@ -404,6 +403,22 @@ Secrets stored in **project-level Variable Groups** in the SylvamoCorp ADO proje
 **[See Full CI/CD Documentation →](docs/reference/extractors/CICD_OVERVIEW.md)**
 
 ## Real Data Statistics
+
+### sylvamo_mfg_core (Production Model)
+
+| Entity | Count | Source |
+|--------|-------|--------|
+| Asset | 45,953 | SAP Functional Locations |
+| Event | 100,000+ | SAP, Proficy, Fabric |
+| Material | 58,342 | SAP Materials |
+| MfgTimeSeries | 3,532+ | PI Server |
+| Reel | 61,335 | `raw_ext_fabric_ppr/ppr_hist_reel` |
+| Roll | 100,000+ | `raw_ext_fabric_ppr/ppr_hist_roll` |
+| RollQuality | 180 | `raw_ext_sharepoint/roll_quality` |
+| CogniteFile | 97 | CDF Files |
+| **TOTAL** | **365,000+** | Real production data |
+
+### sylvamo_mfg (Legacy POC Model)
 
 | Entity | Count | Source |
 |--------|-------|--------|

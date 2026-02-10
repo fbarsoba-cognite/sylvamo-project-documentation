@@ -10,33 +10,33 @@
 
 For architecture discussions and stakeholder meetings, follow this order:
 
-### 1. Current State Overview
-**Document:** [ARCHITECTURE_DECISION_RECORD.md - Section 1](ARCHITECTURE_DECISION_RECORD.md#1-current-state)
+### 1. Executive Summary
+**Document:** [ARCHITECTURE_DECISIONS_AND_ROADMAP.md - Section 1](ARCHITECTURE_DECISIONS_AND_ROADMAP.md#1-executive-summary)
 
-- Two models exist: `sylvamo_mfg` (POC) vs `sylvamo_mfg_core` (Production)
-- Instance counts: 365,000+ nodes in production
-- Establishes baseline for discussion
+- Three model layers: PoC, Production, ISA Target
+- Key question: How to evolve toward full ISA-95 alignment
+- Production model stats: 44,898 assets, 92K+ events, 83K+ reels
 
-### 2. Data Model Comparison
-**Document:** [ARCHITECTURE_DECISION_RECORD.md - Section 2](ARCHITECTURE_DECISION_RECORD.md#2-data-model-comparison)
+### 2. Current State: Three Model Layers
+**Document:** [ARCHITECTURE_DECISIONS_AND_ROADMAP.md - Section 2](ARCHITECTURE_DECISIONS_AND_ROADMAP.md#2-current-state-three-model-layers)
 
-- Entity mapping diagram (sylvamo_mfg vs sylvamo_mfg_core)
-- Key differences table
-- CDM interface implementation benefits
+- PoC Model (sylvamo_mfg) vs Production Model (sylvamo_mfg_core)
+- Comparison table: entities, data, CDM integration, transformations
+- Visual diagram of model evolution
 
-### 3. ISA-95/ISA-88 Alignment
-**Document:** [ARCHITECTURE_DECISION_RECORD.md - Section 3](ARCHITECTURE_DECISION_RECORD.md#3-isa-95isa-88-alignment)
+### 3. Entity Comparison: Current vs ISA-95 Target
+**Document:** [ARCHITECTURE_DECISIONS_AND_ROADMAP.md - Section 4](ARCHITECTURE_DECISIONS_AND_ROADMAP.md#4-entity-comparison-current-vs-isa-95-target)
 
-- ISA-95 hierarchy mapping diagram
-- What's implemented vs what's planned
-- Reel = Batch, Roll = MaterialLot alignment
+- Entity mapping diagram (Current to ISA Extension)
+- Detailed mapping table with alignment status
+- Migration notes for each entity
 
-### 4. Gap Analysis
-**Document:** [ARCHITECTURE_DECISION_RECORD.md - Section 5](ARCHITECTURE_DECISION_RECORD.md#5-gap-analysis)
+### 4. Alignment Analysis
+**Document:** [ARCHITECTURE_DECISIONS_AND_ROADMAP.md - Section 7](ARCHITECTURE_DECISIONS_AND_ROADMAP.md#7-alignment-analysis-core-model-vs-isa-extension)
 
-- Current gaps (Equipment, ProductDefinition, Recipe, Package)
-- Data quality gaps
-- Resolution plan
+- What already aligns (10 aspects)
+- What needs to change (9 gaps with effort/priority)
+- Clear path forward
 
 ### 5. Architecture Decisions
 **Document:** [ARCHITECTURE_DECISIONS_AND_ROADMAP.md - Section 3](ARCHITECTURE_DECISIONS_AND_ROADMAP.md#3-architecture-decisions-made)
