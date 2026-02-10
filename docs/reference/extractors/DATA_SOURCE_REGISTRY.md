@@ -11,15 +11,14 @@
 
 1. [Architecture Overview](#1-architecture-overview)
 2. [Fabric Infrastructure Map](#2-fabric-infrastructure-map)
-3. [Source Systems Summary](#3-source-systems-summary)
-4. [Full Pipeline Mapping](#4-full-pipeline-mapping)
-5. [Data Model Summary](#5-data-model-summary)
-6. [Gap Analysis](#6-gap-analysis)
-7. [RAW Database Naming Issues](#7-raw-database-naming-issues)
-8. [Known Extraction Issues](#8-known-extraction-issues)
-9. [Validation Checklist](#9-validation-checklist)
-10. [Open Questions & Action Items](#10-open-questions--action-items)
-11. [**Things to Fix or Ask (Prioritized Punch List)**](#11-things-to-fix-or-ask-prioritized-punch-list)
+3. [Source Systems & Full Pipeline Mapping](#3-source-systems--full-pipeline-mapping)
+4. [Data Model Summary](#4-data-model-summary)
+5. [Gap Analysis](#5-gap-analysis)
+6. [RAW Database Naming Issues](#6-raw-database-naming-issues)
+7. [Known Extraction Issues](#7-known-extraction-issues)
+8. [Validation Checklist](#8-validation-checklist)
+9. [Open Questions & Action Items](#9-open-questions--action-items)
+10. [**Things to Fix or Ask (Prioritized Punch List)**](#10-things-to-fix-or-ask-prioritized-punch-list)
 
 ---
 
@@ -105,26 +104,9 @@ This section documents the Microsoft Fabric workspaces and lakehouses that serve
 
 ---
 
-## 3. Source Systems Summary
+## 3. Source Systems & Full Pipeline Mapping
 
-| # | Source System | System Type | Extractor Name | Extractor Status | RAW Database | SP / Config |
-|---|--------------|-------------|----------------|------------------|--------------|-------------|
-| 1 | Fabric — LH_SILVER_ppreo | Lakehouse | `fabric-connector-ppr` | ✅ Running | `raw_ext_fabric_ppr` ⚠️ | `sp-cdf-fabric-extractor-dev` |
-| 2 | Fabric — LH_SILVER_ppreo | Lakehouse | `fabric-connector-ppv` | ✅ Running | `raw_ext_fabric_ppv` | `sp-cdf-fabric-extractor-dev` |
-| 3 | Fabric — lh_gold_pm | Lakehouse | `fabric-connector-sapecc` | ✅ DONE (iw28) | `raw_ext_fabric_sapecc` | `sp-cdf-fabric-extractor-dev` |
-| 4 | Fabric — LH_SILVER_sapecc | Lakehouse | `fabric-connector-sapecc` | 🔶 In Progress | `raw_ext_fabric_sapecc` | `sp-cdf-fabric-extractor-dev` |
-| 5 | SAP Gateway (OData) | ERP | `sap-odata-extractor` | ✅ Running | `raw_ext_sap` ⚠️ | `sp-cdf-sap-extractor-dev` |
-| 6 | Proficy GBDB | Historian DB | `sql-extractor-proficy` | ✅ Running | `raw_ext_sql_proficy` | `sp-cdf-sql-extractor-dev` |
-| 7 | PI Server (Eastover) | Historian | `pi-extractor-eastover` | ✅ Running | `raw_ext_pi` + CDF TS | `sp-cdf-pi-extractor-dev` |
-| 8 | PI Server (PM) | Historian | `pi-extractor-pm` | ✅ Running | `raw_ext_pi` + CDF TS | `sp-cdf-pi-extractor-dev` |
-| 9 | PI Server (S519) | Historian | `pi-extractor-s519` | ✅ Running | `raw_ext_pi` + CDF TS | `sp-cdf-pi-extractor-dev` |
-| 10 | SharePoint Online | Document Mgmt | `sharepoint-extractor` | ✅ Running | `raw_ext_sharepoint` | `sp-cdf-file-extractor-dev` |
-
-> ⚠️ = RAW database naming inconsistency exists — see [Section 7](#7-raw-database-naming-issues)
-
----
-
-## 4. Full Pipeline Mapping
+> Each subsection below covers one source system end-to-end: extractor info, connection details, and every table with its transformation and data model target — all in one place.
 
 ### Legend
 - ✅ = Complete and working
@@ -132,14 +114,24 @@ This section documents the Microsoft Fabric workspaces and lakehouses that serve
 - ❌ = Missing / not implemented
 - 🔲 = Planned / not started
 - ❓ = Unknown / needs investigation
+- ⚠️ = RAW database naming inconsistency — see [Section 6](#6-raw-database-naming-issues)
 
 ---
 
-### 4.1 Fabric — PPR Production Data (LH_SILVER_ppreo → raw_ext_fabric_ppr)
+### 3.1 Fabric — PPR Production Data (LH_SILVER_ppreo → raw_ext_fabric_ppr)
 
-**Source:** `ws_enterprise_prod` / `LH_SILVER_ppreo`
-**ABFSS:** `abfss://ws_enterprise_prod@onelake.dfs.fabric.microsoft.com/LH_SILVER_ppreo.Lakehouse`
-**CDF Dataset ID:** `2565293360230286`
+| | |
+|---|---|
+| **Source System** | Microsoft Fabric Lakehouse (PPR) |
+| **System Type** | Lakehouse |
+| **Extractor** | `fabric-connector-ppr` |
+| **Extractor Status** | ✅ Running |
+| **Service Principal** | `sp-cdf-fabric-extractor-dev` (`73a40d42-8cf4-4048-80d1-54c8d28cb58d`) |
+| **RAW Database** | `raw_ext_fabric_ppr` ⚠️ (some configs still write to old `raw_sylvamo_fabric`) |
+| **Workspace** | `ws_enterprise_prod` |
+| **Lakehouse** | `LH_SILVER_ppreo` |
+| **ABFSS** | `abfss://ws_enterprise_prod@onelake.dfs.fabric.microsoft.com/LH_SILVER_ppreo.Lakehouse` |
+| **CDF Dataset ID** | `2565293360230286` |
 
 | Fabric Table | RAW Table Name | RAW Database | Description | Expected Rows | Transformation | Target View(s) | Pipeline Status | Notes |
 |-------------|---------------|-------------|-------------|---------------|----------------|-----------------|-----------------|-------|
@@ -159,10 +151,18 @@ This section documents the Microsoft Fabric workspaces and lakehouses that serve
 
 ---
 
-### 4.2 Fabric — PPV Cost Data (LH_SILVER_ppreo → raw_ext_fabric_ppv)
+### 3.2 Fabric — PPV Cost Data (LH_SILVER_ppreo → raw_ext_fabric_ppv)
 
-**Source:** `ws_enterprise_prod` / `LH_SILVER_ppreo`
-**Fabric Path:** `Tables/enterprise/ppv_snapshot`
+| | |
+|---|---|
+| **Source System** | Microsoft Fabric Lakehouse (PPV) |
+| **System Type** | Lakehouse |
+| **Extractor** | `fabric-connector-ppv` |
+| **Extractor Status** | ✅ Running |
+| **Service Principal** | `sp-cdf-fabric-extractor-dev` (`73a40d42-8cf4-4048-80d1-54c8d28cb58d`) |
+| **RAW Database** | `raw_ext_fabric_ppv` |
+| **Workspace / Lakehouse** | `ws_enterprise_prod` / `LH_SILVER_ppreo` |
+| **Fabric Path** | `Tables/enterprise/ppv_snapshot` |
 
 | Fabric Table | RAW Table Name | RAW Database | Description | Expected Rows | Transformation | Target View(s) | Pipeline Status | Notes |
 |-------------|---------------|-------------|-------------|---------------|----------------|-----------------|-----------------|-------|
@@ -173,13 +173,19 @@ This section documents the Microsoft Fabric workspaces and lakehouses that serve
 
 ---
 
-### 4.3 Fabric — SAP ECC Work Orders & Operations (lh_gold_pm + LH_SILVER_sapecc → raw_ext_fabric_sapecc)
+### 3.3 Fabric — SAP ECC Work Orders & Operations (lh_gold_pm + LH_SILVER_sapecc → raw_ext_fabric_sapecc)
 
-**Source 1 (IW28):** CoE workspace / `lh_gold_pm`
-**ABFSS:** `abfss://e0366989-5d8c-4d3c-8803-ddc874400cf5@onelake.dfs.fabric.microsoft.com/a4e491e5-289b-4fa1-961e-3f8239e398cc`
-
-**Source 2 (AUFK/AFKO/AFVC):** `ws_enterprise_dev` / `LH_SILVER_sapecc`
-**ABFSS:** `abfss://ws_enterprise_dev@onelake.dfs.fabric.microsoft.com/LH_SILVER_sapecc.Lakehouse`
+| | |
+|---|---|
+| **Source System** | Microsoft Fabric Lakehouse (SAP ECC) |
+| **System Type** | Lakehouse |
+| **Extractor** | `fabric-connector-sapecc` |
+| **Extractor Status** | ✅ DONE (iw28, AUFK, AFKO) / 🔶 In Progress (AFVC) |
+| **Service Principal** | `sp-cdf-fabric-extractor-dev` (`73a40d42-8cf4-4048-80d1-54c8d28cb58d`) |
+| **RAW Database** | `raw_ext_fabric_sapecc` |
+| **Source 1 (IW28)** | CoE workspace / `lh_gold_pm` — ABFSS: `abfss://e0366989-5d8c-4d3c-8803-ddc874400cf5@onelake.dfs.fabric.microsoft.com/a4e491e5-289b-4fa1-961e-3f8239e398cc` |
+| **Source 2 (AUFK/AFKO/AFVC)** | `ws_enterprise_dev` / `LH_SILVER_sapecc` — ABFSS: `abfss://ws_enterprise_dev@onelake.dfs.fabric.microsoft.com/LH_SILVER_sapecc.Lakehouse` |
+| **Plant Filter** | `WERKS IN ('0769', '0519') AND AUTYP = '30'` (applied in transformation, not extractor) |
 
 | Fabric Table | Source Lakehouse | RAW Table Name | RAW Database | Description | Expected Rows | Extraction Status | Transformation | Target View(s) | Pipeline Status |
 |-------------|-----------------|---------------|-------------|-------------|---------------|-------------------|----------------|-----------------|-----------------|
@@ -210,11 +216,18 @@ WHERE aufk.WERKS IN ('0769', '0519')
 
 ---
 
-### 4.4 SAP Gateway (OData → raw_ext_sap)
+### 3.4 SAP Gateway (OData → raw_ext_sap)
 
-**Gateway URL:** `http://sapsgvci.sylvamo.com:8075/sap/opu/odata/sap/`
-**SAP Client:** `100` (in OData config) / `300` (in earlier docs — **verify!**)
-**SP:** `sp-cdf-sap-extractor-dev` (`778dcec6-a85a-4799-a78e-1aee9d7aa3d3`)
+| | |
+|---|---|
+| **Source System** | SAP Gateway (OData) |
+| **System Type** | ERP |
+| **Extractor** | `sap-odata-extractor` |
+| **Extractor Status** | ✅ Running |
+| **Service Principal** | `sp-cdf-sap-extractor-dev` (`778dcec6-a85a-4799-a78e-1aee9d7aa3d3`) |
+| **RAW Database** | `raw_ext_sap` ⚠️ (OData config writes to old `raw_sylvamo_sap`) |
+| **Gateway URL** | `http://sapsgvci.sylvamo.com:8075/sap/opu/odata/sap/` |
+| **SAP Client** | `100` (in OData config) / `300` (in earlier docs — **verify!**) |
 
 | OData Service | OData Entity | RAW Table | RAW Database | Description | Expected Rows | Transformation | Target View(s) | Pipeline Status | Notes |
 |-------------|-------------|-----------|-------------|-------------|---------------|----------------|-----------------|-----------------|-------|
@@ -235,10 +248,17 @@ WHERE aufk.WERKS IN ('0769', '0519')
 
 ---
 
-### 4.5 Proficy GBDB (SQL Server → raw_ext_sql_proficy)
+### 3.5 Proficy GBDB (SQL Server → raw_ext_sql_proficy)
 
-**Connection:** ODBC Driver 17 for SQL Server → Proficy GBDB database
-**SP:** `sp-cdf-sql-extractor-dev` (`3ec90782-5f9f-482d-9da2-46567276519b`)
+| | |
+|---|---|
+| **Source System** | Proficy GBDB |
+| **System Type** | Historian DB (SQL Server) |
+| **Extractor** | `sql-extractor-proficy` |
+| **Extractor Status** | ✅ Running |
+| **Service Principal** | `sp-cdf-sql-extractor-dev` (`3ec90782-5f9f-482d-9da2-46567276519b`) |
+| **RAW Database** | `raw_ext_sql_proficy` |
+| **Connection** | ODBC Driver 17 for SQL Server → Proficy GBDB |
 
 | GBDB Table | RAW Table | Description | Data Content | Transformation | Target View(s) | Pipeline Status | Notes |
 |-----------|-----------|-------------|-------------|----------------|-----------------|-----------------|-------|
@@ -257,11 +277,18 @@ WHERE aufk.WERKS IN ('0769', '0519')
 
 ---
 
-### 4.6 PI Servers (Historians → CDF Time Series + raw_ext_pi)
+### 3.6 PI Servers (Historians → CDF Time Series + raw_ext_pi)
 
-**SP:** `sp-cdf-pi-extractor-dev` (`b7671a6c-8680-4b10-b8d0-141767de9877`)
-**TS Space:** `sylvamo_assets`
-**Backfill:** 365 days, step-size 168 hours (1 week)
+| | |
+|---|---|
+| **Source System** | PI Servers (Eastover: S769PI01, PM: S769PI03, S519: S519PIP1) |
+| **System Type** | Historian |
+| **Extractors** | `pi-extractor-eastover`, `pi-extractor-pm`, `pi-extractor-s519` |
+| **Extractor Status** | ✅ Running (all 3) |
+| **Service Principal** | `sp-cdf-pi-extractor-dev` (`b7671a6c-8680-4b10-b8d0-141767de9877`) |
+| **RAW Database** | `raw_ext_pi` (metadata only) + CDF Time Series (actual values) |
+| **TS Space** | `sylvamo_assets` |
+| **Backfill** | 365 days, step-size 168 hours (1 week) |
 
 | PI Server | Server FQDN | RAW Metadata Table | Tags Extracted | Tag Categories | Pipeline Status | Notes |
 |-----------|------------|-------------------|----------------|----------------|-----------------|-------|
@@ -273,10 +300,17 @@ WHERE aufk.WERKS IN ('0769', '0519')
 
 ---
 
-### 4.7 SharePoint Online (→ raw_ext_sharepoint + CDF Files)
+### 3.7 SharePoint Online (→ raw_ext_sharepoint + CDF Files)
 
-**SP:** `sp-cdf-file-extractor-dev` (`4050f0ee-519e-4485-ac2b-f3221071c92e`)
-**SharePoint Site:** `https://sylvamo.sharepoint.com/sites/Sumter/Shared%20Documents`
+| | |
+|---|---|
+| **Source System** | SharePoint Online |
+| **System Type** | Document Management |
+| **Extractor** | `sharepoint-extractor` |
+| **Extractor Status** | ✅ Running |
+| **Service Principal** | `sp-cdf-file-extractor-dev` (`4050f0ee-519e-4485-ac2b-f3221071c92e`) |
+| **RAW Database** | `raw_ext_sharepoint` |
+| **SharePoint Site** | `https://sylvamo.sharepoint.com/sites/Sumter/Shared%20Documents` |
 
 | RAW Table | Description | Data Content | Expected Rows | Transformation | Target View(s) | Pipeline Status | Notes |
 |-----------|-------------|-------------|---------------|----------------|-----------------|-----------------|-------|
@@ -285,9 +319,9 @@ WHERE aufk.WERKS IN ('0769', '0519')
 
 ---
 
-## 5. Data Model Summary
+## 4. Data Model Summary
 
-### 5.1 Model Hierarchy
+### 4.1 Model Hierarchy
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
@@ -318,7 +352,7 @@ WHERE aufk.WERKS IN ('0769', '0519')
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 5.2 View-to-Data-Source Mapping
+### 4.2 View-to-Data-Source Mapping
 
 | Data Model | View | Populated By | Source RAW | Status |
 |------------|------|-------------|------------|--------|
@@ -344,9 +378,9 @@ WHERE aufk.WERKS IN ('0769', '0519')
 
 ---
 
-## 6. Gap Analysis
+## 5. Gap Analysis
 
-### 6.1 RAW Tables Without Transformations (Extracted but unused)
+### 5.1 RAW Tables Without Transformations (Extracted but unused)
 
 | # | RAW Database | RAW Table | Data Description | Potential Target | Priority | Action Required |
 |---|-------------|-----------|-----------------|-----------------|----------|-----------------|
@@ -368,7 +402,7 @@ WHERE aufk.WERKS IN ('0769', '0519')
 | 16 | `raw_ext_sql_proficy` | `event_tables` | GBDB event table metadata | Internal | Low | Likely not needed |
 | 17 | `raw_ext_sql_proficy` | `all_tables` | GBDB all table metadata | Internal | Low | Likely not needed |
 
-### 6.2 Data Model Views Without Data Sources
+### 5.2 Data Model Views Without Data Sources
 
 | # | Data Model | View | Required Data Source | Status | Owner | Notes |
 |---|-----------|------|---------------------|--------|-------|-------|
@@ -384,7 +418,7 @@ WHERE aufk.WERKS IN ('0769', '0519')
 | 10 | mfg_data | Measurement | ❓ | ❌ Unknown source | Sylvamo | |
 | 11 | mfg_data | ManufacturingEvent | Multiple sources? | ❓ Relationship to Event | Sylvamo | |
 
-### 6.3 Source Conflicts / Ambiguities
+### 5.3 Source Conflicts / Ambiguities
 
 | # | Issue | Tables Involved | Details | Resolution Needed |
 |---|-------|----------------|---------|-------------------|
@@ -398,18 +432,18 @@ WHERE aufk.WERKS IN ('0769', '0519')
 
 ---
 
-## 7. RAW Database Naming Issues
+## 6. RAW Database Naming Issues
 
 > **CRITICAL:** There are two naming conventions in use. Old configs write to one DB, transforms read from another. This causes data to be extracted but invisible to transformations.
 
-### 7.1 Naming Convention History
+### 6.1 Naming Convention History
 
 | Era | Pattern | Example | Used By |
 |-----|---------|---------|---------|
 | **Old** (Jan 2026) | `raw_sylvamo_<source>` | `raw_sylvamo_fabric`, `raw_sylvamo_sap` | Early extractor configs (PPR all-tables, SAP OData, HIST_REEL standalone, HIST_ROLL_QUALITY) |
 | **New** (Feb 2026) | `raw_ext_<type>_<source>` | `raw_ext_fabric_ppr`, `raw_ext_fabric_ppv`, `raw_ext_fabric_sapecc`, `raw_ext_sap` | Production configs, all transformations |
 
-### 7.2 Affected Configs
+### 6.2 Affected Configs
 
 | Config | Writes To (Old) | Transforms Read From (New) | Impact |
 |--------|----------------|---------------------------|--------|
@@ -422,7 +456,7 @@ WHERE aufk.WERKS IN ('0769', '0519')
 | `sap-odata-extractor.yml` | `raw_sylvamo_sap.bp_details` | `raw_ext_sap.bp_details` | ❌ **Wrong DB** |
 | `fabric-connector-hist-roll-full.yml` (v2) | `raw_ext_fabric_ppr.ppr_hist_roll` ✅ | `raw_ext_fabric_ppr.ppr_hist_roll` ✅ | ✅ **Correct** |
 
-### 7.3 Resolution Required
+### 6.3 Resolution Required
 
 **Action:** Update ALL old configs to use `raw_ext_*` naming convention with `ppr_` prefixed table names. Specifically:
 1. HIST_REEL config: change `raw_sylvamo_fabric` → `raw_ext_fabric_ppr`
@@ -434,9 +468,9 @@ WHERE aufk.WERKS IN ('0769', '0519')
 
 ---
 
-## 8. Known Extraction Issues
+## 7. Known Extraction Issues
 
-### 8.1 Fabric Connector Bugs
+### 7.1 Fabric Connector Bugs
 
 | Issue | Symptom | Workaround | Status |
 |-------|---------|-----------|--------|
@@ -446,7 +480,7 @@ WHERE aufk.WERKS IN ('0769', '0519')
 | **Row key overwrite** | Without `md5-key`, connector uses row indices (0-999) as keys — each batch overwrites previous | Set `md5-key: true` to generate unique hash-based keys | Documented |
 | **Trailing space in table name** | `HIST_ROLL_QUALITY ` has trailing space in Fabric | Include trailing space in `raw-path` config | Known |
 
-### 8.2 SAP OData Issues
+### 7.2 SAP OData Issues
 
 | Issue | Symptom | Resolution |
 |-------|---------|------------|
@@ -457,9 +491,9 @@ WHERE aufk.WERKS IN ('0769', '0519')
 
 ---
 
-## 9. Validation Checklist
+## 8. Validation Checklist
 
-### 9.1 Data Source Completeness Validation
+### 8.1 Data Source Completeness Validation
 
 | # | Source | RAW Database | RAW Table | Fabric Rows (Expected) | RAW Rows (Actual) | Match? | Last Validated |
 |---|--------|-------------|-----------|----------------------|-------------------|--------|----------------|
@@ -492,7 +526,7 @@ WHERE aufk.WERKS IN ('0769', '0519')
 | 27 | PI | `raw_ext_pi` | `s769pi03_metadata` | ❓ | ❓ | ❓ | — |
 | 28 | PI | `raw_ext_pi` | `s519pip1_metadata` | ❓ | ❓ | ❓ | — |
 
-### 9.2 Transformation Validation
+### 8.2 Transformation Validation
 
 | # | Transformation | Source RAW | Target View | RAW Rows In | Instances Out | Transform Status | Last Run |
 |---|---------------|-----------|-------------|-------------|---------------|-----------------|----------|
@@ -513,9 +547,9 @@ WHERE aufk.WERKS IN ('0769', '0519')
 
 ---
 
-## 10. Open Questions & Action Items
+## 9. Open Questions & Action Items
 
-### 10.1 Questions for Sylvamo (Cam / Valmir)
+### 9.1 Questions for Sylvamo (Cam / Valmir)
 
 | # | Question | Context | Priority | Owner | Status |
 |---|----------|---------|----------|-------|--------|
@@ -532,7 +566,7 @@ WHERE aufk.WERKS IN ('0769', '0519')
 | Q11 | Which **SAP client** is correct: `100` or `300`? | OData config says 100, earlier docs say 300 | Medium | SAP team | 🔲 Open |
 | Q12 | Is there an **IFLOT** (Functional Locations) table in Fabric lakehouses? | Needed for Equipment view. Config has commented TODO | Medium | Valmir | 🔲 Open |
 
-### 10.2 Internal Action Items
+### 9.2 Internal Action Items
 
 | # | Action | Priority | Owner | Target Date | Status |
 |---|--------|----------|-------|-------------|--------|
@@ -581,24 +615,24 @@ WHERE aufk.WERKS IN ('0769', '0519')
 
 ## How to Use This Document
 
-1. **For daily standups:** Use section 11 (Punch List) — prioritized, actionable items grouped by type
-2. **For Sylvamo meetings:** Use section 11 "ASK SYLVAMO" items — pre-built talking points with context
-3. **For internal tracking:** Use section 9 (Validation Checklist) — fill in row counts as validation is performed
-4. **For development:** Use section 4 (Full Pipeline Mapping) — shows exactly which transformations exist and which need to be built
-5. **For config fixes:** Use sections 7 + 11 "FIX NOW" — lists every config that needs updating with priority
+1. **For daily standups:** Use section 10 (Punch List) — prioritized, actionable items grouped by type
+2. **For Sylvamo meetings:** Use section 10 "ASK SYLVAMO" items — pre-built talking points with context
+3. **For internal tracking:** Use section 8 (Validation Checklist) — fill in row counts as validation is performed
+4. **For development:** Use section 3 (Source Systems & Pipeline Mapping) — extractor info + table-level detail in one place
+5. **For config fixes:** Use sections 6 + 10 "FIX NOW" — lists every config that needs updating with priority
 6. **For Fabric team coordination:** Use section 2 (Fabric Infrastructure Map) — workspace/lakehouse/SP topology
 7. **For SVQS-160:** Reference this document as the comprehensive data lineage tracker
 
-> **Next Steps (see Section 11 Priority Matrix for full view):**
-> 1. **THIS WEEK:** Fix RAW DB naming in all old configs and re-run extractors (F1-F5)
-> 2. **THIS WEEK:** Schedule Sylvamo meeting using ASK items A1-A9 as agenda
+> **Next Steps (see Section 10 Priority Matrix for full view):**
+> 1. **THIS WEEK:** Fix RAW DB naming in all old configs and re-run extractors (F1–F5)
+> 2. **THIS WEEK:** Schedule Sylvamo meeting using ASK items A1–A9 as agenda
 > 3. **THIS SPRINT:** Build AUFK+AFKO+AFVC join transform (B1) and Package transform (B2)
 > 4. **THIS SPRINT:** Build validation script (B3) once Sylvamo provides expected counts
-> 5. **BACKLOG:** Remaining transforms (B4-B6) pending Sylvamo confirmation on mappings
+> 5. **BACKLOG:** Remaining transforms (B4–B6) pending Sylvamo confirmation on mappings
 
 ---
 
-## 11. Things to Fix or Ask (Prioritized Punch List)
+## 10. Things to Fix or Ask (Prioritized Punch List)
 
 > **Use this section as your standup checklist and Sylvamo meeting agenda.**
 > Items are grouped by type and sorted by priority within each group.
@@ -609,7 +643,7 @@ WHERE aufk.WERKS IN ('0769', '0519')
 
 | # | What | Why It Matters | Effort | Status |
 |---|------|---------------|--------|--------|
-| F1 | **Fix RAW DB names in all old extractor configs** (`raw_sylvamo_fabric` → `raw_ext_fabric_ppr`, `raw_sylvamo_sap` → `raw_ext_sap`) | Transforms can't read data written to wrong DB. HIST_REEL, HIST_PACKAGE, HIST_ROLL_QUALITY, HIST_BLEND, HIST_MATERIAL, HIST_ORDER_ITEM, PRODUCTION_TOTAL, MILL, and SAP OData `bp_details` are all affected. See [Section 7](#7-raw-database-naming-issues) for full list. | Small — config change + re-run | 🔲 |
+| F1 | **Fix RAW DB names in all old extractor configs** (`raw_sylvamo_fabric` → `raw_ext_fabric_ppr`, `raw_sylvamo_sap` → `raw_ext_sap`) | Transforms can't read data written to wrong DB. HIST_REEL, HIST_PACKAGE, HIST_ROLL_QUALITY, HIST_BLEND, HIST_MATERIAL, HIST_ORDER_ITEM, PRODUCTION_TOTAL, MILL, and SAP OData `bp_details` are all affected. See [Section 6](#6-raw-database-naming-issues) for full list. | Small — config change + re-run | 🔲 |
 | F2 | **Re-run HIST_REEL extractor** after DB name fix | Reel transformation (`populate_Reel`) will fail or read stale data until the reel data lands in `raw_ext_fabric_ppr.ppr_hist_reel` | Small — re-run extraction (~61K rows) | 🔲 |
 | F3 | **Re-run remaining PPR tables** (HIST_PACKAGE, HIST_BLEND, HIST_MATERIAL, HIST_ORDER_ITEM, PRODUCTION_TOTAL, MILL, HIST_ROLL_QUALITY) with correct DB names | All 7 tables are currently in `raw_sylvamo_fabric` — useless to transforms | Medium — run one at a time (KeyError bug) | 🔲 |
 | F4 | **Verify `populate_Event_WorkOrders` and `populate_WorkOrder` transforms now succeed** | `sapecc_work_orders` (~407K rows) was extracted 2026-02-03. Transforms should now have data. | Small — run transforms, check results | 🔲 |
@@ -679,4 +713,4 @@ WHERE aufk.WERKS IN ('0769', '0519')
 
 ---
 
-*Document version: 2.1 — Updated 2026-02-10 with consolidated "Things to Fix or Ask" punch list*
+*Document version: 3.0 — Updated 2026-02-10. Combined Source Systems + Pipeline Mapping into single Section 3. Added prioritized punch list (Section 10).*
