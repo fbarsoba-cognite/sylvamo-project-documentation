@@ -122,6 +122,8 @@ CDF is an **external SaaS endpoint**:
 > 
 > The same code deploys to dev, staging, and prod. The only difference is which `config.<env>.yaml` file is used - each points to a different CDF project.
 
+> **Note:** Dev, staging, and prod are **deployment environments** (CDF projects for CI/CD). They are not mills, plants, or physical sites. Mills are organizational units and are separate from deployment promotions.
+
 ---
 
 ## CI/CD Flow Overview
