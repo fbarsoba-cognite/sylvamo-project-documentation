@@ -119,7 +119,8 @@ CDF is an **external SaaS endpoint**:
 │    │ cdf build│ ───▶ │ cdf deploy  │  ✓ Applies changes to CDF │
 │    └──────────┘      └─────────────┘                            │
 │                                                                 │
-│  Environment promotion: DEV → STAGING → PROD (with approvals)  │
+│  DEV → STAGING (auto); PROD via separate promote-to-prod     │
+│  pipeline (weekly/manual with approval).                       │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -282,6 +283,7 @@ steps:
 
 For more detailed information, see:
 
+- **[CI/CD Hands-On Learnings](CICD_HANDS_ON_LEARNINGS.md)** - Real-world learnings from Sylvamo pipeline setup (branch strategy, pipeline architecture, CDF IAM, etc.)
 - **[CI/CD System Explanation](CICD_SYSTEM_EXPLANATION.md)** - Comprehensive guide on how the CI/CD system works, use case, code flow, and pipeline details
 - **[ADO Pipeline Setup](ADO_PIPELINE_SETUP.md)** - Implementation summary, setup steps, and manual configuration guide
 - **[Clone ADO Repository](ADO_CLONE_REPO.md)** - Programmatic repository cloning guide

@@ -24,6 +24,7 @@
   - Variable groups and environments configuration
   - Testing and validation
   - Troubleshooting real-world issues
+  - **See also:** [CI/CD Hands-On Learnings](CICD_HANDS_ON_LEARNINGS.md) – real-world learnings from Sylvamo pipeline setup
 
 **Assumed Knowledge from Phase 1:**
 - Understanding of CDF as external SaaS endpoint
@@ -375,6 +376,10 @@ steps:
 > - [ ] Secrets marked as secret (padlock icon)
 > - [ ] Pipeline permissions granted
 
+**CDF IAM Considerations:**
+
+> "Each CDF project needs IAM groups for the deployment service principal. Staging and production may restrict WRITE on legacy APIs (Annotations, Assets, Relationships). If you see 'invalid capabilities' errors, update your Group YAML to use READ only for those ACLs. See [Hands-On Learnings - CDF IAM](CICD_HANDS_ON_LEARNINGS.md#cdf-iam-groups) and [Troubleshooting - Invalid Capabilities](CICD_PIPELINE_TROUBLESHOOTING.md#invalid-capabilities-cdf-iam)."
+
 **Common Issue:**
 
 > "If you see permission errors, go back and grant pipeline permissions. This is the #1 issue I see."
@@ -480,7 +485,7 @@ steps:
 
 > "This pipeline runs on every PR. It validates your changes with `cdf build` and `cdf deploy --dry-run`. If it fails, the PR can't be merged."
 
-**Pipeline 2: Deployment Pipeline**
+**Pipeline 2: Deployment Pipeline (Dev + Staging)**
 
 **Live Demo:**
 
@@ -492,16 +497,28 @@ steps:
    > "Click 'Continue'"
 
 2. **Review:**
-   > "This should show three stages: DeployDev, DeployStaging, DeployProd"
+   > "This should show two stages: DeployDev, DeployStaging. Production uses a separate Promote-to-Prod pipeline."
    > "Click 'Save'"
-   > "Rename: 'Deploy to CDF'"
+   > "Rename: 'Deploy to Dev & Staging'"
 
 **What This Pipeline Does:**
 
 > "This is the main deployment pipeline. It:"
 > - Auto-deploys to dev (no approval)
-> - Waits for approval to deploy to staging
-> - Waits for approval to deploy to production
+> - Auto-deploys to staging (no approval, or add approval if desired)
+> - Production is separate – see Promote-to-Production below
+
+**Pipeline 2b: Promote-to-Production (Optional)**
+
+**Live Demo:**
+
+1. **Create:**
+   > "Click 'New Pipeline'"
+   > "Path: `.devops/promote-to-prod-pipeline.yml`"
+   > "Save and rename: 'Promote to Production'"
+
+2. **What It Does:**
+   > "This pipeline runs manually or on a schedule (e.g., Monday 8am UTC). It has an approval gate for production. Use this for controlled production releases."
 
 **Pipeline 3: Test All Environments**
 
@@ -519,10 +536,14 @@ steps:
 **Verification:**
 
 > "Checklist:"
-> - [ ] Three pipelines appear in list
+> - [ ] PR Validation, Deploy, and (optionally) Promote-to-Prod pipelines appear
 > - [ ] PR Validation can be run manually
-> - [ ] Deploy to CDF shows three stages
+> - [ ] Deploy pipeline shows Dev + Staging stages
 > - [ ] No errors when viewing YAML
+
+**What We Learned:**
+
+> "In practice, we use a separate Promote-to-Production pipeline. See [Hands-On Learnings](CICD_HANDS_ON_LEARNINGS.md) for why and how."
 
 **Common Issues:**
 
@@ -978,6 +999,8 @@ Expected to deploy for 'staging', but build was for 'dev'
 
 **Phase 2 Materials:**
 - **[CI/CD Complete Setup Guide](CICD_COMPLETE_SETUP_GUIDE.md)** - This comprehensive setup guide
+- **[CI/CD Hands-On Learnings](CICD_HANDS_ON_LEARNINGS.md)** - Real-world learnings from Sylvamo pipeline setup
+- **[CI/CD Hands-On Speaker Notes](CICD_HANDS_ON_SPEAKER_NOTES.md)** - Notes for follow-along hands-on session
 - **[CI/CD Testing Guide](CICD_TESTING_GUIDE.md)** - Detailed testing procedures
 - **[CI/CD Pipeline Troubleshooting Guide](CICD_PIPELINE_TROUBLESHOOTING.md)** - Comprehensive troubleshooting
 

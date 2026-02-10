@@ -12,7 +12,8 @@ This guide documents common issues encountered during CI/CD pipeline setup and e
 4. [Working Directory Not Found](#working-directory-not-found)
 5. [Project Name Mismatch Errors](#project-name-mismatch-errors)
 6. [Authentication Failures](#authentication-failures)
-7. [Complete Pipeline YAML Reference](#complete-pipeline-yaml-reference)
+7. [Invalid Capabilities (CDF IAM)](#invalid-capabilities-cdf-iam)
+8. [Complete Pipeline YAML Reference](#complete-pipeline-yaml-reference)
 
 ---
 
@@ -389,6 +390,43 @@ Add `--env` parameter to **all** `cdf build` commands:
 - Always use `--env` parameter with `cdf build`
 - Match build environment with deploy environment
 - Document environment-specific build requirements
+
+---
+
+## Invalid Capabilities (CDF IAM)
+
+### Issue: ResourceUpdateError - Invalid Capabilities
+
+**Error Message:**
+```
+ cognitertools.exceptions.ResourceUpdateError: 3 invalid capabilitie(s) are present
+```
+
+**Root Cause:**
+Staging and production CDF projects (`sylvamo-test`, `sylvamo-prod`) restrict WRITE access to certain legacy APIs (Annotations, Assets, Relationships). The deployment service principal's Group YAML may request WRITE privileges that are not allowed in those projects.
+
+**Solution:**
+
+1. **Locate the Group YAML file** in your admin module:
+   - `sylvamo/modules/admin/auth/cognite_toolkit_service_principal.Group.yaml`
+
+2. **Update the following capabilities** to use READ only for staging/prod:
+
+   ```yaml
+   # Change from WRITE to READ only
+   - annotationsAcl:
+       actions: [READ]
+   - assetsAcl:
+       actions: [READ]
+   - relationshipsAcl:
+       actions: [READ]
+   ```
+
+3. **Maintain environment-specific configs** if needed:
+   - Dev can keep full WRITE
+   - Staging and prod use READ only for these ACLs
+
+**Reference:** See [CDF IAM Groups Setup](CICD_COMPLETE_SETUP_GUIDE.md#cdf-iam-groups-setup) and [CI/CD Hands-On Learnings - CDF IAM Groups](CICD_HANDS_ON_LEARNINGS.md#cdf-iam-groups) for full context.
 
 ---
 

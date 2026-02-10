@@ -18,8 +18,9 @@ This guide walks you through the complete setup of CI/CD pipelines for deploying
 8. [Step 5: Configure Branch Policies](#step-5-configure-branch-policies)
 9. [Step 6: Verify Config Files Match Variables](#step-6-verify-config-files-match-variables)
 10. [Step 7: Test the Setup](#step-7-test-the-setup)
-11. [Troubleshooting Common Issues](#troubleshooting-common-issues)
-12. [Complete Pipeline YAML Reference](#complete-pipeline-yaml-reference)
+11. [CDF IAM Groups Setup](#cdf-iam-groups-setup)
+12. [Troubleshooting Common Issues](#troubleshooting-common-issues)
+13. [Complete Pipeline YAML Reference](#complete-pipeline-yaml-reference)
 
 ---
 
@@ -67,6 +68,24 @@ Cognite Data Fusion (CDF) is a cloud service that you deploy **to**, not **insid
 2. **Merge stage:** `deploy` actually applies changes (like `terraform apply`)
 
 Nothing changes in CDF until code is merged to main.
+
+### Pipeline Architecture (Sylvamo Implementation)
+
+At Sylvamo, the deploy pipeline deploys to **Dev and Staging only**. Production uses a **separate pipeline** (promote-to-prod) that runs weekly or manually, with an approval gate. See [Step 4.4: Create Promote-to-Production Pipeline](#44-create-promote-to-production-pipeline) and [CI/CD Hands-On Learnings](CICD_HANDS_ON_LEARNINGS.md) for details.
+
+---
+
+## Branch Strategy
+
+### Trunk-Based: Main Branch Only
+
+We use a trunk-based model:
+
+- **Single source of truth:** `main` branch only (no `dev`, `staging`, or `prod` branches)
+- **Environment-specific configs:** `config.dev.yaml`, `config.staging.yaml`, `config.prod.yaml` define which CDF project each environment targets
+- **Feature branches** target `main`; PR validation runs before merge
+
+See [CI/CD Hands-On Learnings - Branch Strategy](CICD_HANDS_ON_LEARNINGS.md#branch-strategy) for more details.
 
 ---
 
@@ -362,7 +381,7 @@ Environments enable approval gates for staging and production deployments.
 
 ### 4.2 Create Deployment Pipeline
 
-**Purpose:** Multi-stage deployment (dev → staging → prod).
+**Purpose:** Multi-stage deployment (dev → staging). At Sylvamo, this deploys to **Dev and Staging only**; Production uses a separate promote-to-prod pipeline (Step 4.4).
 
 **Steps:**
 
@@ -375,7 +394,7 @@ Environments enable approval gates for staging and production deployments.
 7. Click **"Continue"**
 8. **Review:** Verify the YAML is displayed correctly
 9. Click **"Save"**
-10. **Rename:** Name it **"Deploy to CDF"** or **"CDF Deployment"`
+10. **Rename:** Name it **"Deploy to Dev & Staging (Auto on Merge)"**
 
 **⚠️ Important:** If you see errors about variable groups or working directories, see [Troubleshooting Common Issues](#troubleshooting-common-issues).
 
@@ -394,15 +413,34 @@ Environments enable approval gates for staging and production deployments.
 7. Click **"Continue"**
 8. **Review:** Verify the YAML is displayed correctly
 9. Click **"Save"**
-10. **Rename:** Name it **"Validate All Environments"**
+10. **Rename:** Name it **"Test All Environments (Manual)"**
 
-### 4.4 Verify Pipelines
+### 4.4 Create Promote-to-Production Pipeline
+
+**Purpose:** Production deployment. Runs weekly (Monday 8am UTC) or manually. Uses the `production` ADO environment with an approval gate.
+
+**Steps:**
+
+1. Click **"New Pipeline"** button
+2. **Where is your code?** Select **"Azure Repos Git"**
+3. **Select a repository:** Choose **Industrial-Data-Landscape-IDL**
+4. **Configure your pipeline:** Select **"Existing Azure Pipelines YAML file"**
+5. **Branch:** `main`
+6. **Path:** `.devops/promote-to-prod-pipeline.yml`
+7. Click **"Continue"**
+8. **Review:** Verify the YAML shows build, dry-run, and deploy for prod
+9. Click **"Save"**
+10. **Rename:** Name it **"Promote to Production (Weekly/Manual)"**
+
+**Note:** Ensure `.devops/promote-to-prod-pipeline.yml` exists in your repo. It should have `trigger: none`, a `schedules` block for weekly runs, and use `environment: 'production'` for the approval gate.
+
+### 4.5 Verify Pipelines
 
 **Checklist:**
 
-- [ ] Three pipelines appear in Pipelines list
+- [ ] Four pipelines appear in Pipelines list (PR Validation, Deploy, Test All, Promote to Prod)
 - [ ] PR Validation pipeline can be run manually
-- [ ] Deploy to CDF pipeline shows three stages (Dev, Staging, Prod)
+- [ ] Deploy pipeline shows two stages (Dev, Staging); Promote-to-Prod pipeline exists for Production
 - [ ] No errors when viewing pipeline YAML
 
 ---
@@ -564,6 +602,43 @@ Make PR validation required before merging to main.
 - [ ] Production approval gate works
 - [ ] All environments receive deployments correctly
 - [ ] No errors in pipeline logs
+
+---
+
+## CDF IAM Groups Setup
+
+Each CDF project needs IAM groups for the deployment service principal and other access. Staging and production projects may have different capability restrictions than dev.
+
+### Bootstrap cognite_toolkit_service_principal
+
+The deployment service principal must have `groupsAcl:LIST` (and related capabilities) in each target CDF project. If the group does not exist:
+
+1. **Manual bootstrap (CDF Fusion UI):** Create a group with `sourceId` matching your Azure AD service principal, and minimal capabilities (e.g., `groupsAcl:LIST,READ,CREATE,UPDATE,DELETE`).
+2. **Or copy from dev:** Use CDF API or scripts to copy groups from `sylvamo-dev` to `sylvamo-test` and `sylvamo-prod`.
+
+### Restricted Capabilities in Staging/Production
+
+Staging and production CDF projects (`sylvamo-test`, `sylvamo-prod`) may restrict WRITE access to legacy APIs. Update Group YAML files to use **READ only** for:
+
+- `annotationsAcl`
+- `assetsAcl`
+- `relationshipsAcl`
+
+**Location:** `sylvamo/modules/admin/auth/cognite_toolkit_service_principal.Group.yaml`
+
+**Example fix:**
+
+```yaml
+# Before (fails in staging/prod)
+- annotationsAcl:
+    actions: [READ, WRITE, SUGGEST, REVIEW]
+
+# After (works)
+- annotationsAcl:
+    actions: [READ]
+```
+
+See [CI/CD Pipeline Troubleshooting - Invalid Capabilities](CICD_PIPELINE_TROUBLESHOOTING.md#invalid-capabilities-cdf-iam) and [CI/CD Hands-On Learnings](CICD_HANDS_ON_LEARNINGS.md#cdf-iam-groups) for details.
 
 ---
 
@@ -882,7 +957,7 @@ Use this checklist to verify your setup is complete:
 
 ### Pipelines
 - [ ] PR Validation pipeline created
-- [ ] Deploy to CDF pipeline created
+- [ ] Deploy pipeline created; Promote-to-Prod pipeline created
 - [ ] Validate All Environments pipeline created
 - [ ] All pipelines can be run manually
 
