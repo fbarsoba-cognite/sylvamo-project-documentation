@@ -15,6 +15,10 @@
   - [Extractors](reference/extractors/EXTRACTORS.md)
   - [Data Pipeline & Sources](reference/extractors/DATA_PIPELINE_AND_SOURCES.md)
   - [CI/CD Overview](reference/extractors/CICD_OVERVIEW.md)
+- **Files & P&ID Contextualization**
+  - [CDF File Management](reference/files/CDF_FILE_MANAGEMENT.md) — Storage architecture, CogniteFile CDM, file-to-asset linking
+  - [P&ID Contextualization Lifecycle](reference/files/PID_CONTEXTUALIZATION_LIFECYCLE.md) — Ingestion, detection, matching, approval, revision handling
+  - [Annotation Workflow & Versioning](reference/files/ANNOTATION_WORKFLOW_AND_VERSIONING.md) — Annotation model, confidence scoring, file revision behavior
 - **Use Cases**
   - [Use Cases & Queries](reference/use-cases/USE_CASES_AND_QUERIES.md)
   - [Expert Scenarios](reference/use-cases/USE_CASE_VALIDATION_EXPERT_SCENARIOS.md)
@@ -43,6 +47,7 @@ docs/
 ├── reference/              # Polished, customer-ready documentation
 │   ├── data-model/         # Data model specifications
 │   ├── extractors/         # Extractor and pipeline docs
+│   ├── files/              # CDF file management, P&ID lifecycle, annotations
 │   ├── use-cases/          # Use case documentation
 │   └── getting-started/    # Onboarding guides
 │
@@ -57,4 +62,4 @@ docs/
 
 ---
 
-*Last updated: February 5, 2026*
+*Last updated: February 10, 2026*
