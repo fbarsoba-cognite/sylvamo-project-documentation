@@ -3,7 +3,61 @@
 > **Purpose:** Architecture decision document for Sylvamo stakeholder meeting  
 > **Date:** February 2026  
 > **Author:** Fernando Barsoba (Cognite)  
-> **Status:** For Discussion
+> **Status:** For Discussion  
+> **Version:** 2.0
+
+---
+
+## Document Information
+
+| Attribute | Value |
+|-----------|-------|
+| **Project** | Sylvamo CDF Implementation |
+| **CDF Tenant** | cdf-production-cognite |
+| **Data Model Space** | sylvamo_mfg_core_schema |
+| **Instance Space** | sylvamo_mfg_core_instances |
+| **Toolkit Config** | sylvamo/config.dev.yaml |
+| **GitHub Repo** | [sylvamo-project-documentation](https://github.com/fbarsoba-cognite/sylvamo-project-documentation) |
+
+### Related Documents
+
+| Document | Description |
+|----------|-------------|
+| [APPENDIX_MFG_CORE_MODEL.md](APPENDIX_MFG_CORE_MODEL.md) | Complete GraphQL schema and Mermaid diagrams |
+| [../../extractors/EXTRACTORS.md](../extractors/EXTRACTORS.md) | Extractor configurations (Fabric, PI, SQL, SharePoint) |
+| [ISA-95 Standard](https://www.isa.org/standards-and-publications/isa-standards/isa-standards-committees/isa95) | ISA-95 Enterprise-Control Integration |
+| [ISA-88 Standard](https://www.isa.org/standards-and-publications/isa-standards/isa-standards-committees/isa88) | ISA-88 Batch Control |
+| [Cognite ISA Extension](https://github.com/cognitedata/library/tree/main/modules/models/isa_manufacturing_extension) | Official Cognite reference model |
+
+### Key Stakeholders
+
+| Role | Name/Team | Interest |
+|------|-----------|----------|
+| **Sylvamo - IT Architecture** | TBD | Data model alignment with enterprise systems |
+| **Sylvamo - Operations** | TBD | Usability of CDF applications (Search, InField) |
+| **Sylvamo - Engineering** | TBD | Time series and equipment modeling |
+| **Cognite - Solution Architect** | Fernando Barsoba | Overall architecture and ISA alignment |
+| **Cognite - Data Engineer** | Juan Garcia | Extractors and transformations |
+| **Cognite - ISA Expert** | Johan Stabekk | ISA-95/88 model guidance |
+
+### Meeting Objectives
+
+This document is prepared for the Sylvamo Architecture Meeting. The meeting objectives are:
+
+1. **Review current state** - Validate understanding of `sylvamo_mfg_core` as deployed
+2. **Confirm architecture decisions** - Get stakeholder buy-in on ADRs 1-10
+3. **Align on Phase 2 scope** - Equipment, ProductDefinition, Recipe entities
+4. **Discuss ISA-95 alignment timeline** - When to implement full ISA hierarchy
+5. **Address multi-site requirements** - Sumpter integration timeline
+
+### Decision Log
+
+| Date | Decision | Outcome | Attendees |
+|------|----------|---------|-----------|
+| 2026-01-28 | Use CDM Asset instead of ISA hierarchy | Approved (Johan Stabekk) | Fernando, Johan |
+| 2026-01-xx | Equipment as separate entity vs. view | TBD | Sylvamo meeting |
+| 2026-01-xx | Package entity scope | TBD | Sylvamo meeting |
+| 2026-01-xx | Phase 2 timeline | TBD | Sylvamo meeting |
 
 ---
 
@@ -20,6 +74,12 @@
 9. [Impact Assessment](#9-impact-assessment)
 10. [Recommendations](#10-recommendations)
 
+11. [Use Cases Enabled](#11-use-cases-enabled)
+12. [Multi-Site Considerations](#12-multi-site-considerations)
+13. [Technical Implementation Details](#13-technical-implementation-details)
+14. [Data Quality and Governance](#14-data-quality-and-governance)
+15. [Glossary](#15-glossary)
+
 **Appendices:**
 - [A: Cognite ISA Manufacturing Extension Entities](#appendix-a-cognite-isa-manufacturing-extension-entities)
 - [B: sylvamo_mfg_core Container Properties](#appendix-b-sylvamo_mfg_core-container-properties)
@@ -27,6 +87,8 @@
 - [D: Entity Relationship Diagram](#appendix-d-entity-relationship-diagram)
 - [E: Toolkit Module Structure](#appendix-e-toolkit-module-structure)
 - [F: Transformation Summary](#appendix-f-transformation-summary)
+- [G: External ID Conventions](#appendix-g-external-id-conventions)
+- [H: Data Lineage by Entity](#appendix-h-data-lineage-by-entity)
 
 ---
 
@@ -152,6 +214,79 @@ flowchart TB
 - Links to existing PI extractor time series without data duplication
 
 **Limitation:** Classic time series created before data modeling cannot have `instance_id` set retroactively. Future PI extractor configuration should target data modeling directly.
+
+### ADR-6: Transformation-Based Data Population
+
+**Decision:** Use CDF Transformations (SQL-based) for all data model population instead of direct SDK writes.
+
+**Rationale:**
+- Declarative approach - SQL defines mapping logic
+- Built-in scheduling and monitoring
+- Automatic retry and error handling
+- Version controlled in toolkit YAML files
+- Consistent with Cognite best practices
+
+**Trade-off:** Less flexibility than SDK for complex logic, but simpler maintenance.
+
+### ADR-7: RAW as Staging Layer
+
+**Decision:** All source data flows through CDF RAW before transformation to data model.
+
+**Rationale:**
+- Preserves raw source data for auditing and debugging
+- Decouples extraction from modeling
+- Enables re-processing without re-extraction
+- Supports data quality validation before modeling
+
+**Pattern:**
+```
+Source → Extractor → RAW → Transformation → Data Model
+```
+
+### ADR-8: External ID Namespacing
+
+**Decision:** All external IDs use a namespace prefix indicating the entity type.
+
+**Rationale:**
+- Prevents ID collisions across entity types
+- Makes debugging and log analysis easier
+- Self-documenting when viewing raw data
+- Enables targeted data operations (delete by prefix)
+
+**Examples:**
+- `floc:0769-PM1` (Asset from SAP functional location)
+- `reel:2024-001` (Reel from production system)
+- `ts:PM1.TEMP.PV` (Time series from PI)
+
+### ADR-9: Location Filter via EDM + SLM
+
+**Decision:** Use Cognite's Enterprise Data Model (EDM) + Site Location Mapping (SLM) for location-based data scoping.
+
+**Rationale:**
+- Out-of-the-box CDF feature
+- Works with CDF Search and all applications
+- Simple configuration via toolkit
+- Future-proof for multi-site expansion
+
+**Configuration:** `mfg_location` module in toolkit.
+
+### ADR-10: Toolkit Module Separation
+
+**Decision:** Organize toolkit configuration into logical modules:
+
+| Module | Purpose |
+|--------|---------|
+| `mfg_core` | Core manufacturing data model and transformations |
+| `mfg_location` | Location filter configuration |
+| `access_management` | Security groups and permissions |
+| `admin` | Admin utilities and CI/CD datasets |
+| `common` | Shared spaces and base configuration |
+| `infield` | InField application configuration |
+
+**Rationale:**
+- Enables selective deployment (`cdf deploy --include mfg_core`)
+- Clearer ownership and change tracking
+- Aligns with team structure
 
 ---
 
@@ -562,6 +697,459 @@ All changes in Phases 2-4 are **additive**. The existing `sylvamo_mfg_core` data
 
 ---
 
+## 11. Use Cases Enabled
+
+The current `sylvamo_mfg_core` model enables the following use cases:
+
+### UC1: Asset-Centric Search Experience
+
+**Scenario:** Operator searches for "PM1" and sees all related data.
+
+```mermaid
+flowchart LR
+    Search["Search: PM1"] --> Asset["Asset: PM1 Paper Machine"]
+    Asset --> TS["3,390 Time Series"]
+    Asset --> Events["Events: Work Orders, Production"]
+    Asset --> Files["P&ID Drawings"]
+    Asset --> Children["Child Assets: Subsystems"]
+```
+
+**Enabled by:** Asset hierarchy with `CogniteAsset`, reverse relations to TimeSeries, Events, Files.
+
+### UC2: Production Traceability
+
+**Scenario:** Trace a roll back to its production reel and quality tests.
+
+```mermaid
+flowchart LR
+    Roll["Roll R-12345"] --> Reel["Reel 2024-001-PM1"]
+    Reel --> Quality["Quality Tests"]
+    Reel --> Asset["PM1"]
+    Reel --> TS["Process Time Series"]
+    Roll --> RQ["Roll Quality Reports"]
+```
+
+**Enabled by:** Roll → Reel → Asset relationships, RollQuality entity.
+
+### UC3: Event Analysis by Asset
+
+**Scenario:** Analyze all work orders and production events for a specific area.
+
+| Query | Result |
+|-------|--------|
+| Events for Bleaching Systems | 5,000+ work orders, production events |
+| Events by type for PM1 | Work orders, downtime events, quality events |
+| Cost events for Eastover | PPV analysis, material cost variance |
+
+**Enabled by:** Unified Event entity with `eventType`, Asset relationship.
+
+### UC4: Time Series Analysis
+
+**Scenario:** View process data trends for paper machine operations.
+
+| Capability | Status |
+|------------|--------|
+| Browse time series by asset | Enabled |
+| View sparkline preview | Enabled (with `timeseries` property) |
+| Correlate with production events | Enabled via Asset relationship |
+
+**Enabled by:** MfgTimeSeries with `timeseries` property type linking to classic CDF Time Series.
+
+### UC5: Quality Management (Future - Phase 2)
+
+**Scenario:** Track quality metrics against product specifications.
+
+| Required Entity | Status |
+|-----------------|--------|
+| ProductDefinition | Phase 2 |
+| Recipe with target parameters | Phase 2 |
+| QualityResult linked to ProductDefinition | Phase 3 |
+
+### UC6: Inter-Plant Traceability (Future - Phase 2/3)
+
+**Scenario:** Track paper from Eastover production to Sumpter finishing.
+
+| Required Entity | Status |
+|-----------------|--------|
+| Package entity | Phase 2 |
+| Multi-site Asset hierarchy | Phase 3 |
+
+---
+
+## 12. Multi-Site Considerations
+
+### Current State: Single Site (Eastover)
+
+```mermaid
+flowchart TB
+    subgraph eastover [Eastover Mill - 0769]
+        E_Root["Eastover Mill"]
+        E_PM["Paper Machines"]
+        E_BL["Bleaching"]
+        E_PW["Power"]
+    end
+    
+    E_Root --> E_PM
+    E_Root --> E_BL
+    E_Root --> E_PW
+```
+
+- 44,898 assets in hierarchy
+- All transformations source Eastover data
+- Location filter scoped to Eastover
+
+### Future State: Multi-Site (Eastover + Sumpter)
+
+```mermaid
+flowchart TB
+    subgraph enterprise [Sylvamo Enterprise]
+        subgraph eastover [Eastover Mill - 0769]
+            E_PM["Paper Machines"]
+            E_BL["Bleaching"]
+        end
+        
+        subgraph sumpter [Sumpter Facility]
+            S_FIN["Finishing"]
+            S_CONV["Converting"]
+        end
+    end
+    
+    enterprise --> eastover
+    enterprise --> sumpter
+    eastover -.->|"Package transfer"| sumpter
+```
+
+### ISA-95 Enterprise Hierarchy
+
+| Level | Current | Multi-Site |
+|-------|---------|------------|
+| Enterprise | Not needed | Sylvamo Corporation |
+| Site | Eastover Mill | Eastover, Sumpter |
+| Area | 12 areas | Per-site areas |
+| ProcessCell | 108 cells | Per-site cells |
+| Unit | 3,118 units | Per-site units |
+| Equipment | 41,659 items | Per-site equipment |
+
+### Multi-Site Implementation Approach
+
+1. **Add Enterprise root node** (optional - only if needed for reporting)
+2. **Ingest Sumpter functional locations** from SAP
+3. **Create site-scoped location filters** for each plant
+4. **Implement Package entity** for inter-plant transfers
+5. **Update transformations** to include Sumpter source tables
+
+### Data Considerations
+
+| Aspect | Eastover | Sumpter | Notes |
+|--------|----------|---------|-------|
+| SAP Plant Code | 0769 | TBD | Different plant codes |
+| Functional Locations | sap_floc_eastover | sap_floc_sumter | Already have table |
+| PI Server | Eastover PI | Sumpter PI? | May need separate extractor |
+| Proficy | Eastover GBDB | Sumpter GBDB? | May need separate instance |
+
+---
+
+## 13. Technical Implementation Details
+
+### Phase 2 Implementation Guide
+
+#### Equipment Entity
+
+**Container Definition:**
+
+```yaml
+# MfgEquipment.Container.yaml
+externalId: MfgEquipment
+usedFor: node
+properties:
+  equipmentClass:
+    name: Equipment Class
+    type:
+      type: text
+    nullable: true
+    description: PaperMachine, Winder, Sheeter, Boiler, Pump
+  manufacturer:
+    name: Manufacturer
+    type:
+      type: text
+    nullable: true
+  model:
+    name: Model
+    type:
+      type: text
+    nullable: true
+  serialNumber:
+    name: Serial Number
+    type:
+      type: text
+    nullable: true
+  installDate:
+    name: Installation Date
+    type:
+      type: timestamp
+    nullable: true
+  parentAsset:
+    name: Parent Asset
+    type:
+      type: direct
+      container:
+        space: "{{ mfgCoreSchemaSpace }}"
+        externalId: MfgAsset
+    nullable: true
+```
+
+**View Definition:**
+
+```yaml
+# Equipment.View.yaml
+externalId: Equipment
+implements:
+  - space: cdf_cdm
+    externalId: CogniteEquipment
+    version: v1
+properties:
+  equipmentClass:
+    container:
+      space: "{{ mfgCoreSchemaSpace }}"
+      externalId: MfgEquipment
+    containerPropertyIdentifier: equipmentClass
+  # ... other properties
+```
+
+**Transformation SQL:**
+
+```sql
+-- populate_Equipment.Transformation.sql
+SELECT
+    concat('eq:', `equipment_id`) as externalId,
+    '{{ mfgCoreInstanceSpace }}' as space,
+    `description` as name,
+    `equipment_type` as equipmentClass,
+    `manufacturer` as manufacturer,
+    `model` as model,
+    `serial_number` as serialNumber,
+    to_timestamp(`install_date`) as installDate,
+    node_reference('{{ mfgCoreInstanceSpace }}', 
+        concat('floc:', `functional_location`)) as parentAsset
+FROM `raw_ext_sap`.`equipment_master`
+WHERE `equipment_id` IS NOT NULL
+```
+
+#### ProductDefinition Entity
+
+**Container Definition:**
+
+```yaml
+# ProductDefinition.Container.yaml
+externalId: ProductDefinition
+usedFor: node
+properties:
+  productCode:
+    name: Product Code
+    type:
+      type: text
+    nullable: false
+  productType:
+    name: Product Type
+    type:
+      type: text
+    nullable: true
+    description: Bond, Offset, Cover, Specialty
+  basisWeight:
+    name: Basis Weight
+    type:
+      type: float64
+    nullable: true
+    description: Target basis weight (lb/ream)
+  caliper:
+    name: Caliper
+    type:
+      type: float64
+    nullable: true
+    description: Target caliper (mils)
+  brightness:
+    name: Brightness
+    type:
+      type: float64
+    nullable: true
+    description: Target brightness (%)
+  moistureTarget:
+    name: Moisture Target
+    type:
+      type: float64
+    nullable: true
+    description: Target moisture (%)
+```
+
+#### Recipe Entity (ISA-88)
+
+**Container Definition:**
+
+```yaml
+# Recipe.Container.yaml
+externalId: Recipe
+usedFor: node
+properties:
+  recipeType:
+    name: Recipe Type
+    type:
+      type: text
+    nullable: true
+    description: general, site, master, control
+  version:
+    name: Version
+    type:
+      type: text
+    nullable: true
+  targetParameters:
+    name: Target Parameters
+    type:
+      type: json
+    nullable: true
+    description: JSON object with target process parameters
+  productDefinition:
+    name: Product Definition
+    type:
+      type: direct
+      container:
+        space: "{{ mfgCoreSchemaSpace }}"
+        externalId: ProductDefinition
+    nullable: true
+  equipment:
+    name: Equipment
+    type:
+      type: direct
+      container:
+        space: "{{ mfgCoreSchemaSpace }}"
+        externalId: MfgEquipment
+    nullable: true
+```
+
+### Toolkit Deployment Commands
+
+```bash
+# Build and validate
+cd sylvamo
+cdf build --env dev
+
+# Dry run to see changes
+cdf deploy --env dev --dry-run
+
+# Deploy to dev
+cdf deploy --env dev
+
+# Deploy specific modules
+cdf deploy --env dev --include mfg_core --include mfg_extended
+```
+
+---
+
+## 14. Data Quality and Governance
+
+### Data Quality Rules
+
+| Entity | Rule | Validation |
+|--------|------|------------|
+| Asset | `externalId` must start with `floc:` | Transformation SQL |
+| Asset | `sapFunctionalLocation` must not be null | Container constraint |
+| Reel | `reelNumber` must be unique | Container uniqueness constraint |
+| Roll | `rollNumber` must be unique | Container uniqueness constraint |
+| Event | `eventType` must be in allowed values | Transformation SQL CASE |
+| Event | `startTime` should be before `endTime` | Transformation SQL validation |
+
+### External ID Conventions
+
+| Entity | Pattern | Example |
+|--------|---------|---------|
+| Asset | `floc:{functional_location}` | `floc:0769-PM1-DRYER` |
+| Reel | `reel:{reel_number}_{year}` | `reel:2024-001-PM1_2024` |
+| Roll | `roll:{roll_number}` | `roll:R-12345-001` |
+| Event | `{source}-event:{id}` | `proficy-event:EVT001` |
+| Material | `mat:{material_number}` | `mat:100012345` |
+| Equipment | `eq:{equipment_id}` | `eq:EQ-PM1-001` |
+| TimeSeries | `ts:{pi_tag}` or `proficy:ts_{tag}` | `ts:PI.PM1.SPEED` |
+| File | `dm:{original_id}` | `dm:file-12345` |
+
+### Data Refresh Schedule
+
+| Transformation | Schedule | Notes |
+|----------------|----------|-------|
+| populate_Asset | Daily 2:00 AM | SAP hierarchy rarely changes |
+| populate_Reel | Hourly | Production data |
+| populate_Roll | Hourly | Production data |
+| populate_Event_* | Every 15 min | Near real-time events |
+| populate_TimeSeries | On PI extractor run | Triggered by extractor |
+| populate_Material | Weekly | Master data |
+| populate_RollQuality | Daily | SharePoint sync |
+
+### Access Control
+
+| Group | Permissions | Scope |
+|-------|-------------|-------|
+| sylvamo-mfg-admin | Full CRUD | All entities |
+| sylvamo-mfg-operator | Read + limited write | Production data |
+| sylvamo-mfg-analyst | Read only | All entities |
+| sylvamo-mfg-extractor | Write only | RAW + transformations |
+
+---
+
+## 15. Glossary
+
+### ISA-95 Terms
+
+| Term | Definition | Sylvamo Mapping |
+|------|------------|-----------------|
+| **Enterprise** | Top level of organizational hierarchy | Not implemented (single company) |
+| **Site** | Physical production facility | Asset (assetType=Site) - Eastover Mill |
+| **Area** | Major functional area within a site | Asset (assetType=Area) - Bleaching, Paper Machines |
+| **ProcessCell** | Group of units performing a complete process | Asset (assetType=ProcessCell) |
+| **Unit** | Equipment that performs a major processing activity | Asset (assetType=Unit) |
+| **EquipmentModule** | Physical equipment at lowest level | Asset (assetType=Equipment) |
+| **ProductDefinition** | Specification for a product type | Future - Phase 2 |
+| **ProductRequest** | Request to produce a quantity of product | Future - Phase 4 |
+| **ProductSegment** | Step in production process | Future - Phase 4 |
+| **WorkOrder** | Authorization to perform work | Event (eventType=WorkOrder) |
+
+### ISA-88 Terms
+
+| Term | Definition | Sylvamo Mapping |
+|------|------------|-----------------|
+| **Batch** | Material being processed as a unit | Reel |
+| **Recipe** | Complete set of instructions for making a product | Future - Phase 2 |
+| **Procedure** | Strategy for making a batch | Future - Phase 4 |
+| **UnitProcedure** | Procedure executed on a single unit | Future - Phase 4 |
+| **Operation** | Major processing action | Future - Phase 4 |
+| **Phase** | Smallest element of procedural control | Future - Phase 4 |
+| **ControlModule** | Equipment entity for control | Not planned |
+
+### Cognite CDM Terms
+
+| Term | Definition | Usage |
+|------|------------|-------|
+| **CogniteAsset** | CDM interface for hierarchical assets | Asset view implements this |
+| **CogniteActivity** | CDM interface for time-bounded activities | Event view implements this |
+| **CogniteTimeSeries** | CDM interface for time series data | MfgTimeSeries implements this |
+| **CogniteDescribable** | Base interface with name, description | All views implement this |
+| **CogniteSourceable** | Interface for source system tracking | All views implement this |
+| **CogniteFile** | CDM view for file entities | Used directly |
+| **CogniteEquipment** | CDM interface for equipment | Equipment view (Phase 2) |
+
+### Sylvamo-Specific Terms
+
+| Term | Definition |
+|------|------------|
+| **Reel** | Paper reel produced on a paper machine (= ISA Batch) |
+| **Roll** | Paper roll cut from a reel for customer delivery (= ISA MaterialLot) |
+| **PM1/PM2** | Paper Machine 1 and 2 at Eastover |
+| **Winder** | Equipment that winds paper into rolls |
+| **Sheeter** | Equipment that cuts paper into sheets |
+| **FLOC** | SAP Functional Location - hierarchical asset identifier |
+| **PPR** | Paper Production Reporting system (via Fabric) |
+| **PPV** | Purchase Price Variance - cost tracking |
+| **Proficy** | GE Proficy process historian database |
+
+---
+
 ## Appendix A: Cognite ISA Manufacturing Extension Entities
 
 Full list of entities in the [Cognite ISA Manufacturing Extension](https://github.com/cognitedata/library/tree/main/modules/models/isa_manufacturing_extension):
@@ -806,4 +1394,271 @@ sylvamo/modules/
 
 ---
 
-*Document generated: February 2026*
+## Appendix G: External ID Conventions
+
+### Namespace Patterns
+
+All external IDs follow a namespace pattern for clarity and uniqueness:
+
+```
+{entity_type}:{source_identifier}
+```
+
+### Complete External ID Reference
+
+| Entity | Pattern | Components | Example |
+|--------|---------|------------|---------|
+| **Asset** | `floc:{sap_floc}` | SAP Functional Location | `floc:0769-PM1-DRYER-SECTION` |
+| **Reel** | `reel:{reel_number}` | Unique reel identifier | `reel:2024-PM1-00012345` |
+| **Roll** | `roll:{roll_number}` | Unique roll identifier | `roll:R-20240115-12345` |
+| **Event (SAP WO)** | `sap-wo:{order_number}` | SAP Order Number | `sap-wo:12345678` |
+| **Event (Proficy)** | `proficy-event:{event_id}` | Proficy Event ID | `proficy-event:EVT-2024-001` |
+| **Event (PPV)** | `ppv-event:{id}` | Fabric PPV record ID | `ppv-event:PPV-2024-001` |
+| **Event (ProdOrder)** | `sap-po:{order_number}` | SAP Production Order | `sap-po:1000012345` |
+| **Material** | `mat:{material_number}` | SAP Material Number | `mat:100012345` |
+| **TimeSeries (PI)** | `ts:{pi_tag}` | PI Tag Name | `ts:PM1.DRYER.TEMP.PV` |
+| **TimeSeries (Proficy)** | `proficy:ts_{tag_id}` | Proficy Tag ID | `proficy:ts_12345` |
+| **File** | `dm:{source}:{original_id}` | Source + Original ID | `dm:sharepoint:file-12345` |
+| **RollQuality** | `rq:{roll_number}:{test}` | Roll + Test Type | `rq:R-12345:brightness` |
+| **Equipment** (Phase 2) | `eq:{equipment_id}` | SAP Equipment ID | `eq:10012345` |
+| **ProductDef** (Phase 2) | `prod:{product_code}` | Product Code | `prod:BOND-20-WH` |
+| **Recipe** (Phase 2) | `recipe:{recipe_id}` | Recipe Identifier | `recipe:PM1-BOND-20-v1` |
+
+### External ID Validation
+
+Transformations should validate external IDs before upsert:
+
+```sql
+-- Example validation in transformation
+SELECT 
+    concat('floc:', 
+        CASE 
+            WHEN `functional_location` IS NULL THEN 'INVALID'
+            WHEN length(`functional_location`) < 4 THEN 'INVALID'
+            ELSE `functional_location`
+        END
+    ) as externalId,
+    -- other fields...
+FROM source_table
+WHERE `functional_location` IS NOT NULL
+    AND length(`functional_location`) >= 4
+```
+
+---
+
+## Appendix H: Data Lineage by Entity
+
+### Asset Data Lineage
+
+```mermaid
+flowchart TB
+    subgraph source [Source Systems]
+        SAP_ERP["SAP ERP"]
+    end
+    
+    subgraph raw [RAW Tables]
+        R1["raw_ext_sap.sap_floc_eastover"]
+        R2["raw_ext_sap.sap_floc_sumter"]
+        R3["raw_ext_sap.asset_hierarchy"]
+    end
+    
+    subgraph transform [Transformations]
+        T1["tr_union_sap_floc"]
+        T2["tr_populate_Asset"]
+    end
+    
+    subgraph model [Data Model]
+        Asset["Asset (MfgAsset)"]
+    end
+    
+    SAP_ERP --> |"Fabric Extractor"| R1
+    SAP_ERP --> |"Fabric Extractor"| R2
+    R1 --> T1
+    R2 --> T1
+    T1 --> R3
+    R3 --> T2
+    T2 --> Asset
+```
+
+**Fields Mapped:**
+
+| Source Field | Transformation | Target Property |
+|--------------|----------------|-----------------|
+| `functional_location` | concat('floc:', ...) | externalId |
+| `description` | direct | name |
+| `floc_type` | mapping | assetType |
+| `parent_functional_location` | node_reference | parent |
+| `plant_code` | direct | plantCode |
+| `work_center_code` | direct | workCenterCode |
+
+### Reel Data Lineage
+
+```mermaid
+flowchart TB
+    subgraph source [Source Systems]
+        Fabric["Microsoft Fabric"]
+        PPR["Paper Production Reporting"]
+    end
+    
+    subgraph raw [RAW Tables]
+        R1["raw_ext_fabric_ppr.ppr_hist_reel"]
+    end
+    
+    subgraph transform [Transformations]
+        T1["tr_populate_Reel"]
+    end
+    
+    subgraph model [Data Model]
+        Reel["Reel (MfgReel)"]
+        Asset["Asset"]
+    end
+    
+    PPR --> Fabric
+    Fabric --> |"Fabric Extractor"| R1
+    R1 --> T1
+    T1 --> Reel
+    Reel --> |"asset relation"| Asset
+```
+
+**Fields Mapped:**
+
+| Source Field | Transformation | Target Property |
+|--------------|----------------|-----------------|
+| `reel_number` | concat('reel:', ...) | externalId |
+| `reel_number` | direct | reelNumber, name |
+| `production_date` | to_timestamp | productionDate |
+| `weight` | direct | weight |
+| `width` | direct | width |
+| `grade_code` | direct | gradeCode |
+| `machine_id` | node_reference lookup | asset |
+
+### Event Data Lineage
+
+```mermaid
+flowchart TB
+    subgraph source [Source Systems]
+        SAP["SAP ERP"]
+        Proficy["Proficy GBDB"]
+        Fabric["Microsoft Fabric"]
+    end
+    
+    subgraph raw [RAW Tables]
+        R1["raw_ext_fabric_sapecc.work_orders"]
+        R2["raw_ext_sql_proficy.events_tests"]
+        R3["raw_ext_fabric_ppv.ppv_snapshot"]
+        R4["raw_ext_sap.production_orders"]
+    end
+    
+    subgraph transform [Transformations]
+        T1["tr_populate_Event_WorkOrders"]
+        T2["tr_populate_Event_Proficy"]
+        T3["tr_populate_Event_PPV"]
+        T4["tr_populate_Event_ProductionOrders"]
+    end
+    
+    subgraph model [Data Model]
+        Event["Event (MfgEvent)"]
+    end
+    
+    SAP --> Fabric --> R1
+    Proficy --> |"SQL Extractor"| R2
+    Fabric --> R3
+    SAP --> Fabric --> R4
+    
+    R1 --> T1 --> Event
+    R2 --> T2 --> Event
+    R3 --> T3 --> Event
+    R4 --> T4 --> Event
+```
+
+**Event Type Classification:**
+
+| Transformation | eventType Value | eventSubtype Examples |
+|----------------|-----------------|----------------------|
+| tr_populate_Event_WorkOrders | WorkOrder | Maintenance, Inspection |
+| tr_populate_Event_Proficy | ProductionEvent | Test, Quality Check |
+| tr_populate_Event_PPV | CostEvent | PPV, Material Variance |
+| tr_populate_Event_ProductionOrders | ProductionOrder | Manufacturing Order |
+
+### TimeSeries Data Lineage
+
+```mermaid
+flowchart TB
+    subgraph source [Source Systems]
+        PI["PI Server"]
+        Proficy["Proficy GBDB"]
+    end
+    
+    subgraph classic [CDF Classic]
+        CDF_TS["CDF Time Series"]
+    end
+    
+    subgraph raw [RAW Tables]
+        R1["_cdf.timeseries"]
+        R2["raw_ext_sql_proficy.timeseries_config"]
+    end
+    
+    subgraph transform [Transformations]
+        T1["tr_populate_TimeSeries"]
+        T2["tr_create_ProficyTimeSeries_CDF"]
+        T3["tr_populate_ProficyTimeSeries"]
+    end
+    
+    subgraph model [Data Model]
+        TS["MfgTimeSeries"]
+    end
+    
+    PI --> |"PI Extractor"| CDF_TS
+    CDF_TS --> R1
+    Proficy --> |"SQL Extractor"| R2
+    
+    R1 --> T1 --> TS
+    R2 --> T2 --> CDF_TS
+    R2 --> T3 --> TS
+    
+    TS --> |"timeseries property"| CDF_TS
+```
+
+**Key Fields:**
+
+| Source | Property | Purpose |
+|--------|----------|---------|
+| `_cdf.timeseries.external_id` | externalId | Links to CDF time series |
+| `_cdf.timeseries.name` | name | Display name |
+| `_cdf.timeseries.description` | description | Tag description |
+| `_cdf.timeseries.external_id` | timeSeries | Enables preview/sparkline |
+
+### File Data Lineage
+
+```mermaid
+flowchart TB
+    subgraph source [Source Systems]
+        SP["SharePoint"]
+    end
+    
+    subgraph classic [CDF Classic]
+        CDF_Files["CDF Files"]
+    end
+    
+    subgraph raw [RAW Tables]
+        R1["_cdf.files"]
+    end
+    
+    subgraph transform [Transformations]
+        T1["tr_populate_Files"]
+    end
+    
+    subgraph model [Data Model]
+        File["CogniteFile"]
+    end
+    
+    SP --> |"SharePoint Extractor"| CDF_Files
+    CDF_Files --> R1
+    R1 --> T1 --> File
+```
+
+---
+
+*Document generated: February 2026*  
+*Last updated: February 2026*  
+*Version: 2.0*
