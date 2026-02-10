@@ -2,7 +2,7 @@
 
 > End-to-end lifecycle of how Cognite CDF ingests, parses, annotates, and maintains P&ID documents.
 
-**Last updated:** February 10, 2026
+**Last updated:** February 10, 2026 (rev 2)
 
 ---
 
@@ -22,6 +22,9 @@
 - [Cross-Document References](#cross-document-references)
 - [Detection Capabilities by File Type](#detection-capabilities-by-file-type)
 - [Three Approaches to P&ID Contextualization](#three-approaches-to-pid-contextualization)
+- [Why Annotations Are Not Auto-Updated (Design Rationale)](#why-annotations-are-not-auto-updated-design-rationale)
+- [What Customers Should Do: Operational Playbook](#what-customers-should-do-operational-playbook)
+- [Real-World Scenarios Explained Simply](#real-world-scenarios-explained-simply)
 - [Known Limitations](#known-limitations)
 
 ---
@@ -405,39 +408,37 @@ The annotation system enables queries in **both directions**:
 
 ## Phase 8: Revision Handling
 
-When a P&ID is revised (e.g., equipment moved, instruments added/removed), the existing annotations become stale:
+When a P&ID is revised (equipment moved, instruments added/removed, layout changed), the existing annotations reflect the **previous version** of the document. CDF handles this through a deliberate **detect-clean-reparse** cycle, described in detail below.
 
 ```mermaid
 graph TB
-    subgraph "Before Revision"
+    subgraph "Step 1: Current State"
         R5["P&ID Rev 05"]
         R5_A["60 Annotations<br/>(all approved)"]
         R5_L["Linked to PM1 asset"]
         R5 --- R5_A & R5_L
     end
 
-    subgraph "After Revision Upload"
+    subgraph "Step 2: Revision Uploaded"
         R6["P&ID Rev 06 uploaded"]
-        STALE["Old annotations STALE<br/>────────────────<br/>Bounding boxes may be wrong<br/>Deleted tags still have annotations<br/>New tags have no annotations<br/>Cross-references may be broken"]
+        DETECT["CDF detects the change<br/>(lastUpdatedTime updated)"]
     end
 
-    subgraph "Re-Contextualization"
-        RC1["Detect updated file<br/>(lastUpdatedTime changed)"]
-        RC2["Clean old annotations<br/>(if configured)"]
-        RC3["Re-run full detection"]
-        RC4["Create new annotations"]
+    subgraph "Step 3: Controlled Re-Contextualization"
+        RC1["Workflow identifies<br/>updated file"]
+        RC2["Old annotations cleaned<br/>(workflow-owned only)"]
+        RC3["Full re-detection runs<br/>(fresh OCR + matching)"]
+        RC4["New annotations created<br/>against current document"]
         RC5["Review & approve"]
     end
 
     R5 -.->|"Document revised"| R6
-    R6 --> STALE
-    STALE -->|"Must re-process"| RC1
+    R6 --> DETECT
+    DETECT -->|"Scheduled or triggered"| RC1
     RC1 --> RC2 --> RC3 --> RC4 --> RC5
-
-    style STALE fill:#ffcdd2
 ```
 
-### Re-Contextualization Process
+### Re-Contextualization Sequence
 
 ```mermaid
 sequenceDiagram
@@ -458,7 +459,7 @@ sequenceDiagram
     RAW-->>WF: File updated since last run
 
     alt cleanOldAnnotations = true
-        WF->>CDF: Delete stale annotations<br/>(only workflow-created ones)
+        WF->>CDF: Remove previous annotations<br/>(only workflow-created ones)
     end
 
     WF->>CDF: Run Diagrams Detect<br/>(full OCR + entity matching)
@@ -476,15 +477,327 @@ sequenceDiagram
     WF->>CDF: Log status to extraction pipeline
 ```
 
-### What Is Lost on Revision
+### What Changes and What Stays the Same
 
-| Item | Behavior | Mitigation |
-|------|----------|------------|
-| **Bounding box positions** | Stale if layout changed | Re-detect regenerates all positions |
-| **Approved annotation status** | Lost — new annotations start as suggested | Domain expert must re-approve |
-| **Manually added tags** | Preserved (only workflow annotations are cleaned) | Manual annotations survive |
-| **File-to-asset direct relation** | Preserved (on CogniteFile node) | Not affected by re-detection |
-| **Previous revision content** | Lost if same externalId (overwrite) | Use unique IDs per revision |
+| Item | On Revision | Why |
+|------|-------------|-----|
+| **CogniteFile node** | Stays | The file's identity, space, and metadata persist |
+| **CogniteFile.assets** (parent link) | Stays | The direct relation to the parent asset (e.g., PM1) is on the node, not tied to annotations |
+| **Manually added tags** | Stays | Cleanup only removes workflow-owned annotations |
+| **File labels/tags** | Stays | Metadata properties are not affected |
+| **Workflow-created annotations** | Replaced | Old ones cleaned, new ones created from fresh detection |
+| **Bounding box coordinates** | Regenerated | New detection produces coordinates matching the current layout |
+| **Approved status** | Resets | New annotations go through the confidence scoring cycle again |
+
+---
+
+## Why Annotations Are Not Auto-Updated (Design Rationale)
+
+A common question is: *"Why doesn't CDF just keep the old annotations and update them automatically when the document changes?"*
+
+This is a **deliberate design choice**, not a limitation. Here's why:
+
+### The Core Problem: Annotations Are Tied to Pixel Coordinates
+
+Every annotation records the **exact position** on the document where a tag was found — down to pixel coordinates. When an engineer revises a P&ID:
+
+- Equipment may move to a different location on the drawing
+- New instruments may be added in empty spaces
+- Old instruments may be removed entirely
+- The entire layout may be restructured
+
+There is **no reliable way** to automatically determine which tags on the new revision correspond to which tags on the old revision. The text may be the same, but the position is different. The position may be similar, but the text changed. Or both changed.
+
+### Why a Fresh Detection Is the Right Approach
+
+```mermaid
+graph TB
+    subgraph "Why NOT auto-update"
+        N1["Old annotation says:<br/>'OIL TANK' is at (120, 300)"]
+        N2["New revision moved it<br/>to (400, 150)"]
+        N3["Auto-update would need to<br/>know these are the 'same' tag"]
+        N4["But CDF cannot diff two PDFs<br/>at the pixel level"]
+        N1 --> N3
+        N2 --> N3
+        N3 --> N4
+    end
+
+    subgraph "Why fresh detection works"
+        Y1["Re-run OCR on new document"]
+        Y2["Find all tags at their<br/>CURRENT positions"]
+        Y3["Re-match against<br/>CURRENT asset list"]
+        Y4["Result: annotations that<br/>accurately reflect the document"]
+        Y1 --> Y2 --> Y3 --> Y4
+    end
+
+    style N4 fill:#fff9c4
+    style Y4 fill:#c8e6c9
+```
+
+### The Design Guarantees
+
+This approach provides several important guarantees:
+
+| Guarantee | Explanation |
+|-----------|-------------|
+| **Accuracy** | Annotations always reflect what is actually on the current document — not a best-guess carry-over from an old version |
+| **Completeness** | New equipment added in the revision is detected and matched — not missed because it didn't exist before |
+| **No ghost links** | Removed equipment doesn't leave orphan annotations pointing to blank space |
+| **Confidence is real** | The confidence score reflects the actual match quality on this document, not inherited from a different version |
+| **Domain expert validation** | Human review happens on the actual current document, not on stale information |
+
+### The Analogy
+
+Think of it like a **building inspection**. When a building is renovated, the inspector doesn't update the old report with notes like "the kitchen moved to the second floor." They do a **new inspection** of the current building and produce a **new report**. The old report is still available for historical reference if needed, but the current report reflects reality.
+
+CDF works the same way: each contextualization run produces a **fresh, accurate snapshot** of what's on the document right now.
+
+---
+
+## What Customers Should Do: Operational Playbook
+
+### Setting Up the Revision Workflow
+
+The recommended approach is to have the annotation workflow run on a **schedule** (daily or weekly), so revised P&IDs are automatically re-contextualized without anyone needing to remember to trigger it manually.
+
+```mermaid
+graph TB
+    subgraph "One-Time Setup"
+        S1["Deploy P&ID Annotation Workflow<br/>(via Cognite Toolkit)"]
+        S2["Configure schedule<br/>(e.g., daily at 2 AM)"]
+        S3["Set cleanOldAnnotations = true"]
+        S4["Set confidence thresholds<br/>(e.g., 70% / 85%)"]
+        S1 --> S2 --> S3 --> S4
+    end
+
+    subgraph "Ongoing Operation"
+        O1["Engineers upload revised P&IDs<br/>to SharePoint as usual"]
+        O2["File Extractor syncs to CDF<br/>(automatic)"]
+        O3["Annotation Workflow detects changes<br/>(scheduled run)"]
+        O4["Fresh annotations created"]
+        O5["High-confidence: auto-approved"]
+        O6["Medium-confidence: review queue"]
+        O7["Domain expert reviews<br/>(only the flagged ones)"]
+        O1 --> O2 --> O3 --> O4
+        O4 --> O5
+        O4 --> O6 --> O7
+    end
+
+    subgraph "Result"
+        R1["Interactive diagrams always<br/>reflect current documents"]
+    end
+
+    O5 --> R1
+    O7 --> R1
+```
+
+### Day-to-Day: What Each Role Does
+
+| Role | What They Do | How Often |
+|------|-------------|-----------|
+| **Engineer** | Uploads revised P&IDs to SharePoint | As needed (normal workflow — no CDF steps required) |
+| **File Extractor** | Automatically syncs files to CDF | Continuous (scheduled) |
+| **Annotation Workflow** | Detects updated files, re-contextualizes | Scheduled (daily/weekly) |
+| **Domain Expert** | Reviews annotations in the "Pending Approval" queue in CDF | After each workflow run (typically a few minutes) |
+| **CDF Admin** | Monitors extraction pipeline logs, adjusts thresholds | Monthly or as needed |
+
+### What to Do If Annotations Look Wrong
+
+```mermaid
+graph TB
+    ISSUE["Annotations look wrong<br/>or incomplete"]
+    ISSUE --> CHECK{"What's the situation?"}
+
+    CHECK -->|"Tags point to<br/>wrong locations"| A["Document was revised<br/>but not re-contextualized"]
+    CHECK -->|"New equipment<br/>has no tags"| B["Equipment added in revision;<br/>re-run needed"]
+    CHECK -->|"Wrong asset<br/>linked"| C["Matching issue;<br/>check entity list"]
+    CHECK -->|"OCR misread<br/>a tag"| D["Scan quality issue;<br/>add manual tag"]
+
+    A --> FIX_A["Trigger re-contextualization<br/>(manual or wait for schedule)"]
+    B --> FIX_B["Same: re-contextualize<br/>with updated asset list"]
+    C --> FIX_C["Update entity list,<br/>then re-contextualize"]
+    D --> FIX_D["Reject bad tag,<br/>add correct one manually"]
+
+    style FIX_A fill:#e3f2fd
+    style FIX_B fill:#e3f2fd
+    style FIX_C fill:#e3f2fd
+    style FIX_D fill:#e3f2fd
+```
+
+### Configuration Recommendations
+
+| Setting | Recommended Value | Why |
+|---------|-------------------|-----|
+| **Schedule** | Daily (off-peak hours) | Catches revisions within 24 hours |
+| **cleanOldAnnotations** | `true` | Prevents stale annotations from accumulating |
+| **Auto-approve threshold** | >= 85% | High-confidence matches go live immediately |
+| **Review threshold** | >= 70% | Catches plausible matches for expert validation |
+| **Reject threshold** | < 70% | Avoids cluttering the review queue with bad matches |
+| **Run mode** | Incremental | Only processes changed files (efficient) |
+
+---
+
+## Real-World Scenarios Explained Simply
+
+These scenarios are written for people who work with P&IDs but may not be deeply familiar with how CDF handles them behind the scenes.
+
+---
+
+### Scenario 1: "The Engineer Updated a P&ID — What Happens?"
+
+**The situation:** Sarah, a process engineer, updated P&ID `471-80-I-0026` to add a new pressure transmitter (PT 500) near the oil tank. She saved the new revision to SharePoint.
+
+```mermaid
+graph LR
+    subgraph "What Sarah did"
+        S1["Edited P&ID in CAD"]
+        S2["Added PT 500"]
+        S3["Saved Rev 06 to SharePoint"]
+    end
+
+    subgraph "What happens automatically"
+        A1["File Extractor picks up<br/>the new file"]
+        A2["CDF stores the new PDF"]
+        A3["Annotation Workflow runs<br/>(next scheduled time)"]
+        A4["Old annotations removed"]
+        A5["New detection finds PT 500<br/>+ all existing equipment"]
+        A6["New annotations created"]
+    end
+
+    subgraph "What the team sees"
+        T1["Interactive diagram updates<br/>with PT 500 linked to<br/>its time series"]
+        T2["All other equipment<br/>still linked correctly"]
+    end
+
+    S3 --> A1 --> A2 --> A3 --> A4 --> A5 --> A6 --> T1 & T2
+```
+
+**Key point for Sarah:** She doesn't need to do anything special in CDF. She updates the P&ID the same way she always does. The system handles the rest.
+
+**What if she needs it immediately?** A CDF admin or the domain expert can manually trigger the workflow instead of waiting for the next scheduled run.
+
+---
+
+### Scenario 2: "Two P&IDs Show the Same Pump — One Was Updated"
+
+**The situation:** P&ID A and P&ID B both show Pump P-4712. P&ID A was just revised, but P&ID B was not.
+
+```mermaid
+graph TB
+    subgraph "P&ID A (REVISED)"
+        A_OLD["Old annotations cleaned"]
+        A_NEW["New detection runs"]
+        A_PUMP["Pump P-4712 re-detected<br/>at its NEW position"]
+    end
+
+    subgraph "P&ID B (UNCHANGED)"
+        B_ANN["Existing annotations<br/>remain exactly as they are"]
+        B_PUMP["Pump P-4712 still annotated<br/>at its original position"]
+    end
+
+    subgraph "CDF Asset: Pump P-4712"
+        ASSET["Querying this pump returns<br/>BOTH P&IDs"]
+    end
+
+    A_PUMP --> ASSET
+    B_PUMP --> ASSET
+```
+
+**Key point:** Updating one P&ID does **not** affect the other. Each P&ID has its own independent set of annotations. If you search for Pump P-4712, CDF returns both drawings — each with annotations that accurately reflect their own content.
+
+---
+
+### Scenario 3: "An Instrument Was Removed from the Drawing"
+
+**The situation:** The flow indicator FI 328 was removed from P&ID `471-80-I-0026` in the latest revision because the instrument was decommissioned.
+
+**What happens:**
+
+| Step | What Occurs |
+|------|-------------|
+| 1. Old state | FI 328 had an annotation linking it to time series `471FI328` |
+| 2. New revision uploaded | The drawing no longer shows FI 328 |
+| 3. Workflow runs | Old annotations (including FI 328's) are cleaned |
+| 4. Fresh detection | OCR scans the new document — FI 328 is not found |
+| 5. Result | No annotation is created for FI 328 — it's cleanly gone |
+
+**Key point:** The system doesn't leave a "ghost" annotation pointing to empty space. Because detection runs fresh on the current document, removed equipment simply doesn't produce annotations. This is cleaner than trying to figure out "which annotations should I delete?" from the old set.
+
+---
+
+### Scenario 4: "We Added 50 New Assets to SAP — Will the P&IDs Pick Them Up?"
+
+**The situation:** The maintenance team added 50 new equipment records to SAP. Some of this equipment appears on existing P&IDs but was never matched because CDF didn't know about it.
+
+```mermaid
+graph TB
+    subgraph "Before"
+        B1["P&ID shows 'PUMP P-5501'"]
+        B2["CDF had no asset for P-5501"]
+        B3["Annotation: Unlinked tag"]
+    end
+
+    subgraph "After SAP Update"
+        A1["New asset 'Pump P-5501'<br/>ingested into CDF"]
+        A2["Entity list now includes P-5501"]
+    end
+
+    subgraph "On Next Workflow Run"
+        R1["P&ID re-contextualized<br/>(even if document didn't change)"]
+        R2["OCR finds 'PUMP P-5501'"]
+        R3["Matches to new asset"]
+        R4["Annotation created:<br/>P-5501 → Asset"]
+    end
+
+    B3 -.->|"Asset added to SAP"| A1
+    A1 --> A2
+    A2 -->|"Run in ALL mode"| R1
+    R1 --> R2 --> R3 --> R4
+
+    style B3 fill:#fff9c4
+    style R4 fill:#c8e6c9
+```
+
+**Key point:** This is one reason why fresh detection is powerful — it's not just about document changes. When the **asset list grows**, re-running detection on existing P&IDs can find matches that weren't possible before. To trigger this, run the workflow in **ALL mode** (rather than incremental, which only catches changed files).
+
+---
+
+### Scenario 5: "I Approved 60 Tags Last Week — Do I Have to Re-Approve Them All?"
+
+**The situation:** A domain expert spent time reviewing and approving tags on a P&ID. Now the document was revised (minor change — one valve was added). Do they need to redo all their work?
+
+**The honest answer:** The automated annotations will go through the confidence scoring cycle again. However:
+
+- **High-confidence matches (>= 85%) are auto-approved** — if the same equipment is on the document and the match is strong, it goes live without human intervention
+- **Only medium-confidence matches** appear in the review queue
+- **Manually added tags are preserved** — they are not affected by the workflow cleanup
+
+**In practice**, if the revision was minor (one valve added, rest unchanged):
+- Most of the 60 tags will be re-detected with high confidence and auto-approved
+- The new valve will appear as a new suggestion
+- The expert only reviews a few items, not all 60
+
+**How to minimize re-work:**
+- Set auto-approve threshold appropriately (85% catches most stable matches)
+- For tags that OCR consistently struggles with, add them manually — manual tags survive re-contextualization
+
+---
+
+### Scenario 6: "How Do I Know If a P&ID's Annotations Are Current?"
+
+**The situation:** A field technician is looking at a P&ID in InField. How do they know the annotations are up to date?
+
+**Check these two timestamps:**
+
+| Timestamp | Where to Find It | What It Tells You |
+|-----------|-------------------|-------------------|
+| **File `lastUpdatedTime`** | CogniteFile node metadata | When the document content was last changed |
+| **Annotation creation time** | On each annotation record | When the annotation was created |
+
+**If annotations were created AFTER the file was last updated** — they're current.
+**If annotations were created BEFORE the file was last updated** — the document was revised and annotations may not reflect the latest content.
+
+The annotation workflow's RAW state table also tracks the last processing time for each file, which an admin can check.
 
 ---
 
@@ -624,16 +937,18 @@ graph LR
 
 ## Known Limitations
 
-| Limitation | Description | Impact |
-|-----------|-------------|--------|
-| **Vectorized: first page only** | Only page 1 is parsed for vectorized PDFs | Critical info on later pages is missed; split files first |
-| **No automatic re-contextualization** | Updating a file does NOT trigger re-parsing | Stale annotations until pipeline re-runs |
-| **No diff/change tracking** | Cannot compare what changed between revisions | Full re-parse required; no delta |
-| **Approved status lost on re-detect** | New annotations start as suggested | Domain expert must re-approve |
-| **No built-in annotation carry-over** | Unchanged tags are not preserved across revisions | All annotations regenerated from scratch |
-| **Symbol libraries are project-specific** | Must build/maintain library per project | Initial effort to set up; templates help |
-| **OCR quality varies** | Scanned documents may have recognition errors | Lower confidence scores; more manual review |
-| **No cross-site matching** | Entity list must be scoped to the same location | Prevents false matches but requires careful setup |
+These are platform characteristics to be aware of when planning your P&ID contextualization strategy:
+
+| Characteristic | Description | What to Do |
+|---------------|-------------|------------|
+| **Vectorized: first page only** | Only page 1 is parsed for vectorized PDFs | Split multi-page PDFs before ingestion |
+| **Re-contextualization is workflow-driven** | Updating a file does not auto-trigger re-parsing; the annotation workflow must run | Schedule the workflow daily/weekly, or trigger manually when needed |
+| **Full re-detection per run** | CDF does not diff revisions — it re-parses the entire document | This is by design for accuracy; incremental mode ensures only changed files are processed |
+| **Annotations reset on re-detection** | New annotations go through confidence scoring again | High-confidence matches auto-approve; only edge cases need review |
+| **Manual annotations preserved** | Only workflow-owned annotations are cleaned | Use manual tags for equipment that OCR consistently misses |
+| **Symbol libraries are project-specific** | Must build/maintain library per project | Start with CDF templates; refine over time |
+| **OCR quality depends on source** | Scanned/rasterized documents have lower accuracy | Use vectorized PDFs where possible; set lower auto-approve thresholds for scans |
+| **Entity list must be current** | Matches depend on what's in the entity list | Keep asset/time series lists in sync with source systems (SAP, PI, etc.) |
 
 ---
 
@@ -643,7 +958,6 @@ graph LR
 - [Annotation Workflow & Versioning](ANNOTATION_WORKFLOW_AND_VERSIONING.md) — Annotation states, confidence model, revision workflow
 - [Contextualization Primer](../CONTEXTUALIZATION_PRIMER.md) — Best practices and architectural guidance
 - [Contextualization Gap Analysis](../CONTEXTUALIZATION_GAP_ANALYSIS.md) — Current Sylvamo implementation vs. best practices
-- [P&ID Annotation Plan](../../../docs/reference/sylvamo-pid-sortfield-call/PLAN-pid-annotation-and-asset-linkage.md) — Sylvamo-specific POC results
 
 ---
 
