@@ -23,8 +23,11 @@
 
 | Document | Description |
 |----------|-------------|
+| [TRANSFORMATIONS.md](TRANSFORMATIONS.md) | **Complete transformation documentation** - 24 SQL transformations, data flow, SQL examples |
 | [APPENDIX_MFG_CORE_MODEL.md](APPENDIX_MFG_CORE_MODEL.md) | Complete GraphQL schema and Mermaid diagrams |
-| [../../extractors/EXTRACTORS.md](../extractors/EXTRACTORS.md) | Extractor configurations (Fabric, PI, SQL, SharePoint) |
+| [COGNITE_ISA_EXTENSION_AND_SYLVAMO_ALIGNMENT.md](COGNITE_ISA_EXTENSION_AND_SYLVAMO_ALIGNMENT.md) | Detailed ISA-95/88 alignment analysis |
+| [JOHAN_ISA95_GUIDANCE_SUMMARY.md](JOHAN_ISA95_GUIDANCE_SUMMARY.md) | Expert recommendations from Cognite ISA specialist |
+| [../extractors/EXTRACTORS.md](../extractors/EXTRACTORS.md) | Extractor configurations (Fabric, PI, SQL, SharePoint) |
 | [ISA-95 Standard](https://www.isa.org/standards-and-publications/isa-standards/isa-standards-committees/isa95) | ISA-95 Enterprise-Control Integration |
 | [ISA-88 Standard](https://www.isa.org/standards-and-publications/isa-standards/isa-standards-committees/isa88) | ISA-88 Batch Control |
 | [Cognite ISA Extension](https://github.com/cognitedata/library/tree/main/modules/models/isa_manufacturing_extension) | Official Cognite reference model |
@@ -1375,6 +1378,60 @@ sylvamo/modules/
 
 ## Appendix F: Transformation Summary
 
+> **See Also:** [TRANSFORMATIONS.md](TRANSFORMATIONS.md) for complete transformation documentation with SQL examples, data flow diagrams, and troubleshooting guide.
+
+### Complete Data Path
+
+```mermaid
+flowchart LR
+    subgraph Source [Source Systems]
+        SAP[SAP ERP]
+        PI[PI Server]
+        Proficy[Proficy]
+        SP[SharePoint]
+    end
+    
+    subgraph Extractor [Extractors]
+        Fabric[Fabric Connector]
+        PIExt[PI Extractor]
+        SQL[SQL Extractor]
+        SPExt[SP Extractor]
+    end
+    
+    subgraph RAW [RAW Databases]
+        R1[raw_ext_sap]
+        R2[raw_ext_fabric_ppr]
+        R3[_cdf.timeseries]
+        R4[raw_ext_sql_proficy]
+    end
+    
+    subgraph Transform [24 Transformations]
+        T1[populate_Asset]
+        T2[populate_Reel/Roll]
+        T3[populate_TimeSeries]
+        T4[populate_Event_*]
+    end
+    
+    subgraph Model [Data Model Instances]
+        Asset[Asset - 44,898]
+        Reel[Reel - 83,600+]
+        Event[Event - 92,000+]
+        TS[TimeSeries - 3,532]
+    end
+    
+    SAP --> Fabric --> R1 & R2
+    PI --> PIExt --> R3
+    Proficy --> SQL --> R4
+    SP --> SPExt
+    
+    R1 --> T1 --> Asset
+    R2 --> T2 --> Reel
+    R3 --> T3 --> TS
+    R4 --> T4 --> Event
+```
+
+### Transformation Inventory
+
 | Transformation | Source | Target | Records |
 |----------------|--------|--------|---------|
 | tr_populate_Asset | raw_ext_sap.asset_hierarchy | Asset | 44,898 |
@@ -1390,7 +1447,9 @@ sylvamo/modules/
 | tr_populate_Files | _cdf.files | CogniteFile | 97 |
 | tr_create_ProficyTimeSeries_CDF | raw_ext_sql_proficy | CDF TimeSeries | - |
 | tr_populate_ProficyTimeSeries | raw_ext_sql_proficy | MfgTimeSeries | - |
-| + 4 more Proficy transformations | | | |
+| + 11 more transformations | mfg_extended, infield | Various | - |
+
+**Total: 24 transformations** across mfg_core (19), mfg_extended (5), and infield (2) modules.
 
 ---
 

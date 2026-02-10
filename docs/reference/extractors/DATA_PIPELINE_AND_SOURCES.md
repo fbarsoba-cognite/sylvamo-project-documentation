@@ -1,13 +1,17 @@
 # Data Pipeline & Sources
 
 **Date:** 2026-01-29  
-**Model:** `sylvamo_mfg/sylvamo_manufacturing/v9`
+**Model:** `sylvamo_mfg_core` (Production Model)
+
+---
+
+> **Note:** For comprehensive transformation documentation including SQL examples, data flow diagrams, and troubleshooting, see [TRANSFORMATIONS.md](../data-model/TRANSFORMATIONS.md).
 
 ---
 
 ## Overview
 
-This document describes the data sources and transformations that populate the `sylvamo_mfg` data model with real Sylvamo production data.
+This document describes the data sources and extractors that feed into the Sylvamo CDF data model. For transformation details, see the [comprehensive transformation documentation](../data-model/TRANSFORMATIONS.md).
 
 ## Data Architecture
 

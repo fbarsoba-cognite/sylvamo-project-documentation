@@ -251,6 +251,7 @@ Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 | [**Data Model Specification**](docs/reference/data-model/DATA_MODEL_SPECIFICATION.md) | Complete spec with all containers, properties, and examples |
 | [**Guide for Stakeholders**](docs/reference/data-model/DATA_MODEL_FOR_STAKEHOLDERS.md) | Non-technical overview with flow diagrams and business examples |
 | [**Data Model Walkthrough**](docs/reference/data-model/DATA_MODEL_WALKTHROUGH.md) | Step-by-step example tracing paper from production to delivery |
+| [**Transformations**](docs/reference/data-model/TRANSFORMATIONS.md) | Complete transformation docs - 24 SQL transformations, data flow, examples |
 | [Data Model Diagram](docs/reference/data-model/SYLVAMO_MFG_DATA_MODEL_DIAGRAM.md) | Visual diagrams with Mermaid |
 | [**Appendix: sylvamo_mfg_core**](docs/reference/data-model/APPENDIX_MFG_CORE_MODEL.md) | CDM-integrated data model (Draft for Discussion) |
 | [**Architecture Decisions & Roadmap**](docs/reference/data-model/ARCHITECTURE_DECISIONS_AND_ROADMAP.md) | **Main doc** - ISA-95 alignment, 5 ADRs, roadmap, recommendations |
@@ -266,8 +267,8 @@ Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 |----------|-------------|
 | [**Sprint 2 Plan**](docs/internal/sprint-planning/SPRINT_2_PLAN.md) | Current sprint implementation plan with contextualization roadmap |
 | [**Sprint 2 Story Mapping**](docs/internal/sprint-planning/SPRINT_2_STORY_MAPPING.md) | Mapping between plan phases and Jira stories (17 active) |
-| [ISA Alignment](docs/internal/plans/COGNITE_ISA_EXTENSION_AND_SYLVAMO_ALIGNMENT.md) | ISA-95/88 alignment analysis |
-| [Johan's Guidance](docs/internal/plans/JOHAN_ISA95_GUIDANCE_SUMMARY.md) | Expert recommendations from Cognite |
+| [ISA Alignment](docs/reference/data-model/COGNITE_ISA_EXTENSION_AND_SYLVAMO_ALIGNMENT.md) | ISA-95/88 alignment analysis |
+| [Johan's Guidance](docs/reference/data-model/JOHAN_ISA95_GUIDANCE_SUMMARY.md) | Expert recommendations from Cognite |
 
 ## Extractors
 
