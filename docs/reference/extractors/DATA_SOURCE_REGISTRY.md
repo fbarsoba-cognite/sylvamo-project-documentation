@@ -19,6 +19,7 @@
 8. [Known Extraction Issues](#8-known-extraction-issues)
 9. [Validation Checklist](#9-validation-checklist)
 10. [Open Questions & Action Items](#10-open-questions--action-items)
+11. [**Things to Fix or Ask (Prioritized Punch List)**](#11-things-to-fix-or-ask-prioritized-punch-list)
 
 ---
 
@@ -580,20 +581,102 @@ WHERE aufk.WERKS IN ('0769', '0519')
 
 ## How to Use This Document
 
-1. **For Sylvamo meetings:** Focus on sections 6 (Gap Analysis) and 10 (Open Questions) — these highlight what's missing and what needs decisions
-2. **For internal tracking:** Use section 9 (Validation Checklist) — fill in row counts as validation is performed
-3. **For development:** Use section 4 (Full Pipeline Mapping) — shows exactly which transformations exist and which need to be built
-4. **For config fixes:** Use section 7 (RAW DB Naming Issues) — lists every config that needs updating
-5. **For Fabric team coordination:** Use section 2 (Fabric Infrastructure Map) — workspace/lakehouse/SP topology
-6. **For SVQS-160:** Reference this document as the comprehensive data lineage tracker
+1. **For daily standups:** Use section 11 (Punch List) — prioritized, actionable items grouped by type
+2. **For Sylvamo meetings:** Use section 11 "ASK SYLVAMO" items — pre-built talking points with context
+3. **For internal tracking:** Use section 9 (Validation Checklist) — fill in row counts as validation is performed
+4. **For development:** Use section 4 (Full Pipeline Mapping) — shows exactly which transformations exist and which need to be built
+5. **For config fixes:** Use sections 7 + 11 "FIX NOW" — lists every config that needs updating with priority
+6. **For Fabric team coordination:** Use section 2 (Fabric Infrastructure Map) — workspace/lakehouse/SP topology
+7. **For SVQS-160:** Reference this document as the comprehensive data lineage tracker
 
-> **Next Steps:**
-> 1. **CRITICAL:** Fix RAW DB naming in all old extractor configs (A1, A2)
-> 2. Complete AFVC extraction and create join transformation (A3)
-> 3. Schedule walkthrough with Sylvamo (Cam + Valmir) to fill gaps using Q1-Q12
-> 4. Build automated validation script (A8)
-> 5. Prioritize missing transformations based on use case requirements
+> **Next Steps (see Section 11 Priority Matrix for full view):**
+> 1. **THIS WEEK:** Fix RAW DB naming in all old configs and re-run extractors (F1-F5)
+> 2. **THIS WEEK:** Schedule Sylvamo meeting using ASK items A1-A9 as agenda
+> 3. **THIS SPRINT:** Build AUFK+AFKO+AFVC join transform (B1) and Package transform (B2)
+> 4. **THIS SPRINT:** Build validation script (B3) once Sylvamo provides expected counts
+> 5. **BACKLOG:** Remaining transforms (B4-B6) pending Sylvamo confirmation on mappings
 
 ---
 
-*Document version: 2.0 — Updated 2026-02-10 with detailed Fabric config analysis*
+## 11. Things to Fix or Ask (Prioritized Punch List)
+
+> **Use this section as your standup checklist and Sylvamo meeting agenda.**
+> Items are grouped by type and sorted by priority within each group.
+
+---
+
+### FIX NOW — Config / Data Issues (Cognite team, no external dependency)
+
+| # | What | Why It Matters | Effort | Status |
+|---|------|---------------|--------|--------|
+| F1 | **Fix RAW DB names in all old extractor configs** (`raw_sylvamo_fabric` → `raw_ext_fabric_ppr`, `raw_sylvamo_sap` → `raw_ext_sap`) | Transforms can't read data written to wrong DB. HIST_REEL, HIST_PACKAGE, HIST_ROLL_QUALITY, HIST_BLEND, HIST_MATERIAL, HIST_ORDER_ITEM, PRODUCTION_TOTAL, MILL, and SAP OData `bp_details` are all affected. See [Section 7](#7-raw-database-naming-issues) for full list. | Small — config change + re-run | 🔲 |
+| F2 | **Re-run HIST_REEL extractor** after DB name fix | Reel transformation (`populate_Reel`) will fail or read stale data until the reel data lands in `raw_ext_fabric_ppr.ppr_hist_reel` | Small — re-run extraction (~61K rows) | 🔲 |
+| F3 | **Re-run remaining PPR tables** (HIST_PACKAGE, HIST_BLEND, HIST_MATERIAL, HIST_ORDER_ITEM, PRODUCTION_TOTAL, MILL, HIST_ROLL_QUALITY) with correct DB names | All 7 tables are currently in `raw_sylvamo_fabric` — useless to transforms | Medium — run one at a time (KeyError bug) | 🔲 |
+| F4 | **Verify `populate_Event_WorkOrders` and `populate_WorkOrder` transforms now succeed** | `sapecc_work_orders` (~407K rows) was extracted 2026-02-03. Transforms should now have data. | Small — run transforms, check results | 🔲 |
+| F5 | **Verify SAP RAW table names** — do transforms read `asset_hierarchy` or `sap_floc_eastover` + `sap_floc_sumter`? | If table names don't match, `populate_Asset` may be broken or reading old data | Small — check transform SQL vs actual RAW tables | 🔲 |
+| F6 | **Delete old RAW databases** (`raw_sylvamo_fabric`, `raw_sylvamo_sap`) after migration confirmed | Avoid confusion — two copies of data in different DBs | Small — after F1-F3 verified | 🔲 |
+
+---
+
+### ASK SYLVAMO — Questions That Block Progress (for Cam / Valmir meeting)
+
+| # | Question | Who | Why It Blocks | Suggested Meeting Talking Point |
+|---|----------|-----|--------------|-------------------------------|
+| A1 | **Is the data from DEV workspace acceptable, or do we need to re-extract AUFK/AFKO/AFVC from PROD?** | Valmir | If DEV data differs from PROD, the Operation view will have wrong data | "We extracted ~16M rows from `ws_enterprise_dev`. Is this the same data as production? Should we plan a re-extraction from `ws_enterprise_prod` (needs sp-prod access)?" |
+| A2 | **What data do Notifications contain and where do they come from?** | Valmir | `Notification` view in mfg_ext has no data source at all | "Is this SAP IW29? Is there a Fabric lakehouse table for it? Or is it the same as work orders?" |
+| A3 | **What is the source for Bills of Materials?** | Valmir | Referenced in SOW but no data source or RAW table identified | "Is this from SAP (BOM explosion)? PPR materials? PPV? Do you have an OData service or Fabric table for BOMs?" |
+| A4 | **What are Orders, Shipments and Trends (SOW)?** | Cam | SOW requirement with unclear data source | "Cam mentioned shipments come from PPR and some UC1 inputs from spreadsheets (flat rate/ton). Is `ppr_hist_order_item` the right table? What about the spreadsheet data — how do we ingest it?" |
+| A5 | **Is `ppr_hist_roll_quality` (PPR system) different from SharePoint `roll_quality`?** | Sylvamo | Two tables with overlapping names but likely different data (automated vs manual) | "We have roll quality data from two sources. PPR appears to be automated quality measurements. SharePoint appears to be manual inspection reports. Are these different? Should both go into the model?" |
+| A6 | **What should map to Recipe, ProductDefinition, QualityResult, LabTest, Measurement in `mfg_data`?** | Sylvamo | 5 views in the data model with no defined data source | "We have candidates: `ppr_hist_blend` → Recipe? `samples`/`tests` → LabTest? `ppr_hist_roll_quality` → QualityResult? Help us confirm the mappings." |
+| A7 | **Can you provide source row counts so we can validate extraction completeness?** | Cam/Valmir | We need to confirm RAW data matches source to trust the pipeline | "For each Fabric table and SAP endpoint, what's the expected row count? We'll compare against what landed in CDF RAW." |
+| A8 | **Is `s519pip1` the Sumter PI server?** | Cam | PI server S519 — site mapping unclear. Data reported as "missing" | "We have 3 PI servers: S769PI01 (Eastover), S769PI03 (PM), S519PIP1 (?). Is S519 = Sumter? Is the data complete?" |
+| A9 | **Is there an IFLOT (Functional Locations) table in Fabric?** | Valmir | Needed for Equipment view in mfg_ext — currently empty | "We need SAP functional location / equipment master data. Is there an IFLOT or equipment table in any lakehouse?" |
+| A10 | **Which SAP client is correct: `100` or `300`?** | SAP team | OData config uses 100, older docs reference 300 | Verify before expanding OData endpoints |
+
+---
+
+### BUILD — New Transforms / Scripts Needed (Cognite team, after dependencies resolved)
+
+| # | What to Build | Depends On | Effort | Priority |
+|---|--------------|-----------|--------|----------|
+| B1 | **AUFK+AFKO+AFVC join transformation** → `Operation` view | AFVC extraction complete (F4 above) | Medium | High — sprint 2 goal |
+| B2 | **Package transformation** (`ppr_hist_package` → `Package` view) | F3 — re-extract to correct DB | Medium | Medium |
+| B3 | **Validation script** — compare RAW row counts vs Fabric source and vs model instance counts | A7 — need expected counts from Sylvamo | Medium | High |
+| B4 | **File metadata transformation** — enrich CogniteFile with SharePoint metadata | Clarify `documents` table "duplicate" flag | Small | Medium |
+| B5 | **Blend → Recipe transformation** (if confirmed) | A6 — confirm mapping with Sylvamo | Small | Low — pending confirmation |
+| B6 | **Proficy tests/samples → LabTest transformation** (if confirmed) | A6 — confirm mapping with Sylvamo | Small | Low — pending confirmation |
+
+---
+
+### INVESTIGATE — Unknowns to Research (Cognite team, can do independently)
+
+| # | What to Investigate | Expected Outcome | Effort |
+|---|-------------------|-----------------|--------|
+| I1 | **PI metadata tables** (`s769pi01_metadata`, `s769pi03_metadata`, `s519pip1_metadata`) — do they contain useful data? | Determine if tag metadata should feed into model or is just reference | Small — read RAW tables in CDF |
+| I2 | **SharePoint `documents` table** — why is it marked "duplicate"? | Clarify if documents go to RAW + CDF Files (double), or if RAW table is stale | Small — check CDF |
+| I3 | **Relationship between `mfg_core`/`mfg_extended` and `mfg_data` (v10)** | Understand which model is the "real" production model and which is legacy | Medium — review model definitions |
+| I4 | **PPR-to-Proficy join key** — validate naming convention mapping | Ensure reel_number ↔ Event_Num cross-reference works reliably | Small — test with sample data |
+| I5 | **Proficy `key_columns`, `event_tables`, `all_tables`** — are these just metadata? | Confirm these are internal GBDB metadata and can be deprioritized | Small — read RAW tables |
+
+---
+
+### Quick-Reference Priority Matrix
+
+```
+                    ┌──────────────────────────────────────────┐
+  URGENT            │  F1  F2  F3  F4  F5                     │  Fix configs & re-run extractors
+  (do this week)    │  A1  A2  A3  A7                         │  Ask Sylvamo (schedule meeting)
+                    │  B1                                      │  Build join transform
+                    ├──────────────────────────────────────────┤
+  IMPORTANT         │  B2  B3                                  │  Package transform + validation
+  (this sprint)     │  A4  A5  A6  A8  A9                     │  Clarify data sources
+                    │  I1  I2  I3                              │  Investigate unknowns
+                    ├──────────────────────────────────────────┤
+  BACKLOG           │  F6  B4  B5  B6                          │  Cleanup + pending transforms
+  (next sprint)     │  A10  I4  I5                             │  SAP client + minor research
+                    └──────────────────────────────────────────┘
+```
+
+---
+
+*Document version: 2.1 — Updated 2026-02-10 with consolidated "Things to Fix or Ask" punch list*
