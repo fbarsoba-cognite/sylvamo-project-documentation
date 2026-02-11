@@ -2,7 +2,7 @@
 
 > **Purpose:** Single source of truth for tracking all data flowing into CDF — from source systems through extractors, RAW tables, transformations, and into the data model.
 > **Audience:** Cognite team + Sylvamo stakeholders (Cam, Valmir)
-> **Last Updated:** 2026-02-10 (v2 — enriched from extractor configs)
+> **Last Updated:** 2026-02-11 (v3 — Fabric PPR deployed: hybrid service + Python 64-bit + Task Scheduler)
 > **Jira Ticket:** [SVQS-160](https://cognitedata.atlassian.net/browse/SVQS-160)
 
 ---
@@ -116,16 +116,16 @@ This section documents the Microsoft Fabric workspaces and lakehouses that serve
 
 | # | Source System | Extractor | Ext. Status | RAW Database | RAW Table | Description | Expected Rows | Transformation | Target View | Pipeline Status | Notes |
 |---|-------------|-----------|-------------|-------------|-----------|-------------|---------------|----------------|-------------|-----------------|-------|
-| | **FABRIC — PPR** (LH_SILVER_ppreo, `ws_enterprise_prod`) | | | | | | | | | | **SP:** `sp-cdf-fabric-extractor-dev` |
-| 1 | Fabric (PPR) | `fabric-connector-ppr` | ✅ Running | ⚠️ `raw_sylvamo_fabric` → should be `raw_ext_fabric_ppr` | `ppr_hist_reel` | Reel production history — parent unit (reel_number, manufactured_date, basis_weight, caliper, moisture, weight, status) | ~61,000 | `populate_Reel` | `Reel` (mfg_core) | 🔶 DB mismatch | Config writes to wrong DB |
-| 2 | Fabric (PPR) | `fabric-connector-ppr` | ✅ Running | `raw_ext_fabric_ppr` ✅ | `ppr_hist_roll` | Roll history — child of reel (roll_number, reel_number, basis_weight, caliper, width, weight, producing_machine) | ~2,300,000 | `populate_Roll` | `Roll` (mfg_core) | ✅ End-to-end | md5-key + incremental-field. SVQS-155 resolved |
-| 3 | Fabric (PPR) | `fabric-connector-ppr` | ✅ Running | ⚠️ `raw_sylvamo_fabric` | `ppr_hist_package` | Package/shipping units (package_number, rolls_in_package, assembled_date, ship_date, inventory_point) | ~50,000 | ❌ None | ❌ None | 🔶 Extractor only | **GAP:** Package view exists in mfg_data |
-| 4 | Fabric (PPR) | `fabric-connector-ppr` | ✅ Running | ⚠️ `raw_sylvamo_fabric` | `ppr_hist_roll_quality` | Roll quality measurements and test results (quality metrics, flags) | ❓ | ❌ None | ❌ None | 🔶 Extractor only | Trailing space in Fabric table name! Different from SP `roll_quality` |
-| 5 | Fabric (PPR) | `fabric-connector-ppr` | ✅ Running | ⚠️ `raw_sylvamo_fabric` | `ppr_hist_blend` | Blend/recipe compositions (blend compositions, material mix ratios) | ❓ | ❌ None | ❌ None | 🔶 Extractor only | Could map to `Recipe` in mfg_data? |
-| 6 | Fabric (PPR) | `fabric-connector-ppr` | ✅ Running | ⚠️ `raw_sylvamo_fabric` | `ppr_hist_material` | Material info from PPR (material codes, descriptions) | ❓ | ❌ None | ❌ None | 🔶 Extractor only | Overlaps with SAP `materials` |
-| 7 | Fabric (PPR) | `fabric-connector-ppr` | ✅ Running | ⚠️ `raw_sylvamo_fabric` | `ppr_hist_order_item` | Customer order line items (order items, customer order references) | ❓ | ❌ None | ❌ None | 🔶 Extractor only | Could relate to shipments/trends (SOW) |
-| 8 | Fabric (PPR) | `fabric-connector-ppr` | ✅ Running | ⚠️ `raw_sylvamo_fabric` | `ppr_production_total` | Aggregated production metrics (daily/shift summaries) | ❓ | ❌ None | ❌ None | 🔶 Extractor only | Reporting/KPI data |
-| 9 | Fabric (PPR) | `fabric-connector-ppr` | ✅ Running | ⚠️ `raw_sylvamo_fabric` | `ppr_mill` | Mill reference data (mill codes, names, locations) | ❓ | ❌ None | ❌ None | 🔶 Extractor only | Dimension table for lookups |
+| | **FABRIC — PPR** (LH_SILVER_ppreo, `ws_enterprise_prod`) | | | | | | | | | | **SP:** `sp-cdf-fabric-extractor-dev`. Deployed via `Setup-FabricExtractors.ps1` |
+| 1 | Fabric (PPR) | Win Service (32-bit) | ✅ Running | `raw_ext_fabric_ppr` ✅ | `ppr_hist_reel` | Reel production history — parent unit (reel_number, manufactured_date, basis_weight, caliper, moisture, weight, status) | ~61,000 | `populate_Reel` | `Reel` (mfg_core) | ✅ End-to-end | Windows Service `FabricConnector`. DB naming fixed 2026-02-11 |
+| 2 | Fabric (PPR) | Python 64-bit | 🔶 Full load in progress | `raw_ext_fabric_ppr` ✅ | `ppr_hist_roll` | Roll history — child of reel (roll_number, reel_number, basis_weight, caliper, width, weight, producing_machine) | ~2,300,000 | `populate_Roll` | `Roll` (mfg_core) | 🔶 Extraction running | `fabric_delta_extractor.py` — 64-bit Python (32-bit OOMs). md5-key + incremental ROLL_MANUFACTURING_DATE |
+| 3 | Fabric (PPR) | Task Sched (32-bit) | ✅ Running | `raw_ext_fabric_ppr` ✅ | `ppr_hist_package` | Package/shipping units (package_number, rolls_in_package, assembled_date, ship_date, inventory_point) | ~50,000 | ❌ None | ❌ None | 🔶 Extractor only | **GAP:** Package view exists in mfg_data. DB naming fixed 2026-02-11 |
+| 4 | Fabric (PPR) | Task Sched (32-bit) | ✅ Running | `raw_ext_fabric_ppr` ✅ | `ppr_hist_roll_quality` | Roll quality measurements and test results (quality metrics, flags) | ❓ | ❌ None | ❌ None | 🔶 Extractor only | Trailing space fixed in config. Different from SP `roll_quality` |
+| 5 | Fabric (PPR) | Task Sched (32-bit) | ✅ Running | `raw_ext_fabric_ppr` ✅ | `ppr_hist_blend` | Blend/recipe compositions (blend compositions, material mix ratios) | ❓ | ❌ None | ❌ None | 🔶 Extractor only | Could map to `Recipe` in mfg_data? |
+| 6 | Fabric (PPR) | Task Sched (32-bit) | ✅ Running | `raw_ext_fabric_ppr` ✅ | `ppr_hist_material` | Material info from PPR (material codes, descriptions) | ❓ | ❌ None | ❌ None | 🔶 Extractor only | Overlaps with SAP `materials` |
+| 7 | Fabric (PPR) | Python 64-bit | ⏳ Pending | `raw_ext_fabric_ppr` ✅ | `ppr_hist_order_item` | Customer order line items (order items, customer order references) | ❓ | ❌ None | ❌ None | 🔶 Extractor only | `fabric_delta_extractor.py` — after HIST_ROLL completes. 32-bit OOMs |
+| 8 | Fabric (PPR) | Task Sched (32-bit) | ✅ Running | `raw_ext_fabric_ppr` ✅ | `ppr_production_total` | Aggregated production metrics (daily/shift summaries) | ❓ | ❌ None | ❌ None | 🔶 Extractor only | Reporting/KPI data |
+| 9 | Fabric (PPR) | Task Sched (32-bit) | ✅ Running | `raw_ext_fabric_ppr` ✅ | `ppr_mill` | Mill reference data (mill codes, names, locations) | ❓ | ❌ None | ❌ None | 🔶 Extractor only | Dimension table for lookups |
 | | **FABRIC — PPV** (LH_SILVER_ppreo, `ws_enterprise_prod`) | | | | | | | | | | **SP:** `sp-cdf-fabric-extractor-dev` |
 | 10 | Fabric (PPV) | `fabric-connector-ppv` | ✅ Running | `raw_ext_fabric_ppv` ✅ | `ppv_snapshot` | Material cost / purchase price variance (material, description, type, plant, standard_cost, ppv, snapshot_date) | ~200+ | `populate_Event_PPV` | `Event` (mfg_core) | ✅ End-to-end | |
 | 11 | Fabric (PPV) | `fabric-connector-ppv` | ✅ Running | `raw_ext_fabric_ppv` ✅ | `ppv_snapshot` | *(same table, second transform)* | *(same)* | `populate_CostEvent` | `CostEvent` (mfg_ext) | ✅ End-to-end | Extended view |
@@ -141,7 +141,7 @@ This section documents the Microsoft Fabric workspaces and lakehouses that serve
 | 19 | SAP Gateway | `sap-odata-extractor` | ✅ Running | `raw_ext_sap` | `materials` | Material master data (material codes, descriptions) | ❓ | `populate_Material` | `Material` (mfg_core) | ✅ End-to-end | |
 | 20 | SAP Gateway | `sap-odata-extractor` | ✅ Running | `raw_ext_sap` | `work_orders` | Work orders via OData | ❓ | ❌ (superseded?) | — | ❓ Superseded? | Replaced by `sapecc_work_orders` from Fabric? |
 | 21 | SAP Gateway | `sap-odata-extractor` | ✅ Running | `raw_ext_sap` | `production_orders` | Production orders | ❓ | `populate_Event_ProductionOrders`, `populate_ProductionOrder` | `Event`, `ProductionOrder` | ✅ End-to-end | From lakehouse |
-| | **PROFICY GBDB** (SQL Server) | | | | | | | | | | **SP:** `sp-cdf-sql-extractor-dev`. ODBC Driver 17 |
+| | **PROFICY GBDB** (SQL Server) — **Owner: Max Tollefsen** | | | | | | | | | | **SP:** `sp-cdf-sql-extractor-dev`. ODBC Driver 17. Already set up and running by Max. |
 | 22 | Proficy GBDB | `sql-extractor-proficy` | ✅ Running | `raw_ext_sql_proficy` | `events_tests` | Production events + test results (actual Proficy readings) | ❓ | `populate_Event_Proficy` | `Event` (mfg_core) | ✅ End-to-end | |
 | 23 | Proficy GBDB | `sql-extractor-proficy` | ✅ Running | `raw_ext_sql_proficy` | `events_tests` | *(same table)* | *(same)* | `populate_ProductionEvent` | `ProductionEvent` (mfg_ext) | ✅ End-to-end | Extended view |
 | 24 | Proficy GBDB | `sql-extractor-proficy` | ✅ Running | `raw_ext_sql_proficy` | `events_tests` | *(same table)* | *(same)* | `populate_ProficyDatapoints` | Time Series Datapoints | ✅ End-to-end | Readings as TS |
@@ -173,6 +173,29 @@ This section documents the Microsoft Fabric workspaces and lakehouses that serve
 > - **PPR Join Key to Proficy:** `reel_number` (e.g., EM0010126020) → `substring(5)` maps to Proficy `Event_Num`. See `PPR_PROFICY_NAMING_CONVENTION.md`
 > - **SAP ECC planned join:** AUFK + AFKO + AFVC → `Operation` view (filter: `WERKS IN ('0769','0519') AND AUTYP = '30'`)
 > - **PI extractors** push time series **directly to CDF TS** (not via RAW). Metadata tables in `raw_ext_pi` are tag metadata only.
+> - **Proficy extractor** owned and managed by **Max Tollefsen** — already set up and running independently.
+
+### PPR Deployment Architecture (updated 2026-02-11)
+
+All 9 PPR tables are now deployed via a single consolidated script `Setup-FabricExtractors.ps1` on VM `C:\Cognite\FabricExtractor`. DB naming issue is **resolved** — all configs now write to `raw_ext_fabric_ppr`.
+
+| Component | Tables | Technology | Details |
+|-----------|--------|------------|---------|
+| **Windows Service** (`FabricConnector`) | HIST_REEL (~61K rows) | 32-bit Fabric connector exe | Runs continuously as `Automatic (Delayed Start)` service with restart-on-failure recovery |
+| **Python 64-bit** (`fabric_delta_extractor.py`) | HIST_ROLL (~2.3M rows), HIST_ORDER_ITEM | Custom extractor using `deltalake` + `cognite-sdk` | Task Scheduler. **Reason:** 32-bit connector OOMs on tables >2GB virtual address space |
+| **Task Scheduler** (32-bit exe) | 6 other PPR tables | Fabric connector standalone exe | Hourly polling. Tables: HistRollQuality, HistPackage, HistBlend, HistMaterial, ProductionTotal, Mill |
+
+**Scripts:**
+- `Setup-FabricExtractors.ps1` — Consolidated deployment (generates configs, installs service, creates 12 scheduled tasks, embeds Python extractor, installs Python deps)
+- `Manage-FabricExtractors.ps1` — Management helper (Status, Start, Stop, Restart, Logs, Enable/Disable)
+- `fabric_delta_extractor.py` — 64-bit Python extractor auto-generated by setup script
+
+**Resolved issues (2026-02-11):**
+- ✅ **DB naming:** All 9 PPR configs now use `raw_ext_fabric_ppr` (was `raw_sylvamo_fabric`)
+- ✅ **OOM on large tables:** Custom 64-bit Python extractor for HIST_ROLL and HIST_ORDER_ITEM
+- ✅ **Trailing space:** HIST_ROLL_QUALITY config corrected
+- ✅ **md5-key:** All tables configured with `md5-key: true`
+- ✅ **KeyError bug workaround:** One table per config file (13 separate YAML configs generated)
 
 ---
 
@@ -215,7 +238,7 @@ This section documents the Microsoft Fabric workspaces and lakehouses that serve
 |------------|------|-------------|------------|--------|
 | mfg_core | Asset | `populate_Asset` | `raw_ext_sap.sap_floc_*` | ✅ |
 | mfg_core | Material | `populate_Material` | `raw_ext_sap.materials` | ✅ |
-| mfg_core | Reel | `populate_Reel` | `raw_ext_fabric_ppr.ppr_hist_reel` | 🔶 DB name issue |
+| mfg_core | Reel | `populate_Reel` | `raw_ext_fabric_ppr.ppr_hist_reel` | ✅ (DB fixed 2026-02-11) |
 | mfg_core | Roll | `populate_Roll` | `raw_ext_fabric_ppr.ppr_hist_roll` | ✅ |
 | mfg_core | RollQuality | `populate_RollQuality` | `raw_ext_sharepoint.roll_quality` | ✅ |
 | mfg_core | Event | `populate_Event_Proficy` | `raw_ext_sql_proficy.events_tests` | ✅ |
@@ -291,7 +314,7 @@ This section documents the Microsoft Fabric workspaces and lakehouses that serve
 
 ## 6. RAW Database Naming Issues
 
-> **CRITICAL:** There are two naming conventions in use. Old configs write to one DB, transforms read from another. This causes data to be extracted but invisible to transformations.
+> **~~CRITICAL~~ ✅ RESOLVED (2026-02-11):** The DB naming issue has been fixed. `Setup-FabricExtractors.ps1` now generates all PPR configs with `raw_ext_fabric_ppr`. Old `raw_sylvamo_fabric` configs are no longer used. SAP OData `bp_details` still uses old naming (low priority). The history below is kept for reference.
 
 ### 6.1 Naming Convention History
 
@@ -331,11 +354,12 @@ This section documents the Microsoft Fabric workspaces and lakehouses that serve
 
 | Issue | Symptom | Workaround | Status |
 |-------|---------|-----------|--------|
-| **KeyError bug** | Connector crashes after extracting first table when multiple tables configured | Extract **ONE table at a time** — comment/uncomment in config | Open (Fabric connector issue) |
-| **Default batch size** | Only 1,000 rows extracted (default `read_batch_size`) | Set `read_batch_size: 100000` or higher | Documented |
-| **OOM crash (SVQS-155)** | `numpy._core._exceptions._ArrayMemoryError` on 2.3M row tables | Reduce batch sizes: `ingest-batch-size: 20000`, `fabric-ingest-batch-size: 500`. Use `md5-key: true` + `incremental-field` | Resolved with v2 config |
-| **Row key overwrite** | Without `md5-key`, connector uses row indices (0-999) as keys — each batch overwrites previous | Set `md5-key: true` to generate unique hash-based keys | Documented |
-| **Trailing space in table name** | `HIST_ROLL_QUALITY ` has trailing space in Fabric | Include trailing space in `raw-path` config | Known |
+| **KeyError bug** | Connector crashes after extracting first table when multiple tables configured | `Setup-FabricExtractors.ps1` generates **one config per table** (13 separate YAMLs) | ✅ Workaround deployed |
+| **Default batch size** | Only 1,000 rows extracted (default `read_batch_size`) | Set `read_batch_size: 100000` or higher. All configs updated. | ✅ Resolved |
+| **OOM crash on 32-bit** | `ArrowMemoryError` / `malloc failed` / `inflateInit() failed` on HIST_ROLL (~2.3M rows) and HIST_ORDER_ITEM — 32-bit exe limited to ~2GB virtual address space | Built custom **64-bit Python extractor** (`fabric_delta_extractor.py`) using `deltalake` + `cognite-sdk` with 50K-row batch processing. Setup script auto-deploys it. | ✅ **Resolved** (was SVQS-155) |
+| **Row key overwrite** | Without `md5-key`, connector uses row indices (0-999) as keys — each batch overwrites previous | All configs set `md5-key: true`. Setup script enforces this. | ✅ Resolved |
+| **Trailing space in table name** | `HIST_ROLL_QUALITY ` has trailing space in Fabric | Corrected in generated config — trailing space removed. | ✅ Resolved |
+| **DB naming mismatch** | Old configs wrote to `raw_sylvamo_fabric` instead of `raw_ext_fabric_ppr` | `Setup-FabricExtractors.ps1` generates all configs with correct `raw_ext_fabric_ppr` DB name. | ✅ **Resolved** 2026-02-11 |
 
 ### 7.2 SAP OData Issues
 
@@ -427,8 +451,8 @@ This section documents the Microsoft Fabric workspaces and lakehouses that serve
 
 | # | Action | Priority | Owner | Target Date | Status |
 |---|--------|----------|-------|-------------|--------|
-| A1 | **Fix RAW DB naming:** Update all old configs from `raw_sylvamo_fabric` → `raw_ext_fabric_ppr` and `raw_sylvamo_sap` → `raw_ext_sap` | 🔴 Critical | Cognite | ASAP | 🔲 |
-| A2 | **Re-run HIST_REEL extractor** with corrected DB name (`raw_ext_fabric_ppr`) | 🔴 Critical | Cognite | After A1 | 🔲 |
+| A1 | ~~**Fix RAW DB naming**~~ | ~~🔴 Critical~~ | ~~Cognite~~ | ~~ASAP~~ | ✅ **DONE** 2026-02-11 — `Setup-FabricExtractors.ps1` deployed with correct naming |
+| A2 | ~~**Re-run HIST_REEL extractor**~~ | ~~🔴 Critical~~ | ~~Cognite~~ | ~~After A1~~ | ✅ **DONE** 2026-02-11 — Running as Windows Service |
 | A3 | Create **AUFK+AFKO+AFVC join transformation** for Operation view | High | Cognite | After AFVC extraction | 🔲 |
 | A4 | Investigate PI metadata tables — determine if they contain useful data | Medium | Cognite | — | 🔲 |
 | A5 | Verify SAP RAW table names: `asset_hierarchy` vs `sap_floc_eastover`/`sap_floc_sumter` | High | Cognite | — | 🔲 |
@@ -437,8 +461,9 @@ This section documents the Microsoft Fabric workspaces and lakehouses that serve
 | A8 | Build **validation script** to count RAW rows vs source and vs model instances | High | Cognite | — | 🔲 |
 | A9 | Investigate SharePoint `documents` table — marked as "duplicate" | Low | Cognite | — | 🔲 |
 | A10 | Create file metadata extraction pipeline | Medium | Cognite | — | 🔲 |
-| A11 | **Delete old RAW databases** (`raw_sylvamo_fabric`, `raw_sylvamo_sap`) after migration | Low | Cognite | After A1+A2 verified | 🔲 |
+| A11 | **Delete old RAW databases** (`raw_sylvamo_fabric`, `raw_sylvamo_sap`) after migration | Low | Cognite | After validation | 🔲 |
 | A12 | Decide: extract AUFK/AFKO/AFVC from **PROD** workspace or keep DEV data | High | Cognite+Valmir | — | 🔲 |
+| A13 | **Complete HIST_ROLL + HIST_ORDER_ITEM extraction** via Python 64-bit | 🔴 Critical | Cognite | 2026-02-12 | 🔶 In Progress |
 
 ---
 
@@ -460,13 +485,17 @@ This section documents the Microsoft Fabric workspaces and lakehouses that serve
 
 | Config File | Extractor | Tables | RAW Database | Status | Notes |
 |------------|-----------|--------|-------------|--------|-------|
-| `fabric-connector-ppr-all.yml` | Fabric (PPR) | All 9 PPR tables | ⚠️ `raw_sylvamo_fabric` (OLD) | Outdated | KeyError bug — run one table at a time |
-| `fabric-connector-hist-reel.yml` | Fabric (PPR) | HIST_REEL only | ⚠️ `raw_sylvamo_fabric` (OLD) | Outdated | Needs DB name fix |
-| `fabric-connector-hist-roll-full.yml` (v2) | Fabric (PPR) | HIST_ROLL only | ✅ `raw_ext_fabric_ppr` | **Active** | With md5-key, incremental-field, reduced batch sizes |
-| `fabric-connector-hist-roll-quality.yml` | Fabric (PPR) | HIST_ROLL_QUALITY | ⚠️ `raw_sylvamo_fabric` (OLD) | Outdated | Trailing space in Fabric table name |
-| `fabric-connector-sapecc-v2.yml` (DEV) | Fabric (SAP ECC) | AUFK, AFKO, AFVC | ✅ `raw_ext_fabric_sapecc` | **Active** | Run one table at a time. AFVC current |
+| ~~`fabric-connector-ppr-all.yml`~~ | ~~Fabric (PPR)~~ | ~~All 9 PPR tables~~ | ~~`raw_sylvamo_fabric`~~ | **Replaced** | Superseded by `Setup-FabricExtractors.ps1` |
+| ~~`fabric-connector-hist-reel.yml`~~ | ~~Fabric (PPR)~~ | ~~HIST_REEL~~ | ~~`raw_sylvamo_fabric`~~ | **Replaced** | Superseded — now auto-generated as `ppr-hist-reel.yaml` |
+| ~~`fabric-connector-hist-roll-full.yml`~~ | ~~Fabric (PPR)~~ | ~~HIST_ROLL~~ | ~~`raw_ext_fabric_ppr`~~ | **Replaced** | Superseded — now Python 64-bit via `ppr-hist-roll.yaml` |
+| ~~`fabric-connector-hist-roll-quality.yml`~~ | ~~Fabric (PPR)~~ | ~~HIST_ROLL_QUALITY~~ | ~~`raw_sylvamo_fabric`~~ | **Replaced** | Superseded — now auto-generated as `ppr-hist-roll-quality.yaml` |
+| **`Setup-FabricExtractors.ps1`** | **Fabric (PPR + SAP ECC)** | **All 9 PPR + 4 SAP ECC = 13 total** | ✅ `raw_ext_fabric_ppr` / `raw_ext_fabric_sapecc` | **Active** | Consolidated deployment: generates 13 configs, installs service, creates tasks, embeds Python extractor |
+| `configs/ppr-*.yaml` (9 files) | Fabric (PPR) | One per PPR table | ✅ `raw_ext_fabric_ppr` | **Active** | Auto-generated by Setup script |
+| `configs/sapecc-*.yaml` (4 files) | Fabric (SAP ECC) | One per SAP ECC table | ✅ `raw_ext_fabric_sapecc` | **Active** | Auto-generated by Setup script (disabled tasks) |
+| `fabric_delta_extractor.py` | Python 64-bit | HIST_ROLL, HIST_ORDER_ITEM | ✅ `raw_ext_fabric_ppr` | **Active** | Uses `deltalake` + `cognite-sdk`. Auto-generated by Setup script |
+| `fabric-connector-sapecc-v2.yml` (DEV) | Fabric (SAP ECC) | AUFK, AFKO, AFVC | ✅ `raw_ext_fabric_sapecc` | **Legacy** | Manual config — superseded by Setup script for new deployments |
 | `fabric-connector-sapecc-workorders.yml` | Fabric (SAP ECC) | iw28 | ✅ `raw_ext_fabric_sapecc` | **Done** | ~407K rows extracted |
-| `sap-odata-extractor.yml` | SAP OData | BP_DetailsSet | ⚠️ `raw_sylvamo_sap` (OLD) | Running | Needs DB name fix to `raw_ext_sap` |
+| `sap-odata-extractor.yml` | SAP OData | BP_DetailsSet | ⚠️ `raw_sylvamo_sap` (OLD) | Running | Still needs DB name fix to `raw_ext_sap` |
 
 ---
 
@@ -481,11 +510,12 @@ This section documents the Microsoft Fabric workspaces and lakehouses that serve
 7. **For SVQS-160:** Reference this document as the comprehensive data lineage tracker
 
 > **Next Steps (see Section 10 Priority Matrix for full view):**
-> 1. **THIS WEEK:** Fix RAW DB naming in all old configs and re-run extractors (F1–F5)
+> 1. ~~**THIS WEEK:** Fix RAW DB naming in all old configs and re-run extractors (F1–F5)~~ ✅ **DONE 2026-02-11** — Setup script deployed with correct naming
 > 2. **THIS WEEK:** Schedule Sylvamo meeting using ASK items A1–A9 as agenda
-> 3. **THIS SPRINT:** Build AUFK+AFKO+AFVC join transform (B1) and Package transform (B2)
-> 4. **THIS SPRINT:** Build validation script (B3) once Sylvamo provides expected counts
-> 5. **BACKLOG:** Remaining transforms (B4–B6) pending Sylvamo confirmation on mappings
+> 3. **THIS WEEK:** Complete HIST_ROLL full load (~2.3M rows) and run HIST_ORDER_ITEM
+> 4. **THIS SPRINT:** Build AUFK+AFKO+AFVC join transform (B1) and Package transform (B2)
+> 5. **THIS SPRINT:** Build validation script (B3) once Sylvamo provides expected counts
+> 6. **BACKLOG:** Remaining transforms (B4–B6) pending Sylvamo confirmation on mappings
 
 ---
 
@@ -500,12 +530,14 @@ This section documents the Microsoft Fabric workspaces and lakehouses that serve
 
 | # | What | Why It Matters | Effort | Status |
 |---|------|---------------|--------|--------|
-| F1 | **Fix RAW DB names in all old extractor configs** (`raw_sylvamo_fabric` → `raw_ext_fabric_ppr`, `raw_sylvamo_sap` → `raw_ext_sap`) | Transforms can't read data written to wrong DB. HIST_REEL, HIST_PACKAGE, HIST_ROLL_QUALITY, HIST_BLEND, HIST_MATERIAL, HIST_ORDER_ITEM, PRODUCTION_TOTAL, MILL, and SAP OData `bp_details` are all affected. See [Section 6](#6-raw-database-naming-issues) for full list. | Small — config change + re-run | 🔲 |
-| F2 | **Re-run HIST_REEL extractor** after DB name fix | Reel transformation (`populate_Reel`) will fail or read stale data until the reel data lands in `raw_ext_fabric_ppr.ppr_hist_reel` | Small — re-run extraction (~61K rows) | 🔲 |
-| F3 | **Re-run remaining PPR tables** (HIST_PACKAGE, HIST_BLEND, HIST_MATERIAL, HIST_ORDER_ITEM, PRODUCTION_TOTAL, MILL, HIST_ROLL_QUALITY) with correct DB names | All 7 tables are currently in `raw_sylvamo_fabric` — useless to transforms | Medium — run one at a time (KeyError bug) | 🔲 |
+| F1 | ~~**Fix RAW DB names in all old extractor configs**~~ | ~~Transforms can't read data written to wrong DB~~ | ~~Small~~ | ✅ **DONE** 2026-02-11 — `Setup-FabricExtractors.ps1` generates all configs with `raw_ext_fabric_ppr` |
+| F2 | ~~**Re-run HIST_REEL extractor**~~ | ~~Reel transformation needs data in correct DB~~ | ~~Small~~ | ✅ **DONE** 2026-02-11 — Running as Windows Service with correct DB |
+| F3 | ~~**Re-run remaining PPR tables**~~ | ~~All 7 tables were in wrong DB~~ | ~~Medium~~ | ✅ **DONE** 2026-02-11 — All 8 non-service tables deployed via Task Scheduler (6 x 32-bit exe + 2 x Python 64-bit) |
 | F4 | **Verify `populate_Event_WorkOrders` and `populate_WorkOrder` transforms now succeed** | `sapecc_work_orders` (~407K rows) was extracted 2026-02-03. Transforms should now have data. | Small — run transforms, check results | 🔲 |
 | F5 | **Verify SAP RAW table names** — do transforms read `asset_hierarchy` or `sap_floc_eastover` + `sap_floc_sumter`? | If table names don't match, `populate_Asset` may be broken or reading old data | Small — check transform SQL vs actual RAW tables | 🔲 |
-| F6 | **Delete old RAW databases** (`raw_sylvamo_fabric`, `raw_sylvamo_sap`) after migration confirmed | Avoid confusion — two copies of data in different DBs | Small — after F1-F3 verified | 🔲 |
+| F6 | **Delete old RAW databases** (`raw_sylvamo_fabric`, `raw_sylvamo_sap`) after migration confirmed | Avoid confusion — two copies of data in different DBs | Small — after row count validation | 🔲 |
+| F7 | **Complete HIST_ROLL full load** (~2.3M rows) | Data actively writing to CDF RAW via Python 64-bit extractor (started 2026-02-11 20:08 UTC) | None — running | 🔶 In Progress |
+| F8 | **Run HIST_ORDER_ITEM extraction** after HIST_ROLL completes | Second OOM table, also uses Python 64-bit extractor | Small — start after HIST_ROLL | ⏳ Pending |
 
 ---
 
@@ -555,8 +587,8 @@ This section documents the Microsoft Fabric workspaces and lakehouses that serve
 
 ```
                     ┌──────────────────────────────────────────┐
-  URGENT            │  F1  F2  F3  F4  F5                     │  Fix configs & re-run extractors
-  (do this week)    │  A1  A2  A3  A7                         │  Ask Sylvamo (schedule meeting)
+  URGENT            │  ✅F1 ✅F2 ✅F3  F4  F5  F7  F8        │  F1-F3 DONE! F7/F8: complete HIST_ROLL + ORDER_ITEM
+  (do this week)    │  A3  A7                                  │  Ask Sylvamo (schedule meeting)
                     │  B1                                      │  Build join transform
                     ├──────────────────────────────────────────┤
   IMPORTANT         │  B2  B3                                  │  Package transform + validation
@@ -570,4 +602,4 @@ This section documents the Microsoft Fabric workspaces and lakehouses that serve
 
 ---
 
-*Document version: 3.0 — Updated 2026-02-10. Combined Source Systems + Pipeline Mapping into single Section 3. Added prioritized punch list (Section 10).*
+*Document version: 4.0 — Updated 2026-02-11. Fabric PPR deployment complete: hybrid service + Python 64-bit + Task Scheduler via consolidated Setup-FabricExtractors.ps1. DB naming resolved. OOM resolved with custom 64-bit Python extractor. Proficy owned by Max Tollefsen.*
