@@ -2,7 +2,7 @@
 
 **CDF implementation for Sylvamo paper manufacturing operations**
 
-> ISA-95/ISA-88 aligned data model for paper manufacturing
+> Manufacturing data model for paper production - built on Cognite Data Model (CDM)
 
 This repository contains the data model specification for Sylvamo's manufacturing operations in Cognite Data Fusion (CDF).
 
