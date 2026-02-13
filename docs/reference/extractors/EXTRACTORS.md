@@ -1,7 +1,9 @@
 # Extractors Configuration
 
-**Date:** 2026-01-29  
-**Purpose:** Documentation of all extractors feeding data into the `sylvamo_mfg` model
+**Date:** 2026-02-13 (Updated)  
+**Purpose:** Documentation of all extractors feeding data into `sylvamo_mfg_core` and `sylvamo_mfg_extended` models
+
+> **Last Verified:** February 13, 2026 against CDF sylvamo-dev project
 
 ---
 
@@ -38,26 +40,39 @@ All extractor-managed RAW databases use the prefix `raw_ext_`:
 raw_ext_<extractor_type>_<source>
 ```
 
-| Database | Extractor | Description |
-|----------|-----------|-------------|
-| `raw_ext_fabric_ppr` | Fabric Connector | Paper Production Reporting (Reels, Rolls, Packages) |
-| `raw_ext_fabric_ppv` | Fabric Connector | Purchase Price Variance / Cost data |
-| `raw_ext_pi` | PI Extractor | Time series metadata |
-| `raw_ext_sap` | SAP OData | SAP master data (BP, Materials, Work Orders) |
-| `raw_ext_sql_proficy` | SQL Extractor | Proficy lab test results |
-| `raw_ext_sharepoint` | SharePoint Extractor | Documents and quality reports |
+| Database | Extractor | Tables | Description |
+|----------|-----------|--------|-------------|
+| `raw_ext_fabric_ppr` | Fabric Connector | **16** | Paper Production Reporting (Reels, Rolls, Packages, Blends, etc.) |
+| `raw_ext_fabric_ppv` | Fabric Connector | 2 | Purchase Price Variance / Cost data |
+| `raw_ext_fabric_sapecc` | Fabric Connector | **97** | SAP ECC tables (Work Orders, Notifications, Operations, Materials) |
+| `raw_ext_sap` | SAP OData | 5 | SAP Gateway (Functional Locations, Materials) |
+| `raw_ext_pi` | PI Extractor | 2 | Time series metadata |
+| `raw_ext_sql_proficy` | SQL Extractor | 2 | Proficy lab test results |
+| `raw_ext_sharepoint` | SharePoint Extractor | 2 | Documents and quality reports |
 
 ---
 
 ## Extractor Status Summary
 
-| Extractor | Source | Status | Data Target | Use Case |
-|-----------|--------|--------|-------------|----------|
-| **Fabric Connector** | Microsoft Fabric Lakehouse | ✅ Running | `raw_ext_fabric_ppr`, `raw_ext_fabric_ppv` | UC1, UC2 |
-| **PI Extractor** | PI Server (S769PI01, S769PI03) | ✅ Running | Time Series, `raw_ext_pi` | Process Data |
-| **SharePoint Extractor** | SharePoint Online | ✅ Running | `raw_ext_sharepoint` | UC2 (Quality) |
-| **SAP OData Extractor** | SAP Gateway | ✅ Running | `raw_ext_sap` | Master Data |
-| **SQL Extractor** | Proficy GBDB | ⏳ Configured | `raw_ext_sql_proficy` | UC2 (Lab) |
+| Extractor | Source | Status | Data Target | Records | Use Case |
+|-----------|--------|--------|-------------|---------|----------|
+| **Fabric Connector** | Fabric PPR | ✅ Running | `raw_ext_fabric_ppr` | 16 tables | UC1, UC2 (Reels, Rolls) |
+| **Fabric Connector** | Fabric PPV | ✅ Running | `raw_ext_fabric_ppv` | 716 rows | UC1 (Costs) |
+| **Fabric Connector** | Fabric SAP ECC | ✅ Running | `raw_ext_fabric_sapecc` | **97 tables** | Work Orders, Notifications |
+| **PI Extractor** | PI Server (3 servers) | ✅ Running | Time Series | **3,864 tags** | Process Data |
+| **SharePoint Extractor** | SharePoint Online | ✅ Running | `raw_ext_sharepoint` | 180 records | UC2 (Quality) |
+| **SAP OData Extractor** | SAP Gateway | ✅ Running | `raw_ext_sap` | 5 tables | Functional Locations |
+| **SQL Extractor** | Proficy GBDB | ✅ Running | `raw_ext_sql_proficy` | 10,000+ rows | UC2 (Lab) |
+
+### Current Volumes (Verified Feb 13, 2026)
+
+| Resource | Count | Source |
+|----------|-------|--------|
+| RAW Databases | 7 | All extractors |
+| RAW Tables | **126** | Across all databases |
+| Time Series | **3,864** | PI (3,468) + Proficy (104) + Other (292) |
+| Files | 1,000+ | SharePoint, P&IDs |
+| Total Model Nodes | 500,000+ | mfg_core + mfg_extended |
 
 ---
 
