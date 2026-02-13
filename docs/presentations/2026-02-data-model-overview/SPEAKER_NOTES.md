@@ -690,4 +690,212 @@ A: The data engineering team maintains extractors and transformations. The model
 
 ---
 
+## Appendix A: Johan Stabekk's Key Guidance
+
+**Source:** ISA-95 & Sylvamo Data Model Alignment meeting (Jan 28, 2026)  
+**Expert:** Johan Stabekk - 6 years paper & pulp experience, 3.5 years at Cognite
+
+### Key Quotes to Reference
+
+**On Simplicity:**
+> "We don't want to over complicate it but we don't want to make it so simple that we sit with something that doesn't give them anything."
+
+**On Hierarchy:**
+> "Inside of ISA 95 you would want to create an enterprise type, a site type, an area type, a process cell type. **We don't want that. That's over complicating it.** We want an **asset type** and we want an **equipment type** and these two basically."
+
+**On Reel as Batch:**
+> "A batch here is a reel and an extension of that batch is a roll."
+
+**On Package Entity:**
+> "Here we're trying to go beyond what we have. At IP we are inside of the four walls of a production plant. Here we're going to go **between two production plants**."
+
+**On Scalability:**
+> "We start with what we know we can already define... and then we build from there."
+
+---
+
+## Appendix B: Complete Traceability Query
+
+Use this GraphQL query to demonstrate full end-to-end traceability:
+
+```graphql
+{
+  # Find a specific roll
+  getRoll(externalId: "roll:EME13B08061N") {
+    rollNumber
+    width
+    
+    # What reel was it cut from?
+    reel {
+      reelNumber
+      productionDate
+      
+      # What product grade?
+      productDefinition {
+        name
+        basisWeight
+      }
+      
+      # What machine made it?
+      equipment {
+        name
+        asset { name }  # Which mill?
+      }
+    }
+    
+    # What package is it in?
+    package {
+      packageNumber
+      status
+      sourcePlant { name }       # Shipped from?
+      destinationPlant { name }  # Shipped to?
+    }
+  }
+}
+```
+
+**Expected Result:**
+```json
+{
+  "rollNumber": "EME13B08061N",
+  "width": 8.5,
+  "reel": {
+    "reelNumber": "EM0010110008",
+    "productionDate": "2026-01-15",
+    "productDefinition": {
+      "name": "Wove Paper 20lb",
+      "basisWeight": 20.0
+    },
+    "equipment": {
+      "name": "Paper Machine 1 (PM1)",
+      "asset": { "name": "Eastover Mill" }
+    }
+  },
+  "package": {
+    "packageNumber": "EME12G04152F",
+    "status": "Shipped",
+    "sourcePlant": { "name": "Eastover Mill" },
+    "destinationPlant": { "name": "Sumpter Facility" }
+  }
+}
+```
+
+---
+
+## Appendix C: Verified Use Case Data Summary
+
+### Use Case 1: PPV Analysis (Real Data)
+
+**Total Materials:** 176  
+**Materials with Non-Zero PPV:** 21  
+**Total Current PPV:** -$118,151.12 (Net Favorable)
+
+| Type | Count | Total PPV | Total Cost |
+|------|-------|-----------|------------|
+| PKNG | 102 | +$9,253.79 | $4,403.45 |
+| PRD1 | 6 | $0.00 | $186.18 |
+| RAWM | 61 | -$23,062.58 | $6,240.13 |
+| FIBR | 7 | -$104,342.33 | $1,339.68 |
+
+**Top 3 Materials by PPV Impact:**
+1. WOOD, SOFTWOOD (FIBR): -$72,630.80
+2. CHIPS, MIXED HARDWOOD (FIBR): -$24,801.74
+3. CAUSTIC SODA (RAWM): -$22,095.06
+
+### Use Case 2: Quality Analysis (Real Data)
+
+**Production Data:**
+- Reels: 50
+- Rolls: 19
+- Packages: 50
+- Quality Results: 21
+
+**Quality Summary:**
+- Pass Rate: 71.4% (15 passed, 6 failed)
+- Total Reel Weight: 2,864,026 lbs
+- Average Reel Weight: 57,281 lbs
+
+**Defect Distribution:**
+- 005 - Crushed Edge: 2 occurrences
+- Baggy Edge: 2 occurrences
+- Up Curl: 2 occurrences
+- 007 - Edge Damage: 1 occurrence
+- Collating Box Jams: 1 occurrence
+
+**Business Insight:** Edge-related defects account for 83% of failures (5 of 6). Root cause analysis should focus on winding tension and edge handling.
+
+---
+
+## Appendix D: Data Model Visual Summary
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│ Eastover Mill│────►│   PM1        │────►│ Reel         │
+│   (Asset)    │     │ (Equipment)  │     │ EM0010110008 │
+└──────────────┘     └──────────────┘     └──────┬───────┘
+                                                 │ cut into
+                            ┌────────────────────┼────────────────────┐
+                            ▼                    ▼                    ▼
+                     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+                     │ Roll 061N    │     │ Roll 062N    │     │ Roll 063N    │
+                     └──────┬───────┘     └──────┬───────┘     └──────┬───────┘
+                            │                    │                    │
+                            └────────────────────┼────────────────────┘
+                                                 │ bundled in
+                                                 ▼
+                                          ┌──────────────┐
+                                          │ Package      │
+                                          │ EME12G04152F │
+                                          └──────┬───────┘
+                                                 │
+                              ┌──────────────────┴──────────────────┐
+                              ▼                                     ▼
+                       ┌──────────────┐                      ┌──────────────┐
+                       │ Eastover Mill│                      │Sumpter Facil.│
+                       │ (sourcePlant)│                      │(destination) │
+                       └──────────────┘                      └──────────────┘
+```
+
+---
+
+## Appendix E: Key Relationships Reference
+
+| From | Relation | To | Business Meaning |
+|------|----------|----| -----------------|
+| Equipment | asset | Asset | Equipment belongs to a mill |
+| Recipe | productDefinition | ProductDefinition | Recipe makes a product |
+| Recipe | equipment | Equipment | Recipe runs on equipment |
+| Reel | productDefinition | ProductDefinition | Reel is a batch of product |
+| Reel | equipment | Equipment | Reel made on equipment |
+| Roll | reel | Reel | Roll cut from reel |
+| Roll | package | Package | Roll bundled in package |
+| Package | sourcePlant | Asset | Package ships from mill |
+| Package | destinationPlant | Asset | Package ships to facility |
+| QualityResult | reel | Reel | Quality test on reel |
+| QualityResult | roll | Roll | Quality test on roll |
+| MaterialCostVariance | productDefinition | ProductDefinition | Cost impacts product |
+| Event | asset | Asset | Event occurs at asset |
+| MfgTimeSeries | asset | Asset | TimeSeries from asset |
+| CogniteFile | assets | Asset | File linked to asset |
+
+---
+
+## Appendix F: GitHub Documentation Index
+
+**Reference Documentation:**
+- [Data Model Specification](../../../reference/data-model/DATA_MODEL_SPECIFICATION.md)
+- [Architecture Decisions & Roadmap](../../../reference/data-model/ARCHITECTURE_DECISIONS_AND_ROADMAP.md)
+- [Transformations](../../../reference/data-model/TRANSFORMATIONS.md)
+- [Use Cases & Queries](../../../reference/use-cases/USE_CASES_AND_QUERIES.md)
+- [Johan ISA-95 Guidance](../../../reference/data-model/JOHAN_ISA95_GUIDANCE_SUMMARY.md)
+- [Data Model Walkthrough](../../../reference/data-model/DATA_MODEL_WALKTHROUGH.md)
+- [Extractors](../../../reference/extractors/EXTRACTORS.md)
+- [CI/CD Overview](../../../reference/cicd/CICD_OVERVIEW.md)
+
+**Internal Working Documents:**
+- [Sprint 2 Plan](../../../internal/sprint-planning/SPRINT_2_PLAN.md)
+- [Sprint 2 Story Mapping](../../../internal/sprint-planning/SPRINT_2_STORY_MAPPING.md)
+
+---
+
 *Speaker notes for Sylvamo CDF Data Model presentation*

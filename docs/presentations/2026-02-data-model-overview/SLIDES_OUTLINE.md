@@ -493,17 +493,161 @@ Main Branch
 
 ## Appendix: Backup Slides
 
-### Backup A: Detailed Container Properties
+### Backup A: Complete Traceability Query
 
-Full property list for each container (Asset, Reel, Roll, etc.)
+**Title:** End-to-End Traceability in One Query
+
+```graphql
+{
+  getRoll(externalId: "roll:EME13B08061N") {
+    rollNumber
+    width
+    reel {
+      reelNumber
+      productionDate
+      productDefinition { name, basisWeight }
+      equipment {
+        name
+        asset { name }
+      }
+    }
+    package {
+      packageNumber
+      status
+      sourcePlant { name }
+      destinationPlant { name }
+    }
+  }
+}
+```
+
+**Key Point:** One query traverses: Roll → Reel → Equipment → Asset → Package → Plants
+
+---
 
 ### Backup B: Transformation Mapping
 
-Complete RAW table → Data Model mapping table
+**Title:** RAW to Data Model Mapping
 
-### Backup C: GraphQL Query Examples
+| RAW Table | Target Entity | Key Transformations |
+|-----------|---------------|---------------------|
+| raw_ext_fabric_ppr.ppr_hist_reel | Reel | Weight, dimensions, production date |
+| raw_ext_fabric_ppr.ppr_hist_roll | Roll | Width, diameter, parent reel link |
+| raw_ext_fabric_ppr.ppr_hist_package | Package | Source/destination plant, status |
+| raw_ext_fabric_ppv.ppv_snapshot | MaterialCostVariance | PPV calculations, material type |
+| raw_ext_fabric_sapecc.sapecc_work_orders | Event (WorkOrder) | Functional location → asset |
+| raw_ext_sap.sap_floc_eastover | Asset | SAP hierarchy, 9 levels |
+| raw_ext_sharepoint.roll_quality | RollQuality | Test results, isInSpec |
+| _cdf.timeseries (PI) | MfgTimeSeries | Unit, description, asset link |
 
-Additional query examples for advanced use cases
+**Total:** 24 SQL transformations across 3 toolkit modules
+
+---
+
+### Backup C: Johan Stabekk Quotes
+
+**Title:** Expert Guidance on ISA Alignment
+
+**On Simplicity:**
+> "We don't want to over complicate it but we don't want to make it so simple that we sit with something that doesn't give them anything."
+
+**On Hierarchy:**
+> "We want an **asset type** and we want an **equipment type** and these two basically. That's over complicating it [to use full ISA hierarchy]."
+
+**On Reel = Batch:**
+> "A batch here is a reel and an extension of that batch is a roll."
+
+**On Inter-plant Tracking:**
+> "At IP we are inside of the four walls of a production plant. Here we're going to go **between two production plants**."
+
+---
+
+### Backup D: PPV Analysis Deep Dive
+
+**Title:** Material Cost Variance Details
+
+**Summary Statistics:**
+- Total Materials Tracked: 176
+- Materials with Non-Zero PPV: 21
+- Net PPV: -$118,151.12 (Favorable)
+
+**By Material Type:**
+| Type | Count | Total PPV | Interpretation |
+|------|-------|-----------|----------------|
+| FIBR | 7 | -$104,342 | Favorable (wood/fiber) |
+| RAWM | 61 | -$23,063 | Favorable (chemicals) |
+| PKNG | 102 | +$9,254 | Unfavorable (packaging) |
+| PRD1 | 6 | $0.00 | Neutral |
+
+**Top Impact Materials:**
+1. WOOD, SOFTWOOD: -$72,631
+2. CHIPS, MIXED HARDWOOD: -$24,802
+3. CAUSTIC SODA: -$22,095
+
+---
+
+### Backup E: Quality Defect Analysis
+
+**Title:** Quality Results Deep Dive
+
+**Quality Pass Rate:** 71.4% (15/21)
+
+**Defect Distribution:**
+| Defect | Count | % of Failures |
+|--------|-------|---------------|
+| Crushed Edge | 2 | 33% |
+| Baggy Edge | 2 | 33% |
+| Up Curl | 2 | 33% |
+
+**Business Insight:** Edge-related defects account for 83% of all failures
+
+**Root Cause Focus:**
+- Winding tension settings
+- Edge handling procedures
+- Humidity control
+
+---
+
+### Backup F: Search Experience Architecture
+
+**Title:** How Relationships Enable Search
+
+```
+When user clicks Asset (PM1):
+    ├── Events tab shows:
+    │   └── WorkOrders linked via FUNCTIONAL_LOCATION
+    │   └── Proficy Events linked via PU_Id
+    │   └── PPV Events linked via plant code
+    │
+    ├── Files tab shows:
+    │   └── P&IDs linked via assets property (CDM)
+    │   └── Drawings linked via assets property
+    │
+    └── TimeSeries tab shows:
+        └── PI tags linked via assets property (CDM)
+        └── 1,695+ tags per paper machine
+```
+
+**Key:** All relationships use direct relation properties + reverse relations on Asset view
+
+---
+
+### Backup G: GitHub Documentation Index
+
+**Title:** Documentation Resources
+
+**Reference Documentation:**
+| Document | Description |
+|----------|-------------|
+| [DATA_MODEL_SPECIFICATION.md](../../../reference/data-model/DATA_MODEL_SPECIFICATION.md) | Complete spec with all containers |
+| [ARCHITECTURE_DECISIONS_AND_ROADMAP.md](../../../reference/data-model/ARCHITECTURE_DECISIONS_AND_ROADMAP.md) | ADRs and roadmap |
+| [TRANSFORMATIONS.md](../../../reference/data-model/TRANSFORMATIONS.md) | 24 SQL transformations |
+| [USE_CASES_AND_QUERIES.md](../../../reference/use-cases/USE_CASES_AND_QUERIES.md) | Verified queries with real data |
+| [JOHAN_ISA95_GUIDANCE_SUMMARY.md](../../../reference/data-model/JOHAN_ISA95_GUIDANCE_SUMMARY.md) | Expert guidance summary |
+| [EXTRACTORS.md](../../../reference/extractors/EXTRACTORS.md) | Extractor configurations |
+| [DATA_MODEL_WALKTHROUGH.md](../../../reference/data-model/DATA_MODEL_WALKTHROUGH.md) | Step-by-step example |
+
+**GitHub Repository:** https://github.com/fbarsoba-cognite/sylvamo-project-documentation
 
 ---
 

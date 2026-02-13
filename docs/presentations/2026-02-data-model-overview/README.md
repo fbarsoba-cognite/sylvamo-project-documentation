@@ -66,10 +66,30 @@ By the end of this presentation, attendees will understand:
 
 ## Related Documentation
 
-- [Data Model Specification](../../reference/data-model/DATA_MODEL_SPECIFICATION.md)
-- [Architecture Decisions](../../reference/data-model/ARCHITECTURE_DECISIONS_AND_ROADMAP.md)
-- [Transformations](../../reference/data-model/TRANSFORMATIONS.md)
-- [Extractors](../../reference/extractors/EXTRACTORS.md)
+### Data Model
+- [Data Model Specification](../../reference/data-model/DATA_MODEL_SPECIFICATION.md) - Complete container and property specs
+- [Architecture Decisions & Roadmap](../../reference/data-model/ARCHITECTURE_DECISIONS_AND_ROADMAP.md) - ADRs and phase planning
+- [Data Model Walkthrough](../../reference/data-model/DATA_MODEL_WALKTHROUGH.md) - Step-by-step traceability example
+- [Johan ISA-95 Guidance](../../reference/data-model/JOHAN_ISA95_GUIDANCE_SUMMARY.md) - Expert recommendations
+- [ISA Alignment Analysis](../../reference/data-model/COGNITE_ISA_EXTENSION_AND_SYLVAMO_ALIGNMENT.md) - Standards mapping
+
+### Data Pipeline
+- [Transformations](../../reference/data-model/TRANSFORMATIONS.md) - 24 SQL transformations documented
+- [Extractors](../../reference/extractors/EXTRACTORS.md) - Extractor configurations
+- [Data Source Registry](../../reference/extractors/DATA_SOURCE_REGISTRY.md) - RAW table inventory
+- [Data Pipeline & Sources](../../reference/extractors/DATA_PIPELINE_AND_SOURCES.md) - Source system details
+
+### Use Cases
+- [Use Cases & Queries](../../reference/use-cases/USE_CASES_AND_QUERIES.md) - Verified queries with real data
+- [Expert Scenarios](../../reference/use-cases/USE_CASE_VALIDATION_EXPERT_SCENARIOS.md) - Industry use cases
+
+### CI/CD
+- [CI/CD Overview](../../reference/cicd/CICD_OVERVIEW.md) - Pipeline setup
+- [Complete Setup Guide](../../reference/cicd/CICD_COMPLETE_SETUP_GUIDE.md) - Step-by-step guide
+
+### Sprint Planning
+- [Sprint 2 Plan](../../internal/sprint-planning/SPRINT_2_PLAN.md) - Current sprint work
+- [Story Mapping](../../internal/sprint-planning/SPRINT_2_STORY_MAPPING.md) - Jira story mapping
 
 ---
 
