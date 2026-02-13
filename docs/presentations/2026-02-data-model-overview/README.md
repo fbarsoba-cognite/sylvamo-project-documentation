@@ -30,6 +30,8 @@ By the end of this presentation, attendees will understand:
 | [SLIDES_OUTLINE.md](SLIDES_OUTLINE.md) | Detailed slide-by-slide outline with content |
 | [SPEAKER_NOTES.md](SPEAKER_NOTES.md) | Full speaker notes for each slide (~3 min per slide) |
 | [DEMO_SCRIPT.md](DEMO_SCRIPT.md) | Step-by-step demo walkthrough for CDF Fusion |
+| [DATA_PIPELINE_DEEP_DIVE.md](DATA_PIPELINE_DEEP_DIVE.md) | **NEW** Complete 35-table pipeline mapping, Fabric infrastructure |
+| [Sylvamo_CDF_Data_Model_Presentation.pptx](Sylvamo_CDF_Data_Model_Presentation.pptx) | PowerPoint slides (generated from template) |
 | `assets/` | Screenshots and diagrams for slides |
 
 ## Presentation Structure
@@ -45,11 +47,27 @@ By the end of this presentation, attendees will understand:
 
 ## Key Data Points to Reference
 
+**Data Model:**
 - **Space:** sylvamo_mfg_core_schema / sylvamo_mfg_core_instances
-- **Total Nodes:** 365,000+ real production data
+- **Total Nodes:** 450,000+ real production data
 - **Views:** Asset, Event, Material, MfgTimeSeries, Reel, Roll, RollQuality, CogniteFile
 - **Transformations:** 24 SQL transformations
-- **Extractors:** Fabric, PI, SharePoint, SAP OData, SQL
+
+**Extraction Layer (from [DATA_SOURCE_REGISTRY](https://github.com/fbarsoba-cognite/sylvamo-project-documentation/blob/main/docs/reference/extractors/DATA_SOURCE_REGISTRY.md)):**
+- **RAW Tables:** 35+ across 7 RAW databases
+- **Extractors:** 7 active (Fabric x3, PI, SharePoint, SAP OData, SQL)
+- **Fabric Lakehouses:** LH_SILVER_ppreo (PPR/PPV), lh_gold_pm (SAP PM), LH_SILVER_sapecc (SAP ECC)
+- **Service Principals:** 5 dedicated (sp-cdf-*-extractor-dev)
+
+**Volumes:**
+| Source | Volume |
+|--------|--------|
+| Reels | 61,000+ |
+| Rolls | 2,300,000+ |
+| Packages | 50,000+ |
+| Work Orders | 407,000+ |
+| PI Tags | 3,500+ |
+| SAP ECC Records | 16,000,000+ (AUFK+AFKO+AFVC) |
 
 ## Demo Environment
 
