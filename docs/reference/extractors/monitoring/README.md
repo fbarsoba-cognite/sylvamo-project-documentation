@@ -47,6 +47,39 @@ Reports success/failure for **scheduled** Fabric extractor tasks after each run.
 .\Report-ExtractionRun.ps1 -PipelineExternalId "ep_fabric_sapecc_daily" -TaskName "FabricExtractor-SAPECC-BSEG"
 ```
 
+### Run-MemoryAwareExtraction.ps1
+
+Memory-aware orchestrator that runs extractor tasks sequentially with memory checks between each table. Prevents OOM cascading failures.
+
+**Features:**
+- Checks available memory before each table extraction
+- Waits automatically if memory is below threshold (default: 1500 MB)
+- Auto-discovers failed SAPECC tasks, or accepts specific table list
+- Uses 64-bit Python extractor by default
+- Cooldown period + GC between tables
+- Detailed progress logging with timing
+
+**Usage:**
+```powershell
+# Retry all failed SAPECC tables with memory protection
+.\Run-MemoryAwareExtraction.ps1
+
+# Retry specific tables with custom settings
+.\Run-MemoryAwareExtraction.ps1 -Tables @('BSEG','MSEG','EKPO') -MinMemoryMB 2000
+
+# Use 32-bit connector via Task Scheduler instead
+.\Run-MemoryAwareExtraction.ps1 -UsePython $false -MinMemoryMB 2000
+```
+
+## Memory-Optimized Python Extractor
+
+The `fabric_delta_extractor.py` (embedded in `Setup-FabricExtractors.ps1`) includes these OOM protections:
+
+- **Adaptive batch sizing**: Automatically reduces read batch size when available memory is low (<2GB: 25K, <1GB: 10K, <500MB: 5K rows)
+- **Explicit memory cleanup**: `gc.collect()` + `del batch/rows` after each batch
+- **Memory monitoring**: Logs available memory every 5 batches, pauses if critical (<300MB)
+- **Optimized row conversion**: Avoids creating duplicate PyArrow Table copies
+
 ## PI Extractor Native Support
 
 PI extractors support extraction pipelines natively. Add this to each PI extractor's `config.yml` on the VM:
