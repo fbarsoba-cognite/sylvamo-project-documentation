@@ -166,26 +166,60 @@ def read_delta_table(abfss_prefix, raw_path, tenant, client_id, secret,
     dt = DeltaTable(table_uri, storage_options=storage_options)
     schema = dt.schema()
     try:
-        n_files = len(dt.file_uris())
+        file_uris = dt.file_uris()
+        n_files = len(file_uris)
     except AttributeError:
-        n_files = "unknown"
+        n_files = 0
     log.info(f"Delta table: {len(schema.fields)} columns, {n_files} files")
     log.debug(f"Columns: {[f.name for f in schema.fields]}")
+    # Estimate total rows from Parquet metadata for progress tracking
+    estimated_rows = 0
+    try:
+        import pyarrow.parquet as pq
+        dataset = dt.to_pyarrow_dataset()
+        for frag in dataset.get_fragments():
+            try:
+                md = frag.metadata
+                if md:
+                    estimated_rows += md.num_rows
+            except Exception:
+                pass
+        if estimated_rows > 0:
+            log.info(f"Estimated total rows: {estimated_rows:,}")
+    except Exception:
+        pass
     scanner_kwargs = {"batch_size": batch_size}
     if incremental_field and incremental_value:
         import pyarrow.dataset as ds
         log.info(f"Incremental filter: {incremental_field} > '{incremental_value}'")
         scanner_kwargs["filter"] = ds.field(incremental_field) > incremental_value
-    dataset = dt.to_pyarrow_dataset()
+        estimated_rows = 0  # Can't estimate with filters
+    if not estimated_rows:
+        dataset = dt.to_pyarrow_dataset()
     scanner = dataset.scanner(**scanner_kwargs)
     batch_num = 0
     total_rows = 0
+    start_time = time.time()
     for batch in scanner.to_batches():
         batch_num += 1
         total_rows += len(batch)
-        log.info(f"Read batch {batch_num}: {len(batch)} rows (total: {total_rows})")
+        elapsed = time.time() - start_time
+        rate = total_rows / elapsed if elapsed > 0 else 0
+        if estimated_rows > 0:
+            pct = min(total_rows / estimated_rows * 100, 99.9)
+            remaining = (estimated_rows - total_rows) / rate if rate > 0 else 0
+            eta_min = remaining / 60
+            log.info(f"Batch {batch_num}: {len(batch):,} rows | "
+                     f"{total_rows:,}/{estimated_rows:,} ({pct:.1f}%) | "
+                     f"{rate:,.0f} rows/s | ETA: {eta_min:.1f}m")
+        else:
+            log.info(f"Batch {batch_num}: {len(batch):,} rows | "
+                     f"total: {total_rows:,} | {rate:,.0f} rows/s")
         yield batch
-    log.info(f"Finished reading: {total_rows} rows in {batch_num} batches")
+    elapsed = time.time() - start_time
+    rate = total_rows / elapsed if elapsed > 0 else 0
+    log.info(f"Finished reading: {total_rows:,} rows in {batch_num} batches "
+             f"({elapsed:.1f}s, {rate:,.0f} rows/s)")
 
 
 def make_row_key(row, md5_key):
@@ -233,7 +267,7 @@ def write_to_cdf_raw(client, db_name, table_name, rows, ingest_batch_size=10000,
                      logger=None, dry_run=False):
     log = logger or logging.getLogger(__name__)
     if dry_run:
-        log.info(f"[DRY RUN] Would write {len(rows)} rows to {db_name}.{table_name}")
+        log.info(f"[DRY RUN] Would write {len(rows):,} rows to {db_name}.{table_name}")
         return
     try:
         client.raw.databases.create(db_name)
@@ -243,13 +277,16 @@ def write_to_cdf_raw(client, db_name, table_name, rows, ingest_batch_size=10000,
         client.raw.tables.create(db_name, table_name)
     except Exception:
         pass  # Already exists
-    for i in range(0, len(rows), ingest_batch_size):
+    total = len(rows)
+    n_chunks = (total + ingest_batch_size - 1) // ingest_batch_size
+    for chunk_idx, i in enumerate(range(0, total, ingest_batch_size), 1):
         chunk = rows[i : i + ingest_batch_size]
         from cognite.client.data_classes import Row
         raw_rows = [Row(key=r["key"], columns=r["columns"]) for r in chunk]
         client.raw.rows.insert(db_name, table_name, raw_rows, ensure_parent=True)
-        log.debug(f"Inserted {len(chunk)} rows ({i + len(chunk)}/{len(rows)})")
-    log.info(f"Written {len(rows)} rows to {db_name}.{table_name}")
+        pct = (i + len(chunk)) / total * 100
+        log.info(f"  Upload [{chunk_idx}/{n_chunks}]: {i + len(chunk):,}/{total:,} ({pct:.0f}%)")
+    log.info(f"Written {total:,} rows to {db_name}.{table_name}")
 
 
 def create_cdf_client(project, host, tenant, client_id, secret, scopes):
@@ -381,8 +418,3 @@ def main():
     args = parser.parse_args()
     cfg = load_config(args.config)
     params = parse_config(cfg)
-    run_extraction(params, dry_run=args.dry_run, poll=args.poll)
-
-
-if __name__ == "__main__":
-    main()

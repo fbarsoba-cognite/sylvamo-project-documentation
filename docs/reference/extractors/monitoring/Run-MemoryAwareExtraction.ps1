@@ -98,7 +98,8 @@ foreach ($table in $Tables) {
     $i++
     $availMB = Get-AvailableMemoryMB
 
-    Write-Host "`n$(Get-Date -Format 'HH:mm:ss') [$i/$($Tables.Count)] $table (memory: ${availMB}MB)"
+    $pctOverall = [math]::Round(($i - 1) / $Tables.Count * 100)
+    Write-Host "`n$(Get-Date -Format 'HH:mm:ss') [$i/$($Tables.Count)] ($pctOverall%) $table (memory: ${availMB}MB)" -ForegroundColor Cyan
 
     # Wait for memory if needed
     if (-not (Wait-ForMemory -MinMB $MinMemoryMB -MaxWaitMin $MaxWaitMinutes)) {
@@ -124,8 +125,13 @@ foreach ($table in $Tables) {
         }
 
         $startTime = Get-Date
-        Write-Host "  Running Python extractor..." -NoNewline
-        & C:\Python311\python.exe C:\Cognite\FabricExtractor\fabric_delta_extractor.py --config $config 2>&1 | Out-Null
+        Write-Host "  Running Python extractor (output below)..."
+        # Show extractor output for progress tracking (batch %, ETA)
+        & C:\Python311\python.exe C:\Cognite\FabricExtractor\fabric_delta_extractor.py --config $config 2>&1 | ForEach-Object {
+            if ($_ -match 'Batch \d+|Upload \[|Finished|Extraction complete|ERROR|WARNING|Memory|Estimated') {
+                Write-Host "    $_" -ForegroundColor DarkGray
+            }
+        }
         $elapsed = [math]::Round(((Get-Date) - $startTime).TotalMinutes, 1)
 
         if ($LASTEXITCODE -eq 0) {
