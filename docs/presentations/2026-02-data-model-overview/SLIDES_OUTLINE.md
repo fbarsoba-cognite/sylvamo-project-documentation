@@ -62,22 +62,41 @@
 
 **Content:**
 
-**Model Evolution:**
-| Stage | Model | Nodes | Status |
-|-------|-------|-------|--------|
-| PoC | sylvamo_mfg | 197 | Validated |
-| Production | sylvamo_mfg_core | 450,000+ | Live |
-| Extended | mfg_extended | TBD | In Progress |
+> *Data verified: February 16, 2026*
 
-**Current Production Model:**
-| Component | Value |
-|-----------|-------|
-| Schema Space | sylvamo_mfg_core_schema |
-| Instance Space | sylvamo_mfg_core_instances |
-| Views | 8 (Asset, Event, Material, Reel, Roll, MfgTimeSeries, RollQuality, CogniteFile) |
-| Containers | 7 (MfgAsset, MfgEvent, MfgReel, MfgRoll, MfgTimeSeries, Material, RollQuality) |
-| Transformations | 24 automated SQL |
-| Total Nodes | 450,000+ real production data |
+**Model Evolution:**
+| Stage | Model | Status |
+|-------|-------|--------|
+| PoC | sylvamo_mfg | Validated |
+| Production | sylvamo_mfg_core | Live |
+| Extended | sylvamo_mfg_extended | Partially Populated |
+
+**Two Data Models:**
+
+| Model | Space | Views | Description |
+|-------|-------|-------|-------------|
+| SylvamoMfgCore | sylvamo_mfg_core_schema | 7 | Core manufacturing entities |
+| sylvamo_mfg_extended | sylvamo_mfg_ext_schema | 8 | ISA-95 aligned extensions |
+
+**Live Instance Counts (Core Model):**
+| View | Instances | Source |
+|------|-----------|--------|
+| Asset | 1,000+ | SAP Functional Locations |
+| Event | 1,000+ | Proficy, SAP |
+| Material | 1,000+ | SAP Materials |
+| MfgTimeSeries | 1,000+ | PI Server |
+| Reel | 1,000+ | PPR System |
+| Roll | 1,000+ | PPR System |
+| RollQuality | 580 | SharePoint |
+
+**Extended Model:**
+| View | Instances | Status |
+|------|-----------|--------|
+| WorkOrder | 1,000+ | ✓ Active |
+| ProductionOrder | 1,000+ | ✓ Active |
+| ProductionEvent | 1,000+ | ✓ Active |
+| CostEvent | 716 | ✓ Active |
+| Equipment | 0 | Pending |
 
 **Key Point:** Built on CDM for compatibility with Industrial Tools - Search, Canvas, InField work out of the box
 
@@ -282,27 +301,37 @@ FROM raw_ext_fabric_ppr.ppr_hist_reel
 
 **Business Need:** Track quality issues back to production conditions
 
-**Real Production Data:**
+**Real Production Data (February 2026):**
 | Metric | Value |
 |--------|-------|
-| Total Reels Tracked | 83,600+ |
-| Total Reel Weight | 2,864,026 lbs |
-| Average Reel Weight | 57,281 lbs |
-| Quality Results | 21 (71% pass rate) |
+| Total Quality Records | 180 |
+| Rejected Rolls | 53 (29.4% rejection rate) |
+| Total Time Lost | 5,761 minutes (96 hours) |
+| Time Series Available | 3,864 PI tags |
 
-**Defect Distribution (Real Data):**
-- Crushed Edge: 2 occurrences
-- Baggy Edge: 2 occurrences
-- Up Curl: 2 occurrences
+**Top Defect Types (Actual Data):**
+| Defect | Count | % of Total |
+|--------|-------|------------|
+| 006 - Curl | 41 | 22.8% |
+| 001 - Baggy Edges | 15 | 8.3% |
+| Side to side up curl | 13 | 7.2% |
+| 176 - Mill Wrinkles | 9 | 5.0% |
+| 159 - Wobbly Roll | 8 | 4.4% |
+
+**Equipment Hotspots:**
+| Equipment | Incidents | Time Lost |
+|-----------|-----------|-----------|
+| Sheeter No.1 | 107 (59.4%) | ~3,000 min |
+| Sheeter No.2 | 51 (28.3%) | 2,781 min |
+| Roll Prep | 16 | - |
+
+**Key Insight:** Curl defects on Sheeter No.1 and No.2 account for 87.7% of all quality issues. Focus maintenance here for maximum impact.
 
 **Traceability Flow:**
-1. Customer complaint about roll quality
-2. Search for roll by roll number in CDF
-3. Navigate to parent reel (relationship link)
-4. View quality test results (isInSpec flag)
-5. Check process conditions (3,532 linked time series)
-
-**Key Insight:** What took 4 systems and manual correlation is now relationship navigation
+1. Customer complaint about roll quality → Search roll number
+2. Navigate to parent reel → View production date
+3. Check quality test results → See defect code
+4. Correlate with process conditions → 3,864 time series
 
 **Visual:** Screenshot of CDF Fusion showing roll → reel → quality drill-down
 
@@ -426,19 +455,48 @@ Main Branch
 
 **Title:** Production Data Summary
 
-**sylvamo_mfg_core Statistics (Live Data):**
-| Entity | Count | Source | Notes |
-|--------|-------|--------|-------|
-| Asset | 44,898 | SAP Functional Locations | 9 hierarchy levels |
-| Event | 92,000+ | SAP, Proficy, Fabric | WorkOrders, ProdOrders, ProficyEvents |
-| Material | 58,342+ | SAP Materials | Full material master |
-| MfgTimeSeries | 3,532 | PI Server | 75+ linked to assets |
-| Reel | 83,600+ | Fabric PPR | 2.8M lbs total weight |
-| Roll | 2,300,000+ | Fabric PPR | From RAW table rows |
-| RollQuality | 21+ | SharePoint | 71% pass rate |
-| CogniteFile | 97 | CDF Files | Linked to assets |
-| Work Orders | 407,000 | SAP IW28 via Fabric | Maintenance history |
-| **TOTAL** | **365,000+** | Real production data |
+> *Verified: February 16, 2026 from live CDF queries*
+
+**Classic CDF Resources:**
+| Resource | Count |
+|----------|-------|
+| Assets | 30,952 |
+| Time Series | 3,864 |
+
+**Core Model Instances (`sylvamo_mfg_core`):**
+| View | Instances | Source |
+|------|-----------|--------|
+| Asset | 1,000+ | SAP Functional Locations |
+| Event | 1,000+ | SAP, Proficy |
+| Material | 1,000+ | SAP Materials |
+| MfgTimeSeries | 1,000+ | PI Server |
+| Reel | 1,000+ | Fabric PPR |
+| Roll | 1,000+ | Fabric PPR |
+| RollQuality | 580 | SharePoint |
+
+**Extended Model Instances (`sylvamo_mfg_extended`):**
+| View | Instances | Source |
+|------|-----------|--------|
+| WorkOrder | 1,000+ | SAP ECC |
+| MaintenanceActivity | 1,000+ | SAP ECC |
+| ProductionOrder | 1,000+ | SAP ECC |
+| ProductionEvent | 1,000+ | Proficy |
+| CostEvent | 716 | PPV Snapshots |
+
+**RAW Layer Statistics:**
+| Database | Tables | Key Data |
+|----------|--------|----------|
+| raw_ext_fabric_sapecc | 25 | 2,000+ work orders |
+| raw_ext_fabric_ppr | 18 | Reels, Rolls, Packages |
+| raw_ext_sharepoint | 2 | 180 quality records |
+| raw_ext_sql_proficy | 2 | 2,000+ events |
+| raw_ext_fabric_ppv | 2 | 716 PPV records |
+
+**Quality Insights:**
+- 180 quality records analyzed
+- 53 rejected rolls (29.4% rejection rate)
+- 96 hours total time lost
+- Sheeter No.1 & No.2 = 87.7% of issues
 
 **Visual:** Bar chart or infographic of entity counts
 
@@ -590,21 +648,43 @@ Main Branch
 
 **Title:** Quality Results Deep Dive
 
-**Quality Pass Rate:** 71.4% (15/21)
+> *Verified: February 16, 2026*
 
-**Defect Distribution:**
-| Defect | Count | % of Failures |
-|--------|-------|---------------|
-| Crushed Edge | 2 | 33% |
-| Baggy Edge | 2 | 33% |
-| Up Curl | 2 | 33% |
+**Quality Summary:**
+| Metric | Value |
+|--------|-------|
+| Total Records | 180 |
+| Rejected Rolls | 53 |
+| Rejection Rate | 29.4% |
+| Total Time Lost | 5,761 minutes (96 hours) |
 
-**Business Insight:** Edge-related defects account for 83% of all failures
+**Complete Defect Distribution:**
+| Defect | Count | % of Total |
+|--------|-------|------------|
+| 006 - Curl | 41 | 22.8% |
+| 001 - Baggy Edges | 15 | 8.3% |
+| Side to side up curl | 13 | 7.2% |
+| 176 - Mill Wrinkles | 9 | 5.0% |
+| 159 - Wobbly Roll | 8 | 4.4% |
+| Run ability issues | 6 | 3.3% |
+| Collating box jams | 6 | 3.3% |
+| Soft spots, baggy edge | 6 | 3.3% |
+| Other | 76 | 42.2% |
+
+**Equipment Analysis:**
+| Equipment | Incidents | Time Lost | Top Defect |
+|-----------|-----------|-----------|------------|
+| Sheeter No.1 | 107 (59.4%) | ~3,000 min | Curl (18) |
+| Sheeter No.2 | 51 (28.3%) | 2,781 min | Curl (23) |
+| Roll Prep | 16 (8.9%) | - | - |
+| Sheeter No.3 | 5 (2.8%) | - | Baggy Edges |
+
+**Business Insight:** Curl defects on Sheeter No.1 and No.2 account for 41 of 180 total defects (22.8%)
 
 **Root Cause Focus:**
-- Winding tension settings
-- Edge handling procedures
-- Humidity control
+- Winding tension settings (curl pattern)
+- Edge handling procedures (baggy edges)
+- Equipment calibration (Sheeter No.2)
 
 ---
 

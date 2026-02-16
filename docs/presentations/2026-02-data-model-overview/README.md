@@ -30,7 +30,8 @@ By the end of this presentation, attendees will understand:
 | [SLIDES_OUTLINE.md](SLIDES_OUTLINE.md) | Detailed slide-by-slide outline with content |
 | [SPEAKER_NOTES.md](SPEAKER_NOTES.md) | Full speaker notes for each slide (~3 min per slide) |
 | [DEMO_SCRIPT.md](DEMO_SCRIPT.md) | Step-by-step demo walkthrough for CDF Fusion |
-| [DATA_PIPELINE_DEEP_DIVE.md](DATA_PIPELINE_DEEP_DIVE.md) | **NEW** Complete 35-table pipeline mapping, Fabric infrastructure |
+| [DATA_PIPELINE_DEEP_DIVE.md](DATA_PIPELINE_DEEP_DIVE.md) | Complete 35-table pipeline mapping, Fabric infrastructure |
+| [ACTUAL_DATA_WALKTHROUGH.md](ACTUAL_DATA_WALKTHROUGH.md) | **NEW** Step-by-step explanation of actual CDF data (verified Feb 2026) |
 | [Sylvamo_CDF_Data_Model_Presentation.pptx](Sylvamo_CDF_Data_Model_Presentation.pptx) | PowerPoint slides (generated from template) |
 | `assets/` | Screenshots and diagrams for slides |
 
@@ -47,27 +48,97 @@ By the end of this presentation, attendees will understand:
 
 ## Key Data Points to Reference
 
-**Data Model:**
-- **Space:** sylvamo_mfg_core_schema / sylvamo_mfg_core_instances
-- **Total Nodes:** 450,000+ real production data
-- **Views:** Asset, Event, Material, MfgTimeSeries, Reel, Roll, RollQuality, CogniteFile
-- **Transformations:** 24 SQL transformations
+> **Last verified:** February 16, 2026 (from live CDF queries)
 
-**Extraction Layer (from [DATA_SOURCE_REGISTRY](https://github.com/fbarsoba-cognite/sylvamo-project-documentation/blob/main/docs/reference/extractors/DATA_SOURCE_REGISTRY.md)):**
-- **RAW Tables:** 35+ across 7 RAW databases
-- **Extractors:** 7 active (Fabric x3, PI, SharePoint, SAP OData, SQL)
-- **Fabric Lakehouses:** LH_SILVER_ppreo (PPR/PPV), lh_gold_pm (SAP PM), LH_SILVER_sapecc (SAP ECC)
-- **Service Principals:** 5 dedicated (sp-cdf-*-extractor-dev)
+**Data Model Spaces:**
+| Space | Purpose |
+|-------|---------|
+| `sylvamo_mfg_core_schema` | Core model schema (views, containers) |
+| `sylvamo_mfg_core_instances` | Core model data instances |
+| `sylvamo_mfg_ext_schema` | Extended model schema (ISA-95 aligned) |
+| `sylvamo_mfg_ext_instances` | Extended model data instances |
 
-**Volumes:**
-| Source | Volume |
-|--------|--------|
-| Reels | 61,000+ |
-| Rolls | 2,300,000+ |
-| Packages | 50,000+ |
-| Work Orders | 407,000+ |
-| PI Tags | 3,500+ |
-| SAP ECC Records | 16,000,000+ (AUFK+AFKO+AFVC) |
+**Data Models:**
+- `SylvamoMfgCore` (v1) - 7 views for manufacturing core
+- `sylvamo_mfg_extended` (v1) - 8 views for ISA-95 extensions
+
+### Live Instance Counts (Verified)
+
+**Core Model (`sylvamo_mfg_core_schema`):**
+| View | Instance Count | Description |
+|------|----------------|-------------|
+| Asset | 1,000+ | From SAP Functional Locations |
+| Event | 1,000+ | Proficy events, SAP activities |
+| Material | 1,000+ | SAP materials master |
+| MfgTimeSeries | 1,000+ | PI Server time series metadata |
+| Reel | 1,000+ | Paper machine production runs |
+| Roll | 1,000+ | Individual rolls cut from reels |
+| RollQuality | 580 | SharePoint quality reports |
+
+**Extended Model (`sylvamo_mfg_ext_schema`):**
+| View | Instance Count | Description |
+|------|----------------|-------------|
+| WorkOrder | 1,000+ | SAP maintenance work orders |
+| MaintenanceActivity | 1,000+ | Maintenance activities |
+| ProductionOrder | 1,000+ | SAP production orders |
+| ProductionEvent | 1,000+ | Proficy production events |
+| CostEvent | 716 | PPV cost variance records |
+| Equipment | 0 | Pending population |
+| Operation | 0 | Pending population |
+| Notification | 0 | Pending population |
+
+### RAW Database Summary
+
+| RAW Database | Tables | Description |
+|--------------|--------|-------------|
+| `raw_ext_fabric_sapecc` | 25 | SAP ECC tables via Fabric |
+| `raw_ext_fabric_ppr` | 18 | PPR production data |
+| `raw_ext_fabric_ppv` | 2 | PPV cost snapshots |
+| `raw_ext_sharepoint` | 2 | Quality reports from SharePoint |
+| `raw_ext_sql_proficy` | 2 | Proficy production events |
+| `raw_ext_pi` | 2 | PI time series states |
+| `raw_ext_sap` | 5 | SAP OData extracts |
+
+### Real Data Discoveries
+
+**Roll Quality Analysis (180 records from SharePoint):**
+- **Total Records:** 180 quality events
+- **Rejected Rolls:** 53 (29.4% rejection rate)
+- **Total Time Lost:** 5,761 minutes (96 hours)
+
+**Top Defect Types:**
+| Defect | Count | % of Total |
+|--------|-------|------------|
+| 006 - Curl | 41 | 22.8% |
+| 001 - Baggy Edges | 15 | 8.3% |
+| Side to side up curl | 13 | 7.2% |
+| 176 - Mill Wrinkles | 9 | 5.0% |
+| 159 - Wobbly Roll | 8 | 4.4% |
+
+**Equipment with Most Issues:**
+| Equipment | Incidents | Time Lost |
+|-----------|-----------|-----------|
+| Sheeter No.1 | 107 | 2,980 min |
+| Sheeter No.2 | 51 | 2,781 min (46.4 hrs) |
+| Roll Prep | 16 | - |
+| Sheeter No.3 | 5 | - |
+
+**Work Orders (SAP ECC):**
+| Plant | Work Orders |
+|-------|-------------|
+| 7825 (Eastover) | 978 |
+| MG01 | 313 |
+| MG19 | 213 |
+| 0769 | 132 |
+| 8675 | 116 |
+
+**Other Volumes:**
+| Source | Count |
+|--------|-------|
+| Classic Assets | 30,952 |
+| Time Series | 3,864 |
+| PPV Records | 716 |
+| Proficy Events | 2,000+ |
 
 ## Demo Environment
 
