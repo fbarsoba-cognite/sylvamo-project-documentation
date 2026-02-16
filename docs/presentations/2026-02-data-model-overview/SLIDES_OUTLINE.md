@@ -327,6 +327,24 @@ FROM raw_ext_fabric_ppr.ppr_hist_reel
 
 **Key Insight:** Curl defects on Sheeter No.1 and No.2 account for 87.7% of all quality issues. Focus maintenance here for maximum impact.
 
+**How the Data Model Made This Possible:**
+
+| Without Data Model | With Data Model |
+|-------------------|-----------------|
+| Quality in SharePoint (isolated) | `RollQuality` view with `equipment` property |
+| Equipment in SAP (separate) | `RollQuality` → `Asset` relationship |
+| Manual correlation required | Single GraphQL query |
+| Hours of analysis | Seconds to insight |
+
+**Data Model Structure Used:**
+```
+RollQuality (View)
+├── equipment (property) ──► Links to "Sheeter No.2"
+├── defectCode (property) ─► "006 - Curl" 
+├── minutesLost (property) ► 35 minutes
+└── asset (relationship) ──► Plant hierarchy
+```
+
 **Traceability Flow:**
 1. Customer complaint about roll quality → Search roll number
 2. Navigate to parent reel → View production date

@@ -140,6 +140,75 @@ By the end of this presentation, attendees will understand:
 | PPV Records | 716 |
 | Proficy Events | 2,000+ |
 
+---
+
+## How the Data Model Enables These Discoveries
+
+> **Key Message:** The findings above were only possible BECAUSE of the connected data model. Without it, this analysis would require manual correlation across 5+ disconnected systems.
+
+### Before vs. After the Data Model
+
+| Discovery | Data Sources | Without Model | With Model |
+|-----------|--------------|---------------|------------|
+| Quality patterns by equipment | SharePoint + SAP | Hours of manual correlation | 1 query, seconds |
+| Multi-plant work order comparison | SAP ECC (10 plants) | Separate exports per plant | Single cross-plant query |
+| Cost-to-production traceability | SAP FI + SAP MM + PPR | Impossible to link | Direct relationship navigation |
+
+### Data Model Relationships That Enable Analysis
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│  CONNECTED DATA MODEL STRUCTURE                                    │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   RollQuality ───► Asset ───► WorkOrder                           │
+│        │                │                                          │
+│        │ equipment      │ plant                                    │
+│        ▼                ▼                                          │
+│      Roll ───────► Reel ───────► Material ───────► CostEvent      │
+│                      │                                             │
+│                      │ timeseries                                  │
+│                      ▼                                             │
+│              MfgTimeSeries (3,864 PI tags)                        │
+│                                                                     │
+│   Every arrow = A relationship in the data model                   │
+│   Every insight = ONE QUERY across multiple systems                │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+### Example: Quality Pattern Discovery
+
+**The Finding:** Sheeter No.1 and No.2 account for 87.7% of quality issues
+
+**Data Model Properties Used:**
+| View | Property/Relationship | Purpose |
+|------|----------------------|---------|
+| `RollQuality` | `equipment` (property) | Group defects by equipment |
+| `RollQuality` | `defectCode` (property) | Categorize defect types |
+| `RollQuality` | `minutesLost` (property) | Calculate time impact |
+| `RollQuality` → `Asset` | Direct relation | Link to plant hierarchy |
+
+**The Query:**
+```graphql
+{
+  listRollQuality(limit: 500) {
+    items {
+      equipment     # ← Links to "Sheeter No.2"
+      defectCode    # ← "006 - Curl"
+      minutesLost   # ← Time lost per defect
+    }
+  }
+}
+```
+
+### Presentation Takeaway
+
+When presenting, emphasize:
+1. **The data model IS the value** - without relationships, data stays siloed
+2. **Views and properties** enable filtering and grouping
+3. **Relationships** enable navigation across systems
+4. **One query** replaces hours of manual correlation
+
 ## Demo Environment
 
 - **CDF Project:** sylvamo-dev

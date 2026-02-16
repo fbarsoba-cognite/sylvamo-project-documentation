@@ -351,43 +351,230 @@ Production events from Proficy GBDB capture real-time production data.
 
 ---
 
-## Step 6: Business Value Demonstration
+## Step 6: How the Data Model Enables These Discoveries
+
+> **Key Point:** These findings were only possible BECAUSE of the connected data model. Without it, this analysis would require manual correlation across 5+ systems.
 
 ### Discovery 1: Quality Pattern Identification
 
-**What the Data Shows:**
+**The Finding:**
 - Sheeter No.1 and No.2 account for 87.7% of all quality issues
 - Curl defects (code 006) represent 22.8% of all defects
 - Total time lost: 96 hours across 180 quality events
 
-**Business Impact:**
-- Focus maintenance efforts on Sheeter No.1 and No.2
-- Investigate curl defect root cause (potential winding tension issue)
-- Estimated potential savings: 96 hours × $X/hour productivity
+**How the Data Model Enabled This:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  DATA MODEL STRUCTURE THAT MADE THIS POSSIBLE                   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   RollQuality (View)                                           │
+│   ├── equipment (property) ──────────► Links to Equipment      │
+│   ├── defectCode (property) ─────────► "006 - Curl"           │
+│   ├── minutesLost (property) ────────► 35 minutes             │
+│   └── isRejected (property) ─────────► true/false             │
+│                                                                 │
+│   Equipment → Asset (relationship) ──► "Sheeter No.2"         │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+| Data Model Component | Property/Relationship | What It Enabled |
+|---------------------|----------------------|-----------------|
+| `RollQuality` view | `equipment` property | Group defects by equipment |
+| `RollQuality` view | `defectCode` property | Categorize defect types |
+| `RollQuality` view | `minutesLost` property | Calculate total time lost |
+| `RollQuality` → `Asset` | Direct relation | Link quality to plant hierarchy |
+
+**Without the Data Model:**
+- Quality data in SharePoint (isolated)
+- Equipment data in SAP (separate system)
+- No automated correlation possible
+- Manual lookup required for each quality event
+
+**With the Data Model:**
+- Single query returns quality + equipment + time lost
+- Automatic aggregation by equipment
+- Pattern detection in seconds, not hours
+
+**The Query That Found This:**
+```graphql
+{
+  listRollQuality(limit: 500) {
+    items {
+      equipment        # ← Property links to equipment
+      defectCode       # ← Defect categorization
+      minutesLost      # ← Time impact
+      isRejected       # ← Outcome
+    }
+  }
+}
+```
+
+---
 
 ### Discovery 2: Multi-Plant Work Order Visibility
 
-**What the Data Shows:**
+**The Finding:**
 - Plant 7825 (Eastover) has 48.9% of all work orders
 - 10 plants represented in work order data
 - Work orders link to functional locations (equipment)
 
-**Business Impact:**
-- Compare maintenance practices across plants
-- Identify high-maintenance equipment
-- Plan preventive maintenance based on patterns
+**How the Data Model Enabled This:**
 
-### Discovery 3: Cost Tracking Foundation
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  DATA MODEL STRUCTURE THAT MADE THIS POSSIBLE                   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   WorkOrder (View) - ISA-95 aligned                            │
+│   ├── plant (property) ──────────────► "7825" (Eastover)       │
+│   ├── functionalLocation (property) ─► SAP FLOC reference      │
+│   ├── equipment (property) ──────────► Equipment reference     │
+│   └── asset (relationship) ──────────► Asset hierarchy         │
+│                                                                 │
+│   Asset (View) - CDM CogniteAsset                              │
+│   ├── workOrders (reverse relation) ─► All work orders here   │
+│   └── parent/children ───────────────► Plant hierarchy         │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-**What the Data Shows:**
-- 716 materials tracked for PPV
+| Data Model Component | Property/Relationship | What It Enabled |
+|---------------------|----------------------|-----------------|
+| `WorkOrder` view | `plant` property | Filter/group by plant |
+| `WorkOrder` view | `functionalLocation` | Link to asset hierarchy |
+| `WorkOrder` → `Asset` | Direct relation | Navigate to equipment context |
+| `Asset` view | `workOrders` reverse relation | See all WOs for an asset |
+
+**Without the Data Model:**
+- Work orders in SAP ECC (IW28)
+- Asset hierarchy in separate SAP module
+- Plant comparisons require manual data export
+- No cross-plant visibility
+
+**With the Data Model:**
+- Query work orders across all plants at once
+- Filter by plant, equipment type, date range
+- Compare maintenance patterns plant-to-plant
+- Navigate from work order → asset → plant hierarchy
+
+**The Query That Found This:**
+```graphql
+{
+  listWorkOrder(limit: 1000) {
+    items {
+      plant             # ← Group by plant
+      description       # ← Work order details
+      asset {           # ← Navigate to asset
+        name
+        parent { name } # ← Plant hierarchy
+      }
+    }
+  }
+}
+```
+
+---
+
+### Discovery 3: Cost-to-Production Traceability
+
+**The Finding:**
+- 716 materials tracked for PPV (Purchase Price Variance)
 - Full cost visibility from SAP
 - Material type categorization (FIBR, RAWM, PKNG)
 
-**Business Impact:**
-- Track purchase price variance over time
-- Identify cost-saving opportunities
-- Link material costs to production batches
+**How the Data Model Enabled This:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  DATA MODEL STRUCTURE THAT MADE THIS POSSIBLE                   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   CostEvent (View) - Extended Model                            │
+│   ├── material (relationship) ───────► Material view           │
+│   ├── currentStandardCost (property) ► $3.86                   │
+│   ├── priorStandardCost (property) ──► $3.86                   │
+│   └── ppv (property) ────────────────► Variance amount         │
+│                                                                 │
+│   Material (View) - Core Model                                 │
+│   ├── materialType (property) ───────► "FIBR", "RAWM", "PKNG" │
+│   ├── description (property) ────────► Material name           │
+│   └── reels (reverse relation) ──────► Production batches     │
+│                                                                 │
+│   Reel (View) - Core Model                                     │
+│   └── material (relationship) ───────► What material was used │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+| Data Model Component | Property/Relationship | What It Enabled |
+|---------------------|----------------------|-----------------|
+| `CostEvent` view | `material` relation | Link cost to material |
+| `CostEvent` view | `ppv` property | Track variance |
+| `Material` view | `materialType` property | Categorize materials |
+| `Material` → `Reel` | Reverse relation | See which reels used this material |
+
+**Without the Data Model:**
+- PPV data in SAP Finance module
+- Material data in SAP Materials Management
+- Production data in PPR system
+- No link between cost variance and production
+
+**With the Data Model:**
+- Query: "Which reels used materials with cost increases?"
+- Track cost impact from raw material to finished product
+- Identify production batches affected by price changes
+
+**The Query That Found This:**
+```graphql
+{
+  listCostEvent(filter: { ppv: { gt: 100 }}) {
+    items {
+      ppv
+      material {
+        description
+        materialType
+        reels { items { reelNumber, productionDate } }
+      }
+    }
+  }
+}
+```
+
+---
+
+### Summary: Data Model Value Proposition
+
+| Discovery | Data Sources Unified | Without Model | With Model |
+|-----------|---------------------|---------------|------------|
+| Quality Patterns | SharePoint + SAP | Hours of manual correlation | 1 query, seconds |
+| Plant Comparison | SAP ECC (multiple plants) | Separate exports per plant | Single cross-plant query |
+| Cost Traceability | SAP FI + SAP MM + PPR | Impossible to link | Direct relationship navigation |
+
+**The Core Value:**
+```
+┌────────────────────────────────────────────────────────────────────┐
+│  BEFORE: 5 Disconnected Systems                                    │
+│                                                                     │
+│   SharePoint ──╳── SAP ECC ──╳── PPR ──╳── PI ──╳── Proficy       │
+│                                                                     │
+│   Manual correlation required for any cross-system analysis        │
+├────────────────────────────────────────────────────────────────────┤
+│  AFTER: 1 Connected Data Model                                     │
+│                                                                     │
+│   RollQuality ───► Asset ───► WorkOrder                           │
+│        │                │                                          │
+│        ▼                ▼                                          │
+│      Roll ───────► Reel ───────► Material ───────► CostEvent      │
+│                      │                                             │
+│                      ▼                                             │
+│              MfgTimeSeries (3,864 PI tags)                        │
+│                                                                     │
+│   Any insight is ONE QUERY away                                    │
+└────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
