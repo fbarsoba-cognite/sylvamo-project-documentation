@@ -334,6 +334,7 @@ Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 | Document | Description |
 |----------|-------------|
 | [**MFG Core Data Model**](docs/reference/data-model/MFG_CORE_DATA_MODEL.md) | **CORRECTED** - 7 core views only, Quality Traceability use case |
+| [**MFG Core + PPV (Proposed)**](docs/reference/data-model/MFG_CORE_WITH_PPV.md) | **FOR ANVAR** - Proposed PPV integration into mfg_core |
 | [**MFG Extended Data Model**](docs/reference/data-model/MFG_EXTENDED_DATA_MODEL.md) | 8 extended views, PPV/Cost Analysis use case |
 | [**Data Model Specification**](docs/reference/data-model/DATA_MODEL_SPECIFICATION.md) | Complete spec with all containers, properties, and examples |
 | [**Guide for Stakeholders**](docs/reference/data-model/DATA_MODEL_FOR_STAKEHOLDERS.md) | Non-technical overview with flow diagrams and business examples |
