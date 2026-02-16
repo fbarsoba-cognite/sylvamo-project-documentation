@@ -24,8 +24,8 @@ erDiagram
         string defectCode
         string equipment
         float minutesLost
-        relation roll FK
-        relation asset EMPTY
+        string roll FK
+        string asset NULL
     }
 
     Asset {
@@ -34,7 +34,7 @@ erDiagram
     }
 ```
 
-**Problem:** `RollQuality.asset` is NULL (shown as EMPTY), and no Asset exists for "Sheeter No.1"
+**Problem:** `RollQuality.asset` is NULL, and no Asset exists for "Sheeter No.1"
 
 ---
 
@@ -63,22 +63,22 @@ erDiagram
         string name
         string description
         string assetType
-        relation parent FK
+        string parent FK
     }
 
     Reel {
         string reelNumber PK
-        timestamp productionDate
+        date productionDate
         float weight
         float width
-        relation asset FK
+        string asset FK
     }
 
     Roll {
         string rollNumber PK
         float width
         float diameter
-        relation reel FK
+        string reel FK
     }
 
     RollQuality {
@@ -87,16 +87,16 @@ erDiagram
         string defectDescription
         float minutesLost
         boolean wasRollRejected
-        timestamp reportDate
-        relation roll FK
-        relation asset FK
+        date reportDate
+        string roll FK
+        string asset FK
     }
 
     Event {
         string externalId PK
         string eventType
         string sourceId
-        relation asset FK
+        string asset FK
     }
 
     MfgTimeSeries {
