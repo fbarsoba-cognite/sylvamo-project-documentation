@@ -418,3 +418,8 @@ def main():
     args = parser.parse_args()
     cfg = load_config(args.config)
     params = parse_config(cfg)
+    run_extraction(params, dry_run=args.dry_run, poll=args.poll)
+
+
+if __name__ == "__main__":
+    main()
