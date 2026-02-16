@@ -10,17 +10,20 @@ This repository contains the data model specification for Sylvamo's manufacturin
 
 Sylvamo has **two production data models** in CDF, built on the Cognite Data Model (CDM) for Industrial Tools compatibility.
 
-### sylvamo_mfg_core (Production Model)
+### sylvamo_mfg_core (Production Model) - Current Presentation Focus
 
 | Component | Value |
 |-----------|-------|
 | **Schema Space** | `sylvamo_mfg_core_schema` |
 | **Instance Space** | `sylvamo_mfg_core_instances` |
 | **Data Model** | `SylvamoMfgCore/vv1` |
-| **Views** | 8 (Asset, Event, Material, MfgTimeSeries, Reel, Roll, RollQuality, CogniteFile) |
+| **Views** | 7 custom (Asset, Event, Material, MfgTimeSeries, Reel, Roll, RollQuality) + CDM views |
 | **Instances** | 450,000+ nodes |
+| **Use Case** | **Quality Traceability** (Roll → Reel → Quality Tests) |
 
-### sylvamo_mfg_extended (Extended Model)
+> **Note:** CogniteFile is a CDM view, not a custom Sylvamo view. See [MFG_CORE_DATA_MODEL.md](docs/reference/data-model/MFG_CORE_DATA_MODEL.md) for the correct entity diagram.
+
+### sylvamo_mfg_extended (Extended Model) - Coming Later
 
 | Component | Value |
 |-----------|-------|
@@ -29,6 +32,9 @@ Sylvamo has **two production data models** in CDF, built on the Cognite Data Mod
 | **Data Model** | `sylvamo_mfg_extended/v1` |
 | **Views** | 8 (WorkOrder, ProductionOrder, ProductionEvent, CostEvent, Equipment, MaintenanceActivity, Notification, Operation) |
 | **Instances** | 50,000+ nodes |
+| **Use Case** | **PPV/Cost Analysis** (CostEvent → Material → cost variance) |
+
+> **Note:** The extended model builds on mfg_core. Entities like CostEvent link to Material from mfg_core.
 
 ## Entity Relationship Diagram
 
@@ -327,6 +333,7 @@ Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 
 | Document | Description |
 |----------|-------------|
+| [**MFG Core Data Model**](docs/reference/data-model/MFG_CORE_DATA_MODEL.md) | **CORRECTED** - 7 core views only, relationships, Mermaid diagram |
 | [**Data Model Specification**](docs/reference/data-model/DATA_MODEL_SPECIFICATION.md) | Complete spec with all containers, properties, and examples |
 | [**Guide for Stakeholders**](docs/reference/data-model/DATA_MODEL_FOR_STAKEHOLDERS.md) | Non-technical overview with flow diagrams and business examples |
 | [**Data Model Walkthrough**](docs/reference/data-model/DATA_MODEL_WALKTHROUGH.md) | Step-by-step example tracing paper from production to delivery |
@@ -404,8 +411,8 @@ flowchart LR
             TS["Time Series"]
         end
         subgraph Models["Data Models"]
-            CORE["sylvamo_mfg_core<br/>8 views"]
-            EXT["sylvamo_mfg_extended<br/>8 views"]
+            CORE["sylvamo_mfg_core<br/>7 views<br/>(Quality Traceability)"]
+            EXT["sylvamo_mfg_extended<br/>8 views<br/>(PPV/Cost Analysis)"]
         end
     end
 
