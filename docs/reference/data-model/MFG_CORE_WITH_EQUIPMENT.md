@@ -12,29 +12,14 @@ This document shows the data model structure needed to query quality patterns by
 
 ```mermaid
 erDiagram
-    Asset ||--o{ Reel : "reels"
-    Asset ||--o{ MfgTimeSeries : "timeSeries"
-    Asset ||--o{ CogniteFile : "files"
-    
-    Reel ||--o{ Roll : "rolls"
-    Roll ||--o{ RollQuality : "quality"
-    
-    RollQuality {
-        string externalId PK
-        string defectCode
-        string equipment
-        float minutesLost
-        string roll FK
-        string asset NULL
-    }
-
-    Asset {
-        string name PK
-        string assetType
-    }
+    Asset ||--o{ Reel : reels
+    Asset ||--o{ MfgTimeSeries : timeSeries
+    Asset ||--o{ CogniteFile : files
+    Reel ||--o{ Roll : rolls
+    Roll ||--o{ RollQuality : quality
 ```
 
-**Problem:** `RollQuality.asset` is NULL, and no Asset exists for "Sheeter No.1"
+**Problem:** No link from `RollQuality` back to `Asset`. The `asset` field is NULL.
 
 ---
 
@@ -42,81 +27,20 @@ erDiagram
 
 ```mermaid
 erDiagram
-    Asset ||--o{ Reel : "reels"
-    Asset ||--o{ MfgTimeSeries : "timeSeries"
-    Asset ||--o{ CogniteFile : "files"
-    Asset ||--o{ Event : "events"
-    Asset ||--o{ RollQuality : "qualityReports"
-    Asset ||--o{ Asset : "children"
-    
-    Reel ||--o{ Roll : "rolls"
-    Reel }o--|| Asset : "asset"
-    
-    Roll ||--o{ RollQuality : "qualityResults"
-    Roll }o--|| Reel : "reel"
-    
-    RollQuality }o--|| Roll : "roll"
-    RollQuality }o--|| Asset : "asset"
-
-    Asset {
-        string externalId PK
-        string name
-        string description
-        string assetType
-        string parent FK
-    }
-
-    Reel {
-        string reelNumber PK
-        date productionDate
-        float weight
-        float width
-        string asset FK
-    }
-
-    Roll {
-        string rollNumber PK
-        float width
-        float diameter
-        string reel FK
-    }
-
-    RollQuality {
-        string externalId PK
-        string defectNonDamage
-        string defectDescription
-        float minutesLost
-        boolean wasRollRejected
-        date reportDate
-        string roll FK
-        string asset FK
-    }
-
-    Event {
-        string externalId PK
-        string eventType
-        string sourceId
-        string asset FK
-    }
-
-    MfgTimeSeries {
-        string externalId PK
-        string name
-        string unit
-    }
-
-    CogniteFile {
-        string externalId PK
-        string name
-        string mimeType
-    }
-
-    Material {
-        string materialCode PK
-        string name
-        string materialType
-    }
+    Asset ||--o{ Reel : reels
+    Asset ||--o{ MfgTimeSeries : timeSeries
+    Asset ||--o{ CogniteFile : files
+    Asset ||--o{ Event : events
+    Asset ||--o{ RollQuality : qualityReports
+    Reel ||--o{ Roll : rolls
+    Reel }o--|| Asset : asset
+    Roll ||--o{ RollQuality : qualityResults
+    Roll }o--|| Reel : reel
+    RollQuality }o--|| Roll : roll
+    RollQuality }o--|| Asset : asset
 ```
+
+**Fixed:** `RollQuality` now links to `Asset` (Equipment), enabling reverse traversal.
 
 ---
 
