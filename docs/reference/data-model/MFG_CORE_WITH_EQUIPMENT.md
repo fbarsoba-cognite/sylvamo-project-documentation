@@ -25,7 +25,7 @@ erDiagram
         string equipment
         float minutesLost
         relation roll FK
-        relation asset FK_EMPTY
+        relation asset EMPTY
     }
 
     Asset {
@@ -34,7 +34,7 @@ erDiagram
     }
 ```
 
-**Problem:** `RollQuality.asset` is NULL, and no Asset exists for "Sheeter No.1"
+**Problem:** `RollQuality.asset` is NULL (shown as EMPTY), and no Asset exists for "Sheeter No.1"
 
 ---
 
