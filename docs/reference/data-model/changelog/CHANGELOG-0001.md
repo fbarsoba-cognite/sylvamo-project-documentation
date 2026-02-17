@@ -135,3 +135,45 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 **Schedule intervals:**
 - Hourly (`0 * * * *`): PPR/Proficy-based transformations (Roll, Reel, RollQuality, TimeSeries, Proficy*)
 - Every 6 hours (`0 */6 * * *`): SAP/Fabric-based transformations (Material, Events, Asset, Files)
+
+---
+
+### Correct reel link and UTC/cut date handling
+**Date:** 2026-02-10
+**ADO PR:** [PR #851](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/851), [PR #852](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/852)
+
+**Changes:**
+- Fixed reel link in `populate_Roll.Transformation.sql` to include year
+- Added UTC timezone handling and cut date assignment for Roll transformation
+
+**Why:**
+- Reel-to-Roll links were broken due to missing year in join key
+- Timestamps needed UTC normalization for consistent date handling
+
+---
+
+### [SVQS-209] Remove duplicate Proficy Event transformation
+**Date:** 2026-02-11
+**Jira:** [SVQS-209](https://cognitedata.atlassian.net/browse/SVQS-209)
+**ADO PR:** [PR #853](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/853)
+
+**Changes:**
+- Removed duplicate `populate_Event_Proficy` transformation (SQL + YAML)
+- Proficy events now handled exclusively by the main Event transformations
+
+**Why:**
+- Duplicate transformation was creating redundant event instances in CDF
+
+---
+
+### [SVQS-210] Fix Proficy reels_timeseries timestamp alignment
+**Date:** 2026-02-11
+**Jira:** [SVQS-210](https://cognitedata.atlassian.net/browse/SVQS-210)
+**ADO PR:** [PR #854](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/854)
+
+**Changes:**
+- Added `populate_ProficyReelsDatapoints` transformation (SQL + YAML)
+- Implemented Eastern to UTC timezone conversion for Proficy timestamps
+
+**Why:**
+- Proficy reels_timeseries timestamps were in Eastern time, causing misalignment with CDF's UTC-based data
