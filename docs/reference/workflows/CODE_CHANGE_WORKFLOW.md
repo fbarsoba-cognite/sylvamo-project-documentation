@@ -1,7 +1,14 @@
+---
+title: Code Change Workflow
+description: Standard workflow for making code changes - Jira, ADO branch, PR, documentation, and linking
+type: Always
+globs: 
+alwaysApply: true
+---
+
 # Code Change Workflow
 
-> **Cursor Rule:** This workflow is also available as a Cursor rule at `.cursor/rules/code_change_workflow.mdc`
-> To invoke in Cursor: Type `@code_change_workflow` in the prompt.
+> **To invoke this rule:** Type `@code_change_workflow` in the prompt, or it applies automatically (alwaysApply: true).
 
 **For ALL code changes, follow this workflow:**
 
@@ -13,6 +20,22 @@ When tasks can be parallelized, use multiple agents to speed up work:
 - Example: Update multiple files that don't depend on each other
 - Maximum 4 concurrent agents recommended
 
+## Environment & Credentials
+
+All project credentials (CDF, Jira, SharePoint) are in the main worktree `.env` file:
+
+```
+/Users/fernando.barsoba/Library/CloudStorage/OneDrive-CogniteAS/Sylvamo-Code/sylvamo/.env
+```
+
+**ALWAYS check this file FIRST** before writing any script or running any command that needs authentication. Key variables:
+- `CDF_PROJECT`, `CDF_CLUSTER`, `CDF_URL` -- CDF connection
+- `IDP_CLIENT_ID`, `IDP_CLIENT_SECRET`, `IDP_TENANT_ID`, `IDP_TOKEN_URL` -- OAuth
+- `JIRA_EMAIL`, `JIRA_API_TOKEN` -- Jira API
+- `SHAREPOINT_*` -- SharePoint
+
+Do NOT hardcode credentials. Read them from this `.env` file.
+
 ## SDK Usage: CLI First
 
 **NEVER use the Cognite Python SDK** for standard operations unless explicitly requested.
@@ -23,6 +46,20 @@ When tasks can be parallelized, use multiple agents to speed up work:
   - One-off validation/debugging queries (when user requests)
   - Operations not supported by CLI (e.g., deleting specific instances)
   - When user explicitly asks to use SDK
+
+### Orphaned CDF Resources (Views, Containers, Instances)
+
+When removing views/containers/instances from the codebase:
+1. **`cdf deploy` does NOT automatically delete** orphaned resources from CDF
+2. **Preferred approach:** Use `cdf clean` if available, or create a cleanup script in a PR
+3. **If SDK cleanup is required:**
+   - Document in the changelog what was deleted and why
+   - Reference the original PR that removed the code
+   - Only use SDK for resources that cannot be deleted via CLI
+
+**Example:** If you remove `Equipment.View.yaml` from codebase and deploy, the view may still exist in CDF. Either:
+- Run `cdf clean --env dev` to remove orphaned resources
+- Or use SDK to delete, documenting in changelog under the original ticket
 
 ## 1. Jira Ticket
 - Check if an existing Jira ticket covers the change
@@ -105,7 +142,7 @@ Every code change MUST be logged in the change log:
    - Brief explanation of why the change was made
    ```
    
-> **IMPORTANT:** Always link to the **Pull Request URL** (e.g., `/pullrequest/893`), NOT the branch URL. Branches are deleted after merge, but PR URLs persist.
+   > **IMPORTANT:** Always link to the **Pull Request URL** (e.g., `/pullrequest/893`), NOT the branch URL. Branches are deleted after merge, but PR URLs persist.
 
 ### 7.2 ADRs (for architectural/design decisions)
 
@@ -142,21 +179,17 @@ For changes involving **data model decisions, architectural choices, or design p
    - Add ADR link to Jira ticket description
    - Reference ADR in PR description
 
----
-
-## Reference Details
-
-### Jira API
+## Jira API Details
 - Base URL: https://cognitedata.atlassian.net
 - Project Key: SVQS
-- Use JIRA_EMAIL and JIRA_API_TOKEN from .env
+- Credentials: `JIRA_EMAIL` and `JIRA_API_TOKEN` from the `.env` file (see "Environment & Credentials" above)
 
-### ADO
+## ADO Details
 - Repo: Industrial-Data-Landscape-IDL
 - Organization: SylvamoCorp
 - Remote name: `ado`
 
-### Documentation Repo
+## Documentation Repo Details
 - GitHub: https://github.com/fbarsoba-cognite/sylvamo-project-documentation
 - Clone to: `../sylvamo-project-documentation` (sibling folder)
 - ADRs go in: `docs/reference/data-model/decisions/`
