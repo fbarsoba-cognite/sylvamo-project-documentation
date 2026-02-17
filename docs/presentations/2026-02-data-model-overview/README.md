@@ -33,8 +33,11 @@ By the end of this presentation, attendees will understand:
 | [SPEAKER_NOTES.md](SPEAKER_NOTES.md) | Full speaker notes for each slide (~3 min per slide) |
 | [DEMO_SCRIPT.md](DEMO_SCRIPT.md) | Step-by-step demo walkthrough for CDF Fusion |
 | [DATA_PIPELINE_DEEP_DIVE.md](DATA_PIPELINE_DEEP_DIVE.md) | Complete 35-table pipeline mapping, Fabric infrastructure |
-| [ACTUAL_DATA_WALKTHROUGH.md](ACTUAL_DATA_WALKTHROUGH.md) | **NEW** Step-by-step explanation of actual CDF data (verified Feb 2026) |
+| [ACTUAL_DATA_WALKTHROUGH.md](ACTUAL_DATA_WALKTHROUGH.md) | Step-by-step explanation of actual CDF data (verified Feb 2026) |
 | [Sylvamo_CDF_Data_Model_Presentation.pptx](Sylvamo_CDF_Data_Model_Presentation.pptx) | PowerPoint slides (generated from template) |
+| [PRESENTER_PACKAGE.md](PRESENTER_PACKAGE.md) | Presenter entry point: checklist, links to speaker notes and demo script |
+| [DECK_COMPARISON_CHECKLIST.md](DECK_COMPARISON_CHECKLIST.md) | Checklist for comparing SharePoint deck with SLIDES_OUTLINE |
+| [CONTENT_SYNC_GUIDE.md](CONTENT_SYNC_GUIDE.md) | Copy-paste content from repo into SharePoint deck |
 | `assets/` | Screenshots and diagrams for slides |
 
 ## Presentation Structure
