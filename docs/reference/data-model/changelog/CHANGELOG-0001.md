@@ -35,7 +35,7 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
   - Sheeter No.3 -> `floc:0519-07-05-020-030`
   - Roll Prep -> `floc:0519-07-05-010`
 - Deleted `populate_Asset_Equipment` transformation (no longer needed)
-- TODO: Delete 4 legacy `equip:*` Equipment instances after PR merge
+- Deleted 4 legacy `equip:*` Equipment instances (Feb 17, 2026)
 
 **Why:**
 - Complete ISA-95 Equipment migration (SVQS-243)
