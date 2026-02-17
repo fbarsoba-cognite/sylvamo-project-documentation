@@ -4,7 +4,8 @@
 
 ## Quick Navigation
 
-### Data Model
+### Pipeline & Data Model
+- [**CDF Pipeline Overview**](reference/CDF_PIPELINE_OVERVIEW.md) — End-to-end: extractors, RAW, transformations, CDF functions
 - [**MFG Core Data Model**](reference/data-model/MFG_CORE_DATA_MODEL.md) — 7 core views, Quality Traceability use case
 - [**Data Model Specification**](reference/data-model/DATA_MODEL_SPECIFICATION.md) — Complete spec with containers, properties, examples
 - [**Data Model for Stakeholders**](reference/data-model/DATA_MODEL_FOR_STAKEHOLDERS.md) — Non-technical overview

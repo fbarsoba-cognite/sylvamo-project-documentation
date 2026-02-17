@@ -221,6 +221,7 @@ Sprint 2 completed February 13, 2026. See [archive](docs/archive/2026-02-sprint2
 | [**MFG Core Data Model**](docs/reference/data-model/MFG_CORE_DATA_MODEL.md) | 7 core views, Quality Traceability use case |
 | [**MFG Core + PPV (Proposed)**](docs/reference/data-model/MFG_CORE_WITH_PPV.md) | Proposed PPV integration into mfg_core |
 | [**MFG Extended Data Model**](docs/reference/data-model/MFG_EXTENDED_DATA_MODEL.md) | 8 extended views, PPV/Cost Analysis use case |
+| [**CDF Pipeline Overview**](docs/reference/CDF_PIPELINE_OVERVIEW.md) | End-to-end: extractors, RAW, transformations, CDF functions |
 | [**Data Model Specification**](docs/reference/data-model/DATA_MODEL_SPECIFICATION.md) | Complete spec with all containers, properties, and examples |
 | [**Guide for Stakeholders**](docs/reference/data-model/DATA_MODEL_FOR_STAKEHOLDERS.md) | Non-technical overview with flow diagrams and business examples |
 | [**Transformations**](docs/reference/data-model/TRANSFORMATIONS.md) | SQL transformations, data flow, examples |

@@ -21,13 +21,13 @@
 
 ## 1. Overview
 
-The Sylvamo CDF implementation uses **24 SQL transformations** across 3 toolkit modules to populate the data model from 5 source systems.
+The Sylvamo CDF implementation uses **SQL transformations** across mfg_core, mfg_extended, admin, and contextualization modules, plus **CDF Functions** for SharePoint and Proficy datapoints.
 
 ### Key Statistics
 
 | Metric | Value |
 |--------|-------|
-| **Total Transformations** | 24 SQL transformations |
+| **Transformations** | mfg_core: 14, mfg_extended: 5, admin: 1, contextualization: 5 |
 | **Toolkit Modules** | mfg_core, mfg_extended, infield |
 | **Source Systems** | SAP, PI, Proficy, Fabric, SharePoint |
 | **RAW Databases** | 6 databases |
@@ -136,22 +136,19 @@ flowchart TB
 
 ```
 sylvamo/modules/
-├── mfg_core/transformations/           # Core data model - 19 transformations
+├── mfg_core/transformations/           # Core data model
 │   ├── populate_Asset.Transformation.sql
-│   ├── populate_Reel.Transformation.sql
-│   ├── populate_Roll.Transformation.sql
+│   ├── populate_Reel.Transformation.sql (+ Schedule: 0 * * * *)
+│   ├── populate_Roll.Transformation.sql (+ Schedule: 0 * * * *)
 │   ├── populate_TimeSeries.Transformation.sql
 │   ├── populate_Event_WorkOrders.Transformation.sql
-│   ├── populate_Event_Proficy.Transformation.sql
 │   ├── populate_Event_PPV.Transformation.sql
 │   ├── populate_Event_ProductionOrders.Transformation.sql
 │   ├── populate_Files.Transformation.sql
 │   ├── populate_Material.Transformation.sql
 │   ├── populate_RollQuality.Transformation.sql
 │   ├── populate_ProficyTimeSeries.Transformation.sql
-│   ├── populate_ProficyDatapoints.Transformation.sql
 │   ├── populate_ProficyEventIdTimeSeries.Transformation.sql
-│   ├── populate_ProficyEventIdDatapoints.Transformation.sql
 │   ├── create_ProficyTimeSeries_CDF.Transformation.sql
 │   └── create_ProficyEventIdTimeSeries_CDF.Transformation.sql
 │
@@ -162,10 +159,18 @@ sylvamo/modules/
 │   ├── populate_CostEvent.Transformation.sql
 │   └── populate_Operation.Transformation.sql
 │
-└── infield/cdf_infield_location/transformations/  # InField sync - 2 transformations
-    ├── tr_asset_oid_workmate_infield_sync_assets_from_hierarchy_to_apm.Transformation.sql
-    └── tr_workorder_oid_workmate_infield_sync_workorders_to_apm_activities.Transformation.sql
+├── admin/transformations/
+│   └── populate_SourceSystems.transformation.yaml
+│
+└── contextualization/cdf_connection_sql/transformations/
+    ├── timeseries_to_asset.Transformation.yaml
+    ├── timeseries_to_equipment.Transformation.yaml
+    ├── activity_to_asset.Transformation.yaml
+    ├── activity_to_equipment.Transformation.yaml
+    └── activity_to_timeseries.Transformation.yaml
 ```
+
+> **CDF Functions (scheduled):** `de_sharepoint_list_to_data_model` (Mon–Fri hourly), `de_proficy_datapoints_ingest` (hourly). See [CDF_PIPELINE_OVERVIEW.md](../CDF_PIPELINE_OVERVIEW.md).
 
 ---
 
@@ -180,18 +185,17 @@ sylvamo/modules/
 | **populate_Roll** | raw_ext_fabric_ppr.ppr_hist_roll | Roll | 1,000+ | Cut roll data (limited for demo) |
 | **populate_TimeSeries** | _cdf.timeseries | MfgTimeSeries | 3,532 | PI time series with asset links |
 | **populate_Event_WorkOrders** | raw_ext_fabric_sapecc.sapecc_work_orders | Event | ~223 | SAP work orders |
-| **populate_Event_Proficy** | raw_ext_sql_proficy.events_tests | Event | ~61 | Proficy events/tests |
 | **populate_Event_PPV** | raw_ext_fabric_ppv.ppv_snapshot | Event | ~716 | Purchase price variance events |
 | **populate_Event_ProductionOrders** | raw_ext_sap.production_orders | Event | ~50,000 | SAP production orders |
 | **populate_Files** | _cdf.files | CogniteFile | 97 | Files with asset links |
 | **populate_Material** | raw_ext_sap.materials | Material | TBD | SAP materials |
 | **populate_RollQuality** | raw_ext_sharepoint.roll_quality | RollQuality | TBD | SharePoint quality reports |
 | **populate_ProficyTimeSeries** | raw_ext_sql_proficy | MfgTimeSeries | - | Proficy time series nodes |
-| **populate_ProficyDatapoints** | raw_ext_sql_proficy | CDF TimeSeries | - | Proficy datapoint ingestion |
 | **populate_ProficyEventIdTimeSeries** | raw_ext_sql_proficy | MfgTimeSeries | - | Event-linked time series |
-| **populate_ProficyEventIdDatapoints** | raw_ext_sql_proficy | CDF TimeSeries | - | Event-linked datapoints |
 | **create_ProficyTimeSeries_CDF** | raw_ext_sql_proficy | CDF TimeSeries | - | Create classic TS resources |
 | **create_ProficyEventIdTimeSeries_CDF** | raw_ext_sql_proficy | CDF TimeSeries | - | Create event-linked TS |
+
+> **Proficy datapoints:** Ingested by CDF Function `de_proficy_datapoints_ingest` (hourly), not SQL transformation.
 
 ### mfg_extended Module (5 transformations)
 
@@ -203,12 +207,15 @@ sylvamo/modules/
 | **populate_CostEvent** | Event (filtered) | CostEvent | Specialized CostEvent view |
 | **populate_Operation** | Event (filtered) | Operation | Operation entity |
 
-### infield Module (2 transformations)
+### contextualization Module (5 transformations)
 
-| Transformation | Source | Target | Purpose |
-|----------------|--------|--------|---------|
-| **tr_asset_oid_workmate_infield_sync_assets_from_hierarchy_to_apm** | Asset hierarchy | APM Assets | Sync to InField |
-| **tr_workorder_oid_workmate_infield_sync_workorders_to_apm_activities** | Work Orders | APM Activities | Sync WOs to InField |
+| Transformation | Purpose |
+|----------------|---------|
+| timeseries_to_asset | Link time series to assets |
+| timeseries_to_equipment | Link time series to equipment |
+| activity_to_asset | Link activities to assets |
+| activity_to_equipment | Link activities to equipment |
+| activity_to_timeseries | Link activities to time series |
 
 ---
 

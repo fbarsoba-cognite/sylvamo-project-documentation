@@ -5,7 +5,7 @@
 
 ---
 
-> **Note:** For comprehensive transformation documentation including SQL examples, data flow diagrams, and troubleshooting, see [TRANSFORMATIONS.md](../data-model/TRANSFORMATIONS.md).
+> **Note:** For end-to-end pipeline flow, see [CDF_PIPELINE_OVERVIEW.md](../CDF_PIPELINE_OVERVIEW.md). For transformation SQL and troubleshooting, see [TRANSFORMATIONS.md](../data-model/TRANSFORMATIONS.md).
 
 ---
 

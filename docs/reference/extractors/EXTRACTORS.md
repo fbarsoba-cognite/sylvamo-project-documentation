@@ -80,22 +80,34 @@ raw_ext_<extractor_type>_<source>
 
 ## CDF Extraction Pipelines (from Codebase)
 
-> **Source:** `sylvamo/modules/sourcesystem/cdf_extractor_pipelines/extraction_pipelines/`
+> **Source:** `sylvamo/modules/sourcesystem/cdf_extractor_pipelines/extraction_pipelines/`  
+> **See also:** [CDF_PIPELINE_OVERVIEW.md](../CDF_PIPELINE_OVERVIEW.md) for end-to-end flow
 
 | Pipeline externalId | Name | Schedule | RAW Database | Source |
-|---------------------|------|---------|--------------|--------|
-| `ep_pi_s769pi03` | PI Extractor - S769PI03 (PM) | Continuous | raw_ext_pi | pi-extractor-pm |
-| `ep_pi_s769pi01` | PI Extractor - S769PI01 (Eastover) | Continuous | raw_ext_pi | pi-extractor-eastover |
-| `ep_pi_s519pip1` | PI Extractor - S519PIP1 (Sumter) | Continuous | raw_ext_pi | pi-extractor-sumter |
-| `ep_fabric_sapecc_daily` | Fabric Extractor - SAP ECC Daily (324 tables) | 0 2 * * * | raw_ext_fabric_sapecc | fabric-connector-sapecc |
-| `ep_fabric_ppv_daily` | Fabric Extractor - PPV Daily (1 table) | 0 2 * * * | raw_ext_fabric_ppv | fabric-connector-ppv |
-| `ep_fabric_ppr_hourly` | Fabric Extractor - PPR Hourly (4 tables) | 0 * * * * | raw_ext_fabric_ppr | fabric-connector-ppr |
-| `ep_fabric_ppr_hist_reel` | Fabric Extractor - PPR Hist Reel (continuous) | Continuous | raw_ext_fabric_ppr | fabric-connector-ppr |
-| `ep_fabric_ppr_daily` | Fabric Extractor - PPR Daily (14 tables) | 0 2 * * * | raw_ext_fabric_ppr | fabric-connector-ppr |
-| `ep_file_extractor` | File Extractor - SharePoint Documents | Continuous | raw_ext_sharepoint | sharepoint-extractor |
+|---------------------|------|----------|--------------|--------|
 | `ep_db_extractor` | DB Extractor - SAP OData & Proficy | Continuous | raw_ext_sap, raw_ext_sql_proficy | db-extractor |
+| `ep_file_extractor` | File Extractor - SharePoint Documents | Continuous | raw_ext_sharepoint | sharepoint-extractor |
+| `ep_pi_s769pi03` | PI Extractor - S769PI03 (PM) | Continuous | raw_ext_pi | pi-extractor |
+| `ep_pi_s769pi01` | PI Extractor - S769PI01 (Eastover) | Continuous | raw_ext_pi | pi-extractor |
+| `ep_pi_s519pip1` | PI Extractor - S519PIP1 (Sumter) | Continuous | raw_ext_pi | pi-extractor |
+| `ep_fabric_ppr_hourly` | Fabric - PPR Hourly (4 tables: ppr_gr, ppr_ll, ppr_mill, ppr_production_total) | `0 * * * *` | raw_ext_fabric_ppr | fabric-connector-ppr |
+| `ep_fabric_ppr_hist_reel` | Fabric - PPR Hist Reel | Continuous | raw_ext_fabric_ppr | fabric-connector-ppr |
+| `ep_fabric_ppr_daily` | Fabric - PPR Daily (14 tables) | `0 2 * * *` | raw_ext_fabric_ppr | fabric-connector-ppr |
+| `ep_fabric_ppv_daily` | Fabric - PPV Daily | `0 2 * * *` | raw_ext_fabric_ppv | fabric-connector-ppv |
+| `ep_fabric_sapecc_daily` | Fabric - SAP ECC Daily | `0 2 * * *` | raw_ext_fabric_sapecc | fabric-connector-sapecc |
 
-**PI Tag Counts (from pipeline docs):** S769PI03: 3,390 | S769PI01: 210 | S519PIP1: 6 → **3,606 total**
+**PI Tag Counts:** S769PI03: 3,390 | S769PI01: 210 | S519PIP1: 6 → **3,606 total** (verify in CDF)
+
+---
+
+## CDF Functions (scheduled, not extractors)
+
+| Function | Schedule | Purpose |
+|----------|----------|---------|
+| `de_sharepoint_list_to_data_model` | `0 * * * 1-5` (Mon–Fri hourly) | Writes SharePoint roll quality list directly to RollQuality view |
+| `de_proficy_datapoints_ingest` | `0 * * * *` (hourly) | Writes Proficy datapoints to CDF TimeSeries |
+
+> **Note:** RollQuality is populated by both `tr_populate_RollQuality` (from RAW) and `de_sharepoint_list_to_data_model`. See [CDF_PIPELINE_OVERVIEW.md](../CDF_PIPELINE_OVERVIEW.md).
 
 ---
 
