@@ -30,8 +30,8 @@ All project credentials (CDF, Jira, SharePoint) are in the main worktree `.env` 
 ```
 
 **ALWAYS check this file FIRST** before writing any script or running any command that needs authentication. Key variables:
-- `CDF_PROJECT`, `CDF_CLUSTER`, `CDF_URL` -- CDF connection
-- `IDP_CLIENT_ID`, `IDP_CLIENT_SECRET`, `IDP_TENANT_ID`, `IDP_TOKEN_URL` -- OAuth
+- `CDF_PROJECT`, `CDF_CLUSTER` -- CDF (CDF_URL derived from cluster if not set)
+- `IDP_CLIENT_ID`, `IDP_CLIENT_SECRET`, `IDP_TENANT_ID` -- OAuth (IDP_TOKEN_URL derived if not set)
 - `JIRA_EMAIL`, `JIRA_API_TOKEN` -- Jira API
 - `SHAREPOINT_*` -- SharePoint
 
