@@ -17,6 +17,7 @@ This folder contains documentation that is no longer current but retained for re
 
 - **SPRINT_2_PLAN.md** — Sprint 2 (Feb 2–13, 2026) implementation plan
 - **SPRINT_2_STORY_MAPPING.md** — Jira story mapping for Sprint 2
+- **COMPLETED_STORIES.md** — Jira-verified list of 14 completed stories
 
 ---
 

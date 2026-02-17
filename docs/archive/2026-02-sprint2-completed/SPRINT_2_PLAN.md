@@ -7,17 +7,18 @@
 
 ---
 
-## Completion Summary (from changelogs)
+## Completion Summary (Jira-verified Feb 2026)
 
 | Workstream | Outcome |
 |------------|---------|
-| **Search Experience** | ✅ Events, Time Series, Files linked to Assets; Asset.files reverse relation |
-| **Reel/Roll Scheduling** | ✅ populate_Reel.Schedule.yaml, populate_Roll.Schedule.yaml (CHANGELOG-0003) |
-| **Data Completeness** | ✅ SVQS-245: Fabric extractors revamped (17 tables); SVQS-239: transformation schedules |
-| **Sumter Assets** | ✅ SVQS-244: RollQuality linked to Sumter FLOCs (0519-07-05-*) |
-| **P&ID / Validation** | Carried to Sprint 3 (SVQS-144, SVQS-159) |
+| **Search Experience** | ✅ Events, Time Series, Files linked to Assets; Asset.files reverse relation (SVQS-143, 145, 146, 148, 151, 152) |
+| **UC2 Demo** | ✅ Streamlit diagnostic app (SVQS-147) |
+| **Data Completeness** | ✅ PPR Roll limit fix, Sumter assets, Asset search field (SVQS-155, 157, 158) |
+| **UC2 Data Quality** | ✅ turnupTime property added to Reel (SVQS-154) |
+| **P&ID** | 🟡 In Progress (SVQS-144) |
+| **Remaining** | Reel/Roll scheduling (SVQS-153), Missing PPR tables (SVQS-156), Validation demo (SVQS-159) |
 
-*Verify current Jira status: [SVQS project](https://cognitedata.atlassian.net/browse/SVQS)*
+**14 stories Done** — See [COMPLETED_STORIES.md](./COMPLETED_STORIES.md) for full list.
 
 ---
 
