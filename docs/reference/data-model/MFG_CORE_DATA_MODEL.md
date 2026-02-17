@@ -16,7 +16,7 @@
 
 | View | Description | Key Relationships |
 |------|-------------|-------------------|
-| **Asset** | Mills, plants, locations | parent, children, reels, events, timeSeries |
+| **Asset** | Mills, plants, equipment (with ISA-95 assetType classification) | parent, children, reels, events, timeSeries |
 | **Material** | Raw materials, products | source |
 | **Reel** | Paper reels (production batches) | asset, rolls, events |
 | **Roll** | Paper rolls (material lots) | reel, events, qualityResults |
@@ -176,15 +176,32 @@ This enables queries like:
 
 ## Instance Counts (Live Data)
 
-| View | Instances |
-|------|-----------|
-| Asset | 2,500+ |
-| Reel | 83,600+ |
-| Roll | 14,000+ |
-| RollQuality | 127,000+ |
-| MfgTimeSeries | 3,500+ |
-| Event | 10,000+ |
-| Material | 500+ |
+> **Verified:** February 17, 2026
+
+| View | Instances | Notes |
+|------|-----------|-------|
+| Asset | 45,900+ | Includes 33,072 with `assetType='Equipment'` |
+| Reel | 83,600+ | |
+| Roll | 2,300,000+ | |
+| RollQuality | 580 | SharePoint roll quality reports |
+| MfgTimeSeries | 3,500+ | |
+| Event | 92,000+ | SAP Work Orders, Proficy, PPV |
+| Material | 58,000+ | |
+
+### ISA-95 Asset Type Classification
+
+Assets are classified by `assetType` based on hierarchy level:
+
+| Hierarchy Level | assetType | Count |
+|-----------------|-----------|-------|
+| Level 2 | Area | ~10 |
+| Level 3 | System | ~50 |
+| Level 4 | SubSystem | ~200 |
+| Level 5 | Unit | ~1,000 |
+| Level 6 | EquipmentModule | ~10,000 |
+| Level 7+ | Equipment | 33,072 |
+
+See [ADR-001-ASSET-EQUIPMENT.md](decisions/ADR-001-ASSET-EQUIPMENT.md) for details.
 
 ## What's NOT in mfg_core (Coming in mfg_extended)
 
@@ -194,7 +211,7 @@ The following entities are in **sylvamo_mfg_extended**, not mfg_core:
 |--------|-------------|-------|
 | CostEvent | PPV/cost variance | mfg_extended |
 | WorkOrder | SAP maintenance orders | mfg_extended |
-| Equipment | CogniteEquipment | mfg_extended |
+| Equipment | CogniteEquipment (not used - see ADR-001) | mfg_extended |
 | ProductionOrder | SAP production orders | mfg_extended |
 | ProductionEvent | Proficy events | mfg_extended |
 | Notification | SAP notifications | mfg_extended |
@@ -203,4 +220,4 @@ The following entities are in **sylvamo_mfg_extended**, not mfg_core:
 
 ---
 
-*Last updated: February 2026*
+*Last updated: February 17, 2026*

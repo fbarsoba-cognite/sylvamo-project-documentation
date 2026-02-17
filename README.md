@@ -503,13 +503,13 @@ Secrets stored in **project-level Variable Groups** in the SylvamoCorp ADO proje
 
 ## Real Data Statistics
 
-> **Verified:** February 13, 2026 against CDF sylvamo-dev project
+> **Verified:** February 17, 2026 against CDF sylvamo-dev project
 
 ### sylvamo_mfg_core (Production Model)
 
 | Entity | Count | Source | Status |
 |--------|-------|--------|--------|
-| Asset | 44,000+ | SAP Functional Locations (9 levels) | ✅ |
+| Asset | 45,900+ | SAP Functional Locations (9 levels, with ISA-95 assetType classification) | ✅ |
 | Event | 92,000+ | SAP Work Orders, Proficy, PPV | ✅ |
 | Material | 58,000+ | SAP Material Master | ✅ |
 | MfgTimeSeries | 3,500+ | PI Server (3 servers) | ✅ |
@@ -518,6 +518,8 @@ Secrets stored in **project-level Variable Groups** in the SylvamoCorp ADO proje
 | RollQuality | 580 | `raw_ext_sharepoint/roll_quality` | ✅ |
 | CogniteFile | 97+ | CDF Files (P&IDs, drawings) | ✅ |
 | **TOTAL** | **450,000+** | Real production data | |
+
+> **ISA-95 Equipment Modeling (ADR-001):** Equipment is modeled as Asset subtypes with `assetType='Equipment'` (33,072 leaf-level assets). See [ADR-001-ASSET-EQUIPMENT.md](docs/reference/data-model/decisions/ADR-001-ASSET-EQUIPMENT.md).
 
 ### sylvamo_mfg_extended (Extended Model)
 
@@ -528,7 +530,7 @@ Secrets stored in **project-level Variable Groups** in the SylvamoCorp ADO proje
 | ProductionEvent | 10,000+ | Proficy GBDB | ✅ |
 | CostEvent | 716 | `raw_ext_fabric_ppv/ppv_snapshot` | ✅ |
 | MaintenanceActivity | 10,000+ | Derived from WorkOrder | ✅ |
-| Equipment | 0 | Pending - no source yet | ❌ |
+| Equipment | 0 | Not used - Equipment modeled as Asset subtypes (see ADR-001) | ℹ️ |
 | Notification | 0 | Pending - need SAP IW29 | ❌ |
 | Operation | 0 | Pending - need AUFK+AFKO+AFVC join | ❌ |
 | **TOTAL** | **50,000+** | Extended activities | |
