@@ -94,3 +94,38 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 **Why:**
 - Large numeric work order numbers were being rendered in scientific notation (e.g., 1.2E+7 instead of 12000000)
 - CDF Fusion displayed unreadable values; explicit CAST to STRING fixes the display
+
+---
+
+### CI/CD pipeline setup for CDF Toolkit deployment
+**Date:** 2026-02-08 / 2026-02-09
+**ADO PRs:** [PR #842](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/842) (validation), multiple direct commits
+
+**Changes:**
+- Added `deploy-pipeline.yml` and `dry-run-pipeline.yml` for Azure DevOps CI/CD
+- Split deployment: Dev+Staging on merge to main, Prod on weekly schedule
+- Added PR validation pipeline with dry-run for Dev and Staging
+- Configured `config.dev.yaml`, `config.staging.yaml`, `config.prod.yaml`
+- Fixed annotationsAcl in auth groups for sylvamo-test (staging) compatibility
+
+**Why:**
+- Establish automated CI/CD for CDF Toolkit deployments across Dev, Staging, and Prod
+- Enable PR validation with dry-run to catch issues before merge
+
+---
+
+### Add Sylvamo MFG modules and admin to toolkit deployment
+**Date:** 2026-02-09
+**ADO PR:** [PR #844](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/844)
+
+**Changes:**
+- Added `mfg_core` module: 7 containers (MfgAsset, MfgRoll, MfgReel, MfgEvent, Material, RollQuality, MfgTimeSeries), 7 views, SylvamoMfgCore data model, 15 transformations, location filter
+- Added `mfg_extended` module: 8 containers (WorkOrder, Operation, ProductionOrder, ProductionEvent, CostEvent, Notification, MaintenanceActivity, MfgEquipment), 8 views, 5 transformations, location filter
+- Added `mfg_data` module: Full CDM-aligned manufacturing data model with 15 containers and views
+- Added `mfg_location` module: Location configuration
+- Added `admin` module: auth groups (admin, all-read, service principal), data sets, source system transformation
+- Updated Dev/Staging/Prod config files to include all modules (138 files, ~10,000 lines)
+
+**Why:**
+- Foundational deployment of the complete Sylvamo manufacturing data model to CDF
+- Enables all subsequent transformations, extraction pipelines, and data ingestion
