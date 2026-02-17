@@ -1,7 +1,7 @@
 # Data Pipeline & Sources
 
-**Date:** 2026-01-29  
-**Model:** `sylvamo_mfg_core` (Production Model)
+**Date:** 2026-02-17 (Updated)  
+**Model:** `sylvamo_mfg_core` (Production, 7 views). `sylvamo_mfg_extended` exists but is secondary.
 
 ---
 
@@ -39,25 +39,25 @@ This document describes the data sources and extractors that feed into the Sylva
 │  raw_ext_fabric_ppr/                                                         │
 │    ├── ppr_hist_reel         → Reel                                          │
 │    ├── ppr_hist_roll         → Roll                                          │
-│    └── ppr_hist_package      → Package                                       │
+│    └── ppr_hist_package      → (future)                                       │
 │                                                                              │
 │  raw_ext_fabric_ppv/                                                         │
-│    └── ppv_snapshot          → MaterialCostVariance                          │
+│    └── ppv_snapshot          → CostEvent (extended, secondary)                          │
 │                                                                              │
 │  raw_ext_sharepoint/                                                         │
-│    └── roll_quality          → QualityResult                                 │
+│    └── roll_quality          → RollQuality (mfg_core)                                 │
 │                                                                              │
 │  raw_ext_sql_proficy/                                                        │
-│    └── tests                 → QualityResult (lab tests)                     │
+│    └── tests                 → RollQuality (mfg_core) (lab tests)                     │
 └────────────────────────────────────────────────────────────────────────────┘
          │
          ▼ [Transformations]
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                      sylvamo_mfg DATA MODEL (v4)                             │
+│                      sylvamo_mfg_core (7 views)                             │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  Views:                                                                      │
-│    Asset, Equipment, ProductDefinition, Recipe, Reel, Roll,                  │
-│    Package, QualityResult, MaterialCostVariance                              │
+│    Asset, Event, Material, MfgTimeSeries, Reel, Roll, RollQuality           │
+│    (Equipment is modeled as assetType on Asset)                               │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -115,9 +115,12 @@ This document describes the data sources and extractors that feed into the Sylva
 
 ### 3. SharePoint Quality Data
 
+> **Codebase:** `cdf_sharepoint` module also uses `files_metadata` for PDF→CogniteFile population.
+
+
 | RAW Table | Description | Records |
 |-----------|-------------|---------|
-| `raw_ext_sharepoint/roll_quality` | Roll quality inspection reports | 21+ |
+| `raw_ext_sharepoint/roll_quality` | Roll quality inspection reports | 580+ |
 
 **Key Fields:**
 - `title` - Roll ID being inspected
@@ -127,7 +130,7 @@ This document describes the data sources and extractors that feed into the Sylva
 - `who_is_entering` - Inspector name
 - `created_by` - Source equipment (e.g., "Mill Floor Sheeter Sheeter 1")
 
-### 4. Proficy Lab Data (Future)
+### 4. Proficy Lab Data (SQL Extractor)
 
 | RAW Table | Description | Status |
 |-----------|-------------|--------|
@@ -141,7 +144,7 @@ This document describes the data sources and extractors that feed into the Sylva
 ### Transform 1: RAW → Reel
 
 **Source:** `raw_ext_fabric_ppr/ppr_hist_reel`  
-**Target:** `sylvamo_mfg:Reel/v2`
+**Target:** `sylvamo_mfg_core:Reel`
 
 ```sql
 -- Transformation: populate_reels
@@ -158,14 +161,14 @@ SELECT
     WHEN REEL_AVERAGE_BASIS_WEIGHT < 22 THEN 'product:wove-20'
     ELSE 'product:wove-24'
   END AS productDefinition_externalId,
-  'equip:emp01' AS equipment_externalId
+  'floc:0769-06-01-010' AS asset_externalId  // ADR-001: Reel links to Asset
 FROM `raw_ext_fabric_ppr`.`ppr_hist_reel`
 ```
 
 ### Transform 2: RAW → Roll
 
 **Source:** `raw_ext_fabric_ppr/ppr_hist_roll`  
-**Target:** `sylvamo_mfg:Roll/v2`
+**Target:** `sylvamo_mfg_core:Roll`
 
 ```sql
 -- Transformation: populate_rolls
@@ -181,10 +184,10 @@ SELECT
 FROM `raw_ext_fabric_ppr`.`ppr_hist_roll`
 ```
 
-### Transform 3: RAW → Package
+### Transform 3: RAW → (future)
 
 **Source:** `raw_ext_fabric_ppr/ppr_hist_package`  
-**Target:** `sylvamo_mfg:Package/v2`
+**Target:** `sylvamo_mfg_core:Package (future)`
 
 ```sql
 -- Transformation: populate_packages
@@ -203,10 +206,10 @@ SELECT
 FROM `raw_ext_fabric_ppr`.`ppr_hist_package`
 ```
 
-### Transform 4: RAW → MaterialCostVariance
+### Transform 4: RAW → CostEvent (extended, secondary)
 
 **Source:** `raw_ext_fabric_ppv/ppv_snapshot`  
-**Target:** `sylvamo_mfg:MaterialCostVariance/v1`
+**Target:** `sylvamo_mfg_extended:CostEvent`
 
 ```sql
 -- Transformation: populate_material_cost_variance
@@ -232,10 +235,10 @@ SELECT
 FROM `raw_ext_fabric_ppv`.`ppv_snapshot`
 ```
 
-### Transform 5: RAW → QualityResult
+### Transform 5: RAW → RollQuality (mfg_core)
 
 **Source:** `raw_ext_sharepoint/roll_quality`  
-**Target:** `sylvamo_mfg:QualityResult/v2`
+**Target:** `sylvamo_mfg_core:RollQuality`
 
 ```sql
 -- Transformation: populate_quality_results
@@ -281,18 +284,20 @@ FROM `raw_ext_sharepoint`.`roll_quality`
 
 ## Current Data Statistics
 
+> **Verified:** February 2026 against CDF sylvamo-dev
+
 | Entity | Count | Source |
 |--------|-------|--------|
-| Asset | 2 | Static (Eastover, Sumpter) |
-| Equipment | 3 | Static (EMP01, EMW01, Sheeter) |
-| ProductDefinition | 2 | Derived from basis weight ranges |
-| Reel | 61,000+ | `raw_ext_fabric_ppr/ppr_hist_reel` |
-| Roll | 200,000+ | `raw_ext_fabric_ppr/ppr_hist_roll` |
-| Package | 50,000+ | `raw_ext_fabric_ppr/ppr_hist_package` |
-| QualityResult | 21 | `raw_ext_sharepoint/roll_quality` |
-| MaterialCostVariance | 176 | `raw_ext_fabric_ppv/ppv_snapshot` |
-| **TOTAL** | **300,000+** | Real production data |
+| Asset | 45,900+ | SAP Functional Locations (ISA-95 assetType) |
+| Reel | 83,600+ | `raw_ext_fabric_ppr/ppr_hist_reel` |
+| Roll | 2,300,000+ | `raw_ext_fabric_ppr/ppr_hist_roll` |
+| RollQuality | 580 | `raw_ext_sharepoint/roll_quality` |
+| Event | 92,000+ | SAP Work Orders, Proficy, PPV |
+| Material | 58,000+ | SAP Material Master |
+| MfgTimeSeries | 3,500+ | PI Server |
+| CostEvent | 716 | `raw_ext_fabric_ppv/ppv_snapshot` |
+| **TOTAL** | **450,000+** | mfg_core (primary) |
 
 ---
 
-*Document updated: January 29, 2026*
+*Document updated: February 17, 2026*

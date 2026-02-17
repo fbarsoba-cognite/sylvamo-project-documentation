@@ -156,7 +156,7 @@ flowchart TB
             Asset["Asset<br/>44,000+ nodes"]
             Reel["Reel<br/>83,600+ batches"]
             Roll["Roll<br/>2,300,000+ lots"]
-            RollQuality["RollQuality<br/>580 tests"]
+            RollQuality["RollQuality<br/>~750 tests"]
         end
         
         subgraph Cost["Use Case 2: PPV Analysis"]

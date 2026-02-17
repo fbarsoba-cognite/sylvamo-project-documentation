@@ -147,7 +147,7 @@ flowchart TB
 | Dimension | PoC (`sylvamo_mfg`) | Production (`sylvamo_mfg_core`) | ISA Extension |
 |-----------|---------------------|----------------------------------|---------------|
 | **Space** | `sylvamo_mfg` | `sylvamo_mfg_core_schema` + `_instances` | `sp_isa_manufacturing` + `sp_isa_instance` |
-| **Entities** | 9 views | 8 views (7 custom + CogniteFile) | 25+ views |
+| **Entities** | 9 views | 7 views | 25+ views |
 | **Real Data** | 197 sample nodes | 450,000+ production nodes | Seed data only |
 | **CDM Integration** | Partial | Full (CogniteAsset, CogniteTimeSeries, CogniteActivity) | Full |
 | **Transformations** | None | 17 active transformations | Template transformations |

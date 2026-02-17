@@ -7,6 +7,8 @@
 **Deployed Model:** `sylvamo_mfg/sylvamo_manufacturing/v2` (GraphQL API published, includes Recipe)  
 **Key Decision:** Use CDM Asset + Equipment instead of ISA Site/Unit for organizational hierarchy
 
+> **ADR-001 Update (Feb 2026):** Equipment as a separate view has been removed. Equipment is now modeled as Asset nodes with `assetType='Equipment'` (ISA-95 QuickStart pattern). See [ADR-001](decisions/ADR-001-ASSET-EQUIPMENT.md).
+
 ## Current Deployment Status
 
 | Component | Status | Details |

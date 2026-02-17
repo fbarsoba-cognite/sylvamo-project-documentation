@@ -2,7 +2,7 @@
 
 > How Cognite Data Fusion stores, organizes, and links files to the industrial data model.
 
-**Last updated:** February 10, 2026
+**Last updated:** February 17, 2026 (aligned with codebase)
 
 ---
 
@@ -16,6 +16,7 @@
 - [CogniteFile Properties Reference](#cognitefile-properties-reference)
 - [File-to-Asset Relationships](#file-to-asset-relationships)
 - [File Ingestion Methods](#file-ingestion-methods)
+- [Sylvamo File Ingestion Implementation](#sylvamo-file-ingestion-implementation)
 - [Access Control](#access-control)
 - [File Versioning](#file-versioning)
 - [Key Limitations](#key-limitations)
@@ -309,6 +310,35 @@ graph TB
         A1 --> A2 --> A3
     end
 ```
+
+---
+
+## Sylvamo File Ingestion Implementation
+
+The Sylvamo codebase provides two file ingestion paths:
+
+### Path 1: cdf_sharepoint Module (RAW → Transformation)
+
+- **Source**: RAW table `files_metadata` (from `rawSourceDatabase`)
+- **Transformation**: `files.Transformation` (population)
+- **Destination**: `{{ organization }}File` view (e.g., `CogniteFile` or org-specific file view) in instance space
+- **Logic**: Selects rows with `mime_type = 'application/pdf'`; creates nodes with `externalId: VAL_<name>`, `name`, `sourceId`, `mimeType`
+- **Use case**: Demo/sample data; can be configured for SharePoint metadata when extractor populates `files_metadata`
+
+### Path 2: File Extractor + populate_Files (Production)
+
+- **Extraction pipeline**: `ep_file_extractor` (File Extractor - SharePoint Documents)
+- **Source**: SharePoint Online via FileExtractor Windows Service (PAMIDL02 VM)
+- **RAW database**: `raw_ext_sharepoint` (tables: `documents`, `roll_quality`)
+- **Transformation**: `tr_populate_Files` (Populate Files from CDF Files API)
+- **Source for transformation**: `_cdf.files` (CDF internal files table)
+- **Destination**: `CogniteFile` in `mfg_core` instance space
+- **Logic**: Reads from CDF Files API; links files to assets based on directory path (e.g., Eastover directories → Eastover Mill asset)
+- **Status**: Pending configuration (SVQS-230)
+
+### File Upload Template
+
+The `cdf_sharepoint` module includes `upload.CogniteFile.yaml` for file uploads: `externalId: VAL_$FILENAME`, `mimeType: application/pdf`.
 
 ---
 

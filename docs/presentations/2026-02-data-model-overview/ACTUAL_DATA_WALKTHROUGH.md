@@ -1,3 +1,5 @@
+> **Note:** These materials were prepared for the Sprint 2 demo (Feb 2026) and may contain outdated statistics. Verify current data in CDF.
+
 # Actual Data Walkthrough - Step by Step
 
 > **Last Updated:** February 16, 2026  

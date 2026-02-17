@@ -368,13 +368,13 @@ Variable groups in ADO are like secure key-value stores:
 
 ```
 Variable Group: dev-toolkit-credentials
-├── CDF_CLUSTER = "westeurope-1"
+├── CDF_CLUSTER = "az-eastus-1"
 ├── CDF_PROJECT = "sylvamo-dev"
 ├── LOGIN_FLOW = "client_credentials"
 ├── IDP_CLIENT_ID = "abc123..." (visible)
 ├── IDP_CLIENT_SECRET = "xyz789..." (marked as secret - hidden)
 ├── IDP_TENANT_ID = "tenant-id..."
-└── CDF_URL = "https://westeurope-1.cognitedata.com"
+└── CDF_URL = "https://az-eastus-1.cognitedata.com"
 ```
 
 ### How Credentials Flow Through the System
@@ -428,7 +428,7 @@ When the pipeline runs `cdf deploy --env dev`:
    IDP_CLIENT_ID=abc123...
    IDP_CLIENT_SECRET=xyz789...
    CDF_PROJECT=sylvamo-dev
-   CDF_CLUSTER=westeurope-1
+   CDF_CLUSTER=az-eastus-1
    ```
 
 3. **CLI substitutes variables**:

@@ -4,6 +4,17 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 
 ---
 
+### 2026-02-17 — Documentation tree review and reorganization
+
+**Changes:**
+- Archive: Moved `MFG_CORE_WITH_EQUIPMENT.md` to `docs/archive/2026-02-deprecated/` (superseded by ADR-001)
+- Archive: Moved Sprint 2 plan artifacts to `docs/archive/2026-02-sprint2-completed/`
+- Extractors: Updated EXTRACTORS.md with current extraction pipeline list
+- Data Pipeline: Updated DATA_PIPELINE_AND_SOURCES.md with mfg_core/mfg_extended split and current instance counts
+- Sprint: Updated README and docs to Sprint 3 (Feb 16 – Mar 2, 2026)
+- MFG Extended: Added ADR-001 note re Equipment deprecation
+
+
 ### [SVQS-243] Add ISA-95 assetType classification to Asset hierarchy
 **Date:** 2026-02-17 04:08 UTC
 **Jira:** [SVQS-243](https://cognitedata.atlassian.net/browse/SVQS-243)
@@ -37,6 +48,9 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 - Deleted `populate_Asset_Equipment` transformation (no longer needed)
 - Deleted 4 legacy `equip:*` Equipment instances (Feb 17, 2026)
 - Deleted Equipment view and MfgEquipment container from sylvamo_mfg_core_schema (Feb 17, 2026)
+- SDK migration: Added asset links to 180 existing RollQuality instances (Feb 17, 2026)
+  - Instances created by SharePoint function now linked to SAP FLOC Assets
+  - Total RollQuality with asset links: 349/750
 
 **Why:**
 - Complete ISA-95 Equipment migration (SVQS-243)

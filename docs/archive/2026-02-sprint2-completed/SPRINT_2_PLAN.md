@@ -1,3 +1,5 @@
+> **ARCHIVED - Sprint 2 Completed (Feb 2-13, 2026).** This is a historical record. See [Sprint Planning README](../../internal/sprint-planning/README.md) for current sprint.
+
 # Sprint 2 Implementation Plan
 
 **Sprint Duration:** February 2 - February 13, 2026  

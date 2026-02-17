@@ -1,3 +1,5 @@
+> **Note:** These materials were prepared for the Sprint 2 demo (Feb 2026) and may contain outdated statistics. Verify current data in CDF.
+
 # Sylvamo CDF Data Model - Demo Script
 
 **Purpose:** Step-by-step walkthrough for live demonstrations during the presentation  

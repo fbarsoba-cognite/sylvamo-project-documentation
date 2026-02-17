@@ -8,33 +8,20 @@ This repository contains the data model specification for Sylvamo's manufacturin
 
 ## Overview
 
-Sylvamo has **two production data models** in CDF, built on the Cognite Data Model (CDM) for Industrial Tools compatibility.
+Sylvamo's primary data model in CDF is **sylvamo_mfg_core**, built on the Cognite Data Model (CDM) for Industrial Tools compatibility. A secondary extended model exists for additional use cases.
 
-### sylvamo_mfg_core (Production Model) - Current Presentation Focus
+### sylvamo_mfg_core (Primary Production Model)
 
 | Component | Value |
 |-----------|-------|
 | **Schema Space** | `sylvamo_mfg_core_schema` |
 | **Instance Space** | `sylvamo_mfg_core_instances` |
-| **Data Model** | `SylvamoMfgCore/vv1` |
+| **Data Model** | `SylvamoMfgCore/v1` |
 | **Views** | 7 custom (Asset, Event, Material, MfgTimeSeries, Reel, Roll, RollQuality) + CDM views |
 | **Instances** | 450,000+ nodes |
 | **Use Case** | **Quality Traceability** (Roll → Reel → Quality Tests) |
 
-> **Note:** CogniteFile is a CDM view, not a custom Sylvamo view. See [MFG_CORE_DATA_MODEL.md](docs/reference/data-model/MFG_CORE_DATA_MODEL.md) for the correct entity diagram.
-
-### sylvamo_mfg_extended (Extended Model) - Coming Later
-
-| Component | Value |
-|-----------|-------|
-| **Schema Space** | `sylvamo_mfg_ext_schema` |
-| **Instance Space** | `sylvamo_mfg_ext_instances` |
-| **Data Model** | `sylvamo_mfg_extended/v1` |
-| **Views** | 8 (WorkOrder, ProductionOrder, ProductionEvent, CostEvent, Equipment, MaintenanceActivity, Notification, Operation) |
-| **Instances** | 50,000+ nodes |
-| **Use Case** | **PPV/Cost Analysis** (CostEvent → Material → cost variance) |
-
-> **Note:** The extended model builds on mfg_core. Entities like CostEvent link to Material from mfg_core.
+> **Note:** CogniteFile is a CDM view, not a custom Sylvamo view. Equipment is modeled as Asset subtypes with `assetType` classification (see [ADR-001](docs/reference/data-model/decisions/ADR-001-ASSET-EQUIPMENT.md)).
 
 ## Entity Relationship Diagram
 
@@ -111,86 +98,14 @@ erDiagram
     }
 ```
 
-### sylvamo_mfg_extended (Extended Model)
-
-```mermaid
-erDiagram
-    WorkOrder ||--o{ Operation : "contains"
-    WorkOrder ||--o{ Notification : "created by"
-    WorkOrder }o--|| Asset : "at"
-    ProductionOrder ||--o{ ProductionEvent : "events"
-    ProductionOrder }o--|| Reel : "produces"
-    ProductionOrder }o--|| Asset : "at"
-    ProductionEvent }o--|| Reel : "for"
-    CostEvent }o--|| Material : "for"
-    CostEvent }o--|| Asset : "at"
-    Equipment }o--|| Asset : "part of"
-    MaintenanceActivity }o--|| Asset : "at"
-
-    WorkOrder {
-        string orderNumber PK
-        string description
-        string status
-        timestamp scheduledStart
-        relation asset FK
-    }
-
-    Notification {
-        string notificationNumber PK
-        string description
-        relation workOrder FK
-    }
-
-    Operation {
-        string operationNumber PK
-        string description
-        relation workOrder FK
-    }
-
-    ProductionOrder {
-        string orderNumber PK
-        string status
-        relation reel FK
-        relation asset FK
-    }
-
-    ProductionEvent {
-        string eventId PK
-        string eventType
-        relation productionOrder FK
-        relation reel FK
-    }
-
-    CostEvent {
-        string externalId PK
-        float ppvAmount
-        float standardCost
-        relation material FK
-        relation asset FK
-    }
-
-    Equipment {
-        string equipmentId PK
-        string name
-        string equipmentType
-        relation asset FK
-    }
-
-    MaintenanceActivity {
-        string activityId PK
-        string activityType
-        relation asset FK
-    }
-```
-
 ### Diagram Legend
 
 #### Relationship Symbols (Crow's Foot Notation)
 
 | Symbol | Meaning | Example |
 |--------|---------|---------|
-| `\|\|--o{` | **One-to-Many**: One parent has many children | Asset `\|\|--o{` Equipment means one Asset contains many Equipment |
-| `}o--\|\|` | **Many-to-One**: Many children belong to one parent | Roll `}o--\|\|` Package means many Rolls are bundled in one Package |
+| `\|\|--o{` | **One-to-Many**: One parent has many children | Asset `\|\|--o{` Reel means one Asset produces many Reels |
+| `}o--\|\|` | **Many-to-One**: Many children belong to one parent | Roll `}o--\|\|` Reel means many Rolls come from one Reel |
 | `\|\|` | **One** (exactly one) | The single line indicates "one" side |
 | `o{` | **Many** (zero or more) | The crow's foot (fork) indicates "many" side |
 
@@ -198,17 +113,14 @@ erDiagram
 
 | Label | Business Meaning |
 |-------|------------------|
-| **"contains"** | Asset contains Equipment (physical hierarchy) |
-| **"produces"** | Equipment produces Reels |
-| **"runs"** | Equipment runs Recipes |
-| **"defines"** | ProductDefinition defines what a Recipe makes |
-| **"specifies"** | ProductDefinition specifies what a Reel is |
-| **"cost impact"** | MaterialCostVariance affects ProductDefinition costs |
+| **"produces"** | Asset produces Reels (paper production) |
+| **"has"** | Asset has Events (work orders, production events) |
+| **"monitors"** | Asset is monitored by MfgTimeSeries (PI tags) |
+| **"quality reports"** | Asset has RollQuality reports |
+| **"files"** | Asset has associated CogniteFiles (P&IDs, drawings) |
 | **"cut into"** | Reel is cut into Rolls |
-| **"tested by"** | Reel/Roll is tested by QualityResult |
-| **"bundled in"** | Roll is bundled in Package |
-| **"sourcePlant"** | Package ships FROM this Asset |
-| **"destinationPlant"** | Package ships TO this Asset |
+| **"events"** | Reel/Roll has production Events |
+| **"quality"** | Roll has quality test results |
 
 #### Property Types
 
@@ -220,7 +132,6 @@ erDiagram
 | `float` | Decimal number |
 | `timestamp` | Date and time |
 | `boolean` | True/False |
-| `json` | Structured data object |
 | `relation` | Link to another entity |
 
 ## Flow Diagram
@@ -228,22 +139,14 @@ erDiagram
 ```mermaid
 flowchart TB
     subgraph Core["📦 sylvamo_mfg_core (Production Model)"]
-        Asset["Asset<br/>45,900+ nodes<br/>SAP Functional Locations<br/>(33K Equipment via assetType)"]
+        Asset["Asset<br/>45,900+ nodes<br/>SAP Functional Locations<br/>(incl. 33K Equipment via assetType)"]
         Event["Event<br/>92,000+ nodes<br/>SAP, Proficy, PPV"]
         Material["Material<br/>58,000+ nodes<br/>SAP Materials"]
         MfgTimeSeries["MfgTimeSeries<br/>3,500+ tags<br/>PI Server"]
         Reel["Reel<br/>83,600+ batches<br/>Fabric PPR"]
         Roll["Roll<br/>2,300,000+ lots<br/>Fabric PPR"]
-        RollQuality["RollQuality<br/>750+ tests<br/>SharePoint/CDF Function"]
+        RollQuality["RollQuality<br/>~750 tests<br/>SharePoint/CDF Function"]
         CogniteFile["CogniteFile<br/>CDM Files"]
-    end
-
-    subgraph Extended["🔧 sylvamo_mfg_extended"]
-        WorkOrder["WorkOrder<br/>407,000+ orders<br/>SAP IW28"]
-        ProductionOrder["ProductionOrder<br/>SAP Production"]
-        ProductionEvent["ProductionEvent<br/>Proficy Events"]
-        CostEvent["CostEvent<br/>716 PPV records"]
-        Equipment["Equipment<br/>(as Asset subtypes)"]
     end
 
     Asset --> Reel
@@ -254,12 +157,6 @@ flowchart TB
     Roll --> RollQuality
     Reel --> Event
     Roll --> Event
-
-    Asset --> WorkOrder
-    Asset --> ProductionOrder
-    ProductionOrder --> ProductionEvent
-    ProductionOrder --> Reel
-    CostEvent --> Material
 ```
 
 ## Use Cases
@@ -291,68 +188,70 @@ flowchart TB
 
 ## Key Design Decisions
 
-Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
+Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026) and subsequent analysis:
 
-1. **CDM Asset with Equipment as subtypes** (assetType='Equipment') - no separate Equipment entity (ADR-001)
+1. **Equipment as Asset subtypes** via `assetType` classification (ADR-001) - QuickStart Pattern
 2. **Reel** as ISA Batch (paper reel = batch)
 3. **Roll** as ISA MaterialLot (sellable unit)
-4. **Package** entity for inter-plant traceability (Sylvamo extension)
-5. **Recipe** entity following ISA-88 (general, site, master, control types)
+4. **CDM Asset hierarchy** from SAP Functional Locations (9 levels)
+5. **RollQuality** linked to both Roll and Asset for quality traceability
 
-## Sprint 3 Plan (Current)
+> **[ADR-001: Asset/Equipment Modeling →](docs/reference/data-model/decisions/ADR-001-ASSET-EQUIPMENT.md)** | **[Full Changelog →](docs/reference/data-model/changelog/CHANGELOG-0001.md)**
+
+## Sprint 3 (Current)
 
 **Sprint Duration:** February 16 - March 2, 2026
 
-| Workstream | Focus | Status |
-|------------|-------|--------|
-| Contextualization | P&ID, PPR, PPV, Work Orders | In Progress |
-| Search Experience | End-to-end validation demo | Pending |
-| Data Quality | PI tags, Work Order ingestion | Pending |
-| Data Completeness | PPR tables, Fabric extractor | Pending |
+| Workstream | Focus |
+|------------|-------|
+| Contextualization | P&ID annotation, PPR/PPV data |
+| Data Quality | Reel/Roll scheduling, quality data |
+| Demos | CDF Industrial Tools, Atlas AI Agents |
 
-**Sprint 2 completed** February 13, 2026. Search Experience 6/9 done; UC2 Data Quality in investigation.
-
-**[See Full Sprint 3 Plan →](docs/internal/sprint-planning/SPRINT_3_PLAN.md)** | **[Sprint 2 (Archived) →](docs/deprecated/sprint-planning/SPRINT_2_PLAN.md)**
+Sprint 2 completed February 13, 2026. See [archive](docs/archive/2026-02-sprint2-completed/) for completed sprint artifacts.
 
 ## Documentation
 
 **[Full Documentation Index →](docs/README.md)**
 
-### Reference Documentation (Polished)
+### Reference Documentation
 
 | Document | Description |
 |----------|-------------|
-| [**MFG Core Data Model**](docs/reference/data-model/MFG_CORE_DATA_MODEL.md) | **CORRECTED** - 7 core views only, Quality Traceability use case |
-| [**MFG Core + PPV (Proposed)**](docs/reference/data-model/MFG_CORE_WITH_PPV.md) | **FOR ANVAR** - Proposed PPV integration into mfg_core |
-| [**Deprecated: MFG Core + Equipment**](docs/deprecated/data-model/MFG_CORE_WITH_EQUIPMENT.md) | Superseded by ADR-001 (Equipment as Asset subtypes) |
+| [**MFG Core Data Model**](docs/reference/data-model/MFG_CORE_DATA_MODEL.md) | 7 core views, Quality Traceability use case |
+| [**MFG Core + PPV (Proposed)**](docs/reference/data-model/MFG_CORE_WITH_PPV.md) | Proposed PPV integration into mfg_core |
 | [**MFG Extended Data Model**](docs/reference/data-model/MFG_EXTENDED_DATA_MODEL.md) | 8 extended views, PPV/Cost Analysis use case |
 | [**Data Model Specification**](docs/reference/data-model/DATA_MODEL_SPECIFICATION.md) | Complete spec with all containers, properties, and examples |
 | [**Guide for Stakeholders**](docs/reference/data-model/DATA_MODEL_FOR_STAKEHOLDERS.md) | Non-technical overview with flow diagrams and business examples |
-| [**Data Model Walkthrough**](docs/reference/data-model/DATA_MODEL_WALKTHROUGH.md) | Step-by-step example tracing paper from production to delivery |
-| [**Transformations**](docs/reference/data-model/TRANSFORMATIONS.md) | Complete transformation docs - 24 SQL transformations, data flow, examples |
-| [Data Model Diagram](docs/reference/data-model/SYLVAMO_MFG_DATA_MODEL_DIAGRAM.md) | Visual diagrams with Mermaid |
-| [**Appendix: sylvamo_mfg_core**](docs/reference/data-model/APPENDIX_MFG_CORE_MODEL.md) | CDM-integrated data model (Draft for Discussion) |
-| [**Architecture Decisions & Roadmap**](docs/reference/data-model/ARCHITECTURE_DECISIONS_AND_ROADMAP.md) | **Main doc** - ISA-95 alignment, 5 ADRs, roadmap, recommendations |
-| [**Extractors**](docs/reference/extractors/EXTRACTORS.md) | Extractor configurations and status (Fabric, PI, SharePoint, SQL) |
-| [**CI/CD Overview**](docs/reference/extractors/CICD_OVERVIEW.md) | CI/CD pipeline setup for CDF deployments (ADO, GitHub, GitLab) |
-| [**Data Pipeline & Sources**](docs/reference/extractors/DATA_PIPELINE_AND_SOURCES.md) | Data sources, transformations, and refresh schedules |
-| [**Use Cases & Queries**](docs/reference/use-cases/USE_CASES_AND_QUERIES.md) | Verified use case scenarios with real data query examples |
-| [Expert Scenarios](docs/reference/use-cases/USE_CASE_VALIDATION_EXPERT_SCENARIOS.md) | Industry use cases enabled by this model |
+| [**Transformations**](docs/reference/data-model/TRANSFORMATIONS.md) | SQL transformations, data flow, examples |
+| [**Architecture Decisions & Roadmap**](docs/reference/data-model/ARCHITECTURE_DECISIONS_AND_ROADMAP.md) | ISA-95 alignment, ADRs, roadmap |
+| [**Extractors**](docs/reference/extractors/EXTRACTORS.md) | Extractor configurations and status |
+| [**CI/CD Overview**](docs/reference/cicd/CICD_OVERVIEW.md) | CI/CD pipeline setup for CDF deployments |
+| [**Data Pipeline & Sources**](docs/reference/extractors/DATA_PIPELINE_AND_SOURCES.md) | Data sources, transformations, refresh schedules |
+| [**Code Change Workflow**](docs/reference/workflows/CODE_CHANGE_WORKFLOW.md) | End-to-end workflow: code changes, validation, Jira, changelog |
+| [**Use Cases & Queries**](docs/reference/use-cases/USE_CASES_AND_QUERIES.md) | Verified use case scenarios with real data |
 
-### Internal Working Documents
+### Architecture Decisions & Changelog
+
+| Document | Description |
+|----------|-------------|
+| [**ADR-001: Asset/Equipment**](docs/reference/data-model/decisions/ADR-001-ASSET-EQUIPMENT.md) | ISA-95 Equipment modeling as Asset subtypes |
+| [**Changelog**](docs/reference/data-model/changelog/CHANGELOG-0001.md) | Chronological record of data model changes |
+
+### Historical/Reference Documents
 
 | Document | Description |
 |----------|-------------|
 | [**Sprint 3 Plan**](docs/internal/sprint-planning/SPRINT_3_PLAN.md) | Current sprint - Contextualization, demos, data quality |
-| [Sprint 2 Plan (Archived)](docs/deprecated/sprint-planning/SPRINT_2_PLAN.md) | Sprint 2 completed Feb 13, 2026 |
 | [ISA Alignment](docs/reference/data-model/COGNITE_ISA_EXTENSION_AND_SYLVAMO_ALIGNMENT.md) | ISA-95/88 alignment analysis |
 | [Johan's Guidance](docs/reference/data-model/JOHAN_ISA95_GUIDANCE_SUMMARY.md) | Expert recommendations from Cognite |
+| [Sprint 2 Archive](docs/archive/2026-02-sprint2-completed/) | Completed sprint artifacts |
 
 ## Extractors
 
 | Extractor | Source | Status | Data Target |
 |-----------|--------|--------|-------------|
-| **Fabric Connector** | Microsoft Fabric Lakehouse | ✅ Running | `raw_ext_fabric_ppr`, `raw_ext_fabric_ppv` |
+| **Fabric Connector** | Microsoft Fabric Lakehouse | ✅ Running | `raw_ext_fabric_ppr`, `raw_ext_fabric_ppv`, `raw_ext_fabric_sapecc` |
 | **PI Extractor** | PI Server (3,500+ tags) | ✅ Running | Time Series, `raw_ext_pi` |
 | **SharePoint Extractor** | SharePoint Online | ✅ Running | `raw_ext_sharepoint` |
 | **SAP OData Extractor** | SAP Gateway | ✅ Running | `raw_ext_sap` |
@@ -364,10 +263,11 @@ All extractor-managed databases use the prefix `raw_ext_<extractor>_<source>`:
 
 | Database | Extractor | Description |
 |----------|-----------|-------------|
-| `raw_ext_fabric_ppr` | Fabric Connector | Paper Production Reporting (Reels, Rolls, Packages) |
+| `raw_ext_fabric_ppr` | Fabric Connector | Paper Production Reporting (Reels, Rolls) |
 | `raw_ext_fabric_ppv` | Fabric Connector | Purchase Price Variance / Cost data |
+| `raw_ext_fabric_sapecc` | Fabric Connector | SAP ECC data (Work Orders, Materials) |
 | `raw_ext_pi` | PI Extractor | Time series metadata |
-| `raw_ext_sap` | SAP OData | SAP master data |
+| `raw_ext_sap` | SAP OData | SAP master data (Functional Locations) |
 | `raw_ext_sql_proficy` | SQL Extractor | Proficy lab test results |
 | `raw_ext_sharepoint` | SharePoint Extractor | Documents and quality reports |
 
@@ -404,7 +304,6 @@ flowchart LR
         end
         subgraph Models["Data Models"]
             CORE["sylvamo_mfg_core<br/>7 views<br/>(Quality Traceability)"]
-            EXT["sylvamo_mfg_extended<br/>8 views<br/>(PPV/Cost Analysis)"]
         end
     end
 
@@ -421,7 +320,6 @@ flowchart LR
     R3 --> CORE
     R4 --> CORE
     TS --> CORE
-    R1 --> EXT
 ```
 
 ### RAW to Data Model Mapping
@@ -434,10 +332,6 @@ flowchart LR
 | PPR (via Fabric) | `raw_ext_fabric_ppr/ppr_hist_roll` | Roll | mfg_core |
 | SharePoint | `raw_ext_sharepoint/roll_quality` | RollQuality | mfg_core |
 | PI Server | Time Series API | MfgTimeSeries | mfg_core |
-| SAP Work Orders | `raw_ext_fabric_sapecc/sapecc_work_orders` | WorkOrder | mfg_extended |
-| SAP Production Orders | `raw_ext_fabric_ppr/*` | ProductionOrder | mfg_extended |
-| Proficy | `raw_ext_sql_proficy/*` | ProductionEvent | mfg_extended |
-| PPV (via Fabric) | `raw_ext_fabric_ppv/ppv_snapshot` | CostEvent | mfg_extended |
 
 **[See Full Data Pipeline Documentation →](docs/reference/extractors/DATA_PIPELINE_AND_SOURCES.md)** | **[Data Source Registry →](docs/reference/extractors/DATA_SOURCE_REGISTRY.md)**
 
@@ -454,7 +348,7 @@ CDF is deployed using the **Cognite Toolkit CLI** (`cdf`) through standard CI/CD
 | **Deploy Tool** | Cognite Toolkit CLI (`cdf`) |
 | **Package** | `cognite-toolkit` (pip) or Docker `cognite/toolkit:<version>` |
 | **Key Commands** | `cdf build`, `cdf deploy --dry-run`, `cdf deploy` |
-| **Platforms** | GitHub Actions, Azure DevOps, GitLab CI/CD |
+| **Platform** | Azure DevOps (SylvamoCorp) |
 
 ### CI/CD Flow
 
@@ -481,15 +375,15 @@ Pipelines authenticate via **OAuth2 client credentials** (Entra ID service princ
 | Environment Variable | Description |
 |---------------------|-------------|
 | `LOGIN_FLOW` | `client_credentials` |
-| `CDF_CLUSTER` | e.g., `westeurope-1` |
-| `CDF_PROJECT` | e.g., `sylvamo-dev` |
+| `CDF_CLUSTER` | `az-eastus-1` |
+| `CDF_PROJECT` | `sylvamo-dev` |
 | `IDP_CLIENT_ID` | Service Principal App ID |
 | `IDP_CLIENT_SECRET` | Service Principal Secret |
 | `IDP_TENANT_ID` | Entra ID Tenant |
 
 Secrets stored in **project-level Variable Groups** in the SylvamoCorp ADO project, injected as env vars at runtime.
 
-**[See Full CI/CD Documentation →](docs/reference/extractors/CICD_OVERVIEW.md)**
+**[See Full CI/CD Documentation →](docs/reference/cicd/CICD_OVERVIEW.md)** | **[Code Change Workflow →](docs/reference/workflows/CODE_CHANGE_WORKFLOW.md)**
 
 ## Real Data Statistics
 
@@ -505,32 +399,18 @@ Secrets stored in **project-level Variable Groups** in the SylvamoCorp ADO proje
 | MfgTimeSeries | 3,500+ | PI Server (3 servers) | ✅ |
 | Reel | 83,600+ | `raw_ext_fabric_ppr/ppr_hist_reel` | ✅ |
 | Roll | 2,300,000+ | `raw_ext_fabric_ppr/ppr_hist_roll` | ✅ |
-| RollQuality | 750+ | SharePoint + CDF Function (349+ linked to Asset) | ✅ |
+| RollQuality | ~750 | `raw_ext_sharepoint/roll_quality` + CDF Function (349+ linked to Asset) | ✅ |
 | CogniteFile | 97+ | CDF Files (P&IDs, drawings) | ✅ |
 | **TOTAL** | **450,000+** | Real production data | |
 
 > **ISA-95 Equipment Modeling (ADR-001):** Equipment is modeled as Asset subtypes with `assetType='Equipment'` (33,072 leaf-level assets). See [ADR-001-ASSET-EQUIPMENT.md](docs/reference/data-model/decisions/ADR-001-ASSET-EQUIPMENT.md).
 
-### sylvamo_mfg_extended (Extended Model)
-
-| Entity | Count | Source | Status |
-|--------|-------|--------|--------|
-| WorkOrder | 10,000+ | SAP IW28 via Fabric (407K in RAW) | ✅ |
-| ProductionOrder | 10,000+ | SAP Production Orders | ✅ |
-| ProductionEvent | 10,000+ | Proficy GBDB | ✅ |
-| CostEvent | 716 | `raw_ext_fabric_ppv/ppv_snapshot` | ✅ |
-| MaintenanceActivity | 10,000+ | Derived from WorkOrder | ✅ |
-| Equipment | 0 | Not used - Equipment modeled as Asset subtypes (see ADR-001) | ℹ️ |
-| Notification | 0 | Pending - need SAP IW29 | ❌ |
-| Operation | 0 | Pending - need AUFK+AFKO+AFVC join | ❌ |
-| **TOTAL** | **50,000+** | Extended activities | |
-
-### Data Model Comparison
+### Data Model Summary
 
 | Model | Status | Views | Total Instances | Purpose |
 |-------|--------|-------|-----------------|---------|
-| `sylvamo_mfg_core` | **Production** | 8 | 450,000+ | Core entities (Asset, Reel, Roll, Material) |
-| `sylvamo_mfg_extended` | **Production** | 8 | 50,000+ | Activities (WorkOrder, ProductionOrder, CostEvent) |
+| `sylvamo_mfg_core` | **Production** | 7 | 450,000+ | Core entities (Asset, Reel, Roll, Material, Quality) |
+| `sylvamo_mfg_extended` | Secondary | 8 | 50,000+ | Activities (WorkOrder, ProductionOrder, CostEvent) |
 | `sylvamo_mfg` | **Deprecated** | 0 | 0 | Legacy POC - no longer in use |
 
 ## GraphQL Query Examples
@@ -556,49 +436,32 @@ Secrets stored in **project-level Variable Groups** in the SylvamoCorp ADO proje
 }
 ```
 
-### Query Work Orders with Operations (mfg_extended)
+### Query Assets by Equipment Type
 
 ```graphql
 {
-  listWorkOrder(first: 10) {
+  listAsset(filter: { assetType: { eq: "Equipment" } }, first: 10) {
     items {
       externalId
-      orderNumber
-      description
-      status
-      asset { name }
-      operations {
-        items {
-          operationNumber
-          description
-        }
-      }
+      name
+      assetType
+      parent { name }
     }
   }
 }
 ```
 
-### Cross-Model Query: Production Order → Reel → Roll Quality
+### Query Roll Quality with Asset Link
 
 ```graphql
 {
-  listProductionOrder(first: 5) {
+  listRollQuality(first: 10) {
     items {
-      orderNumber
-      reel {
-        reelNumber
-        rolls(first: 3) {
-          items {
-            rollNumber
-            qualityResults {
-              items {
-                defectCode
-                isRejected
-              }
-            }
-          }
-        }
-      }
+      externalId
+      defectCode
+      isRejected
+      roll { rollNumber }
+      asset { name assetType }
     }
   }
 }
@@ -610,5 +473,5 @@ Internal use only - Cognite/Sylvamo
 
 ---
 
-*Updated: February 2026*  
+*Updated: February 2026*
 *Verified against CDF sylvamo-dev project*

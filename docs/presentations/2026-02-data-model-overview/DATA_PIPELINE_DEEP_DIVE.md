@@ -1,3 +1,5 @@
+> **Note:** These materials were prepared for the Sprint 2 demo (Feb 2026) and may contain outdated statistics. Verify current data in CDF.
+
 # Sylvamo Data Pipeline Deep Dive
 
 > **Purpose:** Detailed technical reference for all data flowing into CDF  

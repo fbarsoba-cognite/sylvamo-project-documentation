@@ -1,5 +1,8 @@
 # CI/CD Hands-On Learnings
 
+> **Training materials:** Learnings captured from Sprint 2 (February 2026) pipeline setup. Content remains relevant.
+
+
 **Real-world implementation insights from Sylvamo pipeline setup (SVQS-171)**
 
 This document captures learnings from the actual setup of CI/CD pipelines for Cognite Data Fusion (CDF) at Sylvamo. Use these insights when implementing or troubleshooting your own pipelines.

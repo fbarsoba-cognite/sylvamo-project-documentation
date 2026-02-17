@@ -1,3 +1,5 @@
+> **ARCHIVED - Sprint 2 Completed (Feb 2-13, 2026).** This is a historical record. See [Sprint Planning README](../../internal/sprint-planning/README.md) for current sprint.
+
 # Sprint 2 User Story Mapping
 
 **Updated:** February 4, 2026  

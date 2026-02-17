@@ -1,3 +1,5 @@
+> **Note:** These materials were prepared for the Sprint 2 demo (Feb 2026) and may contain outdated statistics. Verify current data in CDF.
+
 # Sylvamo CDF Data Model - Speaker Notes
 
 **Total Duration:** 60 minutes  
@@ -894,7 +896,8 @@ Use this GraphQL query to demonstrate full end-to-end traceability:
 
 **Internal Working Documents:**
 - [Sprint 3 Plan](../../../internal/sprint-planning/SPRINT_3_PLAN.md)
-- [Sprint 2 Plan (Archived)](../../../deprecated/sprint-planning/SPRINT_2_PLAN.md)
+- [Sprint 2 Plan](../../../archive/2026-02-sprint2-completed/SPRINT_2_PLAN.md)
+- [Sprint 2 Story Mapping](../../../archive/2026-02-sprint2-completed/SPRINT_2_STORY_MAPPING.md)
 
 ---
 

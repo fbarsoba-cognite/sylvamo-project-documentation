@@ -12,6 +12,8 @@ Johan Stabekk, with 6 years of paper & pulp plant experience and 3.5 years at Co
 
 **Key Message:** Start simple with what fits, extend later. Use the Core Data Model (CDM) for organizational hierarchy and extend with ISA concepts only where they add value.
 
+> **ADR-001 Update (Feb 2026):** Johan recommended Equipment as a separate CDM entity. We adopted the QuickStart pattern instead: Equipment is modeled as Asset nodes with `assetType='Equipment'` rather than a separate Equipment view. See [ADR-001](decisions/ADR-001-ASSET-EQUIPMENT.md).
+
 ---
 
 ## 1. ISA-95/ISA-88 Overview

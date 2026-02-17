@@ -2,7 +2,7 @@
 
 > **Purpose:** Single source of truth for tracking all data flowing into CDF — from source systems through extractors, RAW tables, transformations, and into the data model.
 > **Audience:** Cognite team + Sylvamo stakeholders (Cam, Valmir)
-> **Last Updated:** 2026-02-17 (v3.1 — Sprint 2 completed, Sprint 3 active. Equipment→assetType on Asset. Fabric PPR deployed: hybrid service + Python 64-bit + Task Scheduler)
+> **Last Updated:** 2026-02-11 (v3 — Fabric PPR deployed: hybrid service + Python 64-bit + Task Scheduler)
 > **Jira Ticket:** [SVQS-160](https://cognitedata.atlassian.net/browse/SVQS-160)
 
 ---
@@ -217,7 +217,7 @@ All 9 PPR tables are now deployed via a single consolidated script `Setup-Fabric
 │  Schema: sylvamo_mfg_ext_schema | Instances: sylvamo_mfg_ext_instances  │
 │                                                                          │
 │  Views: WorkOrder, ProductionOrder, ProductionEvent, CostEvent,         │
-│         Equipment (→assetType on Asset), MaintenanceActivity, Notification, Operation │
+│         Equipment, MaintenanceActivity, Notification, Operation         │
 └──────────────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────────────┐
@@ -251,7 +251,7 @@ All 9 PPR tables are now deployed via a single consolidated script `Setup-Fabric
 | mfg_ext | ProductionOrder | `populate_ProductionOrder` | `raw_ext_sap.production_orders` | ✅ |
 | mfg_ext | ProductionEvent | `populate_ProductionEvent` | `raw_ext_sql_proficy.events_tests` | ✅ |
 | mfg_ext | CostEvent | `populate_CostEvent` | `raw_ext_fabric_ppv.ppv_snapshot` | ✅ |
-| mfg_ext | Equipment | *(deprecated)* | Now modeled as assetType on Asset | — |
+| mfg_ext | Equipment | ❌ No transformation | ❌ No source identified | ❌ |
 | mfg_ext | MaintenanceActivity | ❌ No transformation | ❌ No source identified | ❌ |
 | mfg_ext | Notification | ❌ No transformation | ❌ Valmir to provide | ❌ |
 | mfg_ext | Operation | ❌ No transformation | 🔶 `sapecc_afvc` being extracted | 🔶 Data almost ready |
@@ -286,7 +286,7 @@ All 9 PPR tables are now deployed via a single consolidated script `Setup-Fabric
 
 | # | Data Model | View | Required Data Source | Status | Owner | Notes |
 |---|-----------|------|---------------------|--------|-------|-------|
-| 1 | mfg_ext | Equipment | *(deprecated)* — now assetType on Asset | — | — | Equipment removed as separate view |
+| 1 | mfg_ext | Equipment | SAP equipment master | ❌ No source | Valmir/Cam | May come from IFLOT in Fabric? |
 | 2 | mfg_ext | MaintenanceActivity | SAP PM data | ❌ No source | Valmir/Cam | Related to work orders? |
 | 3 | mfg_ext | Notification | SAP IW29 (or similar) | ❌ No source | Valmir | Same data as work orders? |
 | 4 | mfg_ext | Operation | `sapecc_afvc` (AUFK+AFKO+AFVC join) | 🔶 **Data almost ready** | Cognite | AFVC extraction in progress, join transform needed |
@@ -445,7 +445,7 @@ All 9 PPR tables are now deployed via a single consolidated script `Setup-Fabric
 | Q9 | Can you provide **source row counts** for validation? | Need to validate RAW completeness for running extractors | High | Cam/Valmir | 🔲 Open |
 | Q10 | When will AFVC extraction complete and is the data from **DEV** workspace acceptable? | AUFK/AFKO done from DEV. Will we need to re-extract from PROD? | High | Valmir | 🔲 Open |
 | Q11 | Which **SAP client** is correct: `100` or `300`? | OData config says 100, earlier docs say 300 | Medium | SAP team | 🔲 Open |
-| Q12 | Is there an **IFLOT** (Functional Locations) table in Fabric lakehouses? | Equipment now assetType on Asset. IFLOT may enrich Asset. | Medium | Valmir | 🔲 Open |
+| Q12 | Is there an **IFLOT** (Functional Locations) table in Fabric lakehouses? | Needed for Equipment view. Config has commented TODO | Medium | Valmir | 🔲 Open |
 
 ### 9.2 Internal Action Items
 
@@ -553,7 +553,7 @@ All 9 PPR tables are now deployed via a single consolidated script `Setup-Fabric
 | A6 | **What should map to Recipe, ProductDefinition, QualityResult, LabTest, Measurement in `mfg_data`?** | Sylvamo | 5 views in the data model with no defined data source | "We have candidates: `ppr_hist_blend` → Recipe? `samples`/`tests` → LabTest? `ppr_hist_roll_quality` → QualityResult? Help us confirm the mappings." |
 | A7 | **Can you provide source row counts so we can validate extraction completeness?** | Cam/Valmir | We need to confirm RAW data matches source to trust the pipeline | "For each Fabric table and SAP endpoint, what's the expected row count? We'll compare against what landed in CDF RAW." |
 | A8 | **Is `s519pip1` the Sumter PI server?** | Cam | PI server S519 — site mapping unclear. Data reported as "missing" | "We have 3 PI servers: S769PI01 (Eastover), S769PI03 (PM), S519PIP1 (?). Is S519 = Sumter? Is the data complete?" |
-| A9 | **Is there an IFLOT (Functional Locations) table in Fabric?** | Valmir | Equipment now modeled as assetType on Asset. IFLOT may enrich. | "Equipment removed as separate view. Is IFLOT needed for Asset enrichment?" |
+| A9 | **Is there an IFLOT (Functional Locations) table in Fabric?** | Valmir | Needed for Equipment view in mfg_ext — currently empty | "We need SAP functional location / equipment master data. Is there an IFLOT or equipment table in any lakehouse?" |
 | A10 | **Which SAP client is correct: `100` or `300`?** | SAP team | OData config uses 100, older docs reference 300 | Verify before expanding OData endpoints |
 
 ---
@@ -562,7 +562,7 @@ All 9 PPR tables are now deployed via a single consolidated script `Setup-Fabric
 
 | # | What to Build | Depends On | Effort | Priority |
 |---|--------------|-----------|--------|----------|
-| B1 | **AUFK+AFKO+AFVC join transformation** → `Operation` view | AFVC extraction complete (F4 above) | Medium | High — sprint 3 (Sprint 2 completed) |
+| B1 | **AUFK+AFKO+AFVC join transformation** → `Operation` view | AFVC extraction complete (F4 above) | Medium | High — sprint 2 goal |
 | B2 | **Package transformation** (`ppr_hist_package` → `Package` view) | F3 — re-extract to correct DB | Medium | Medium |
 | B3 | **Validation script** — compare RAW row counts vs Fabric source and vs model instance counts | A7 — need expected counts from Sylvamo | Medium | High |
 | B4 | **File metadata transformation** — enrich CogniteFile with SharePoint metadata | Clarify `documents` table "duplicate" flag | Small | Medium |
@@ -601,56 +601,5 @@ All 9 PPR tables are now deployed via a single consolidated script `Setup-Fabric
 ```
 
 ---
-
-
-
----
-
-## Codebase Reference (sylvamo/modules/sourcesystem)
-
-> **Last synced:** 2026-02-17. The following modules and extraction pipelines are defined in the codebase.
-
-### Extraction Pipelines (`cdf_extractor_pipelines`)
-
-| File | externalId | RAW Database |
-|------|------------|--------------|
-| pi_s769pi03.ExtractionPipeline.yaml | ep_pi_s769pi03 | raw_ext_pi |
-| pi_s769pi01.ExtractionPipeline.yaml | ep_pi_s769pi01 | raw_ext_pi |
-| pi_s519pip1.ExtractionPipeline.yaml | ep_pi_s519pip1 | raw_ext_pi |
-| fabric_sapecc_daily.ExtractionPipeline.yaml | ep_fabric_sapecc_daily | raw_ext_fabric_sapecc |
-| fabric_ppv_daily.ExtractionPipeline.yaml | ep_fabric_ppv_daily | raw_ext_fabric_ppv |
-| fabric_ppr_hourly.ExtractionPipeline.yaml | ep_fabric_ppr_hourly | raw_ext_fabric_ppr |
-| fabric_ppr_hist_reel.ExtractionPipeline.yaml | ep_fabric_ppr_hist_reel | raw_ext_fabric_ppr |
-| fabric_ppr_daily.ExtractionPipeline.yaml | ep_fabric_ppr_daily | raw_ext_fabric_ppr |
-| file_extractor.ExtractionPipeline.yaml | ep_file_extractor | raw_ext_sharepoint |
-| db_extractor.ExtractionPipeline.yaml | ep_db_extractor | raw_ext_sap, raw_ext_sql_proficy |
-
-### Source System Modules (raw tables + transformations)
-
-| Module | Raw Tables | Notes |
-|--------|------------|-------|
-| cdf_pi | timeseries_metadata | Parameterized rawSourceDatabase |
-| cdf_sharepoint | files_metadata | Transforms to CogniteFile (PDFs) |
-| cdf_sap_events | workorder, workitem, workpackage, worktask | Parameterized rawSourceDatabase; SAP PM style |
-| cdf_sap_assets | dump | Parameterized rawSourceDatabase; equipment/asset hierarchy |
-
-### Transformation Sources (mfg_core, mfg_extended)
-
-| Transformation | RAW Source |
-|----------------|------------|
-| populate_Reel | raw_ext_fabric_ppr.ppr_hist_reel |
-| populate_Roll | raw_ext_fabric_ppr.ppr_hist_roll |
-| populate_RollQuality | raw_ext_sharepoint.roll_quality |
-| populate_Event_WorkOrders | raw_ext_fabric_sapecc.sapecc_work_orders |
-| populate_Event_PPV | raw_ext_fabric_ppv.ppv_snapshot |
-| populate_Event_ProductionOrders | raw_ext_sap.production_orders |
-| populate_WorkOrder | raw_ext_fabric_sapecc.sapecc_work_orders |
-| populate_ProductionEvent | raw_ext_sql_proficy.events_tests |
-| populate_CostEvent | raw_ext_fabric_ppv.ppv_snapshot |
-| populate_Operation | raw_ext_fabric_sapecc.sapecc_aufk, sapecc_afko, sapecc_afvc |
-| populate_Asset | raw_ext_sap.sap_floc_eastover, sap_floc_sumter |
-| populate_Material | raw_ext_sap.materials |
-
-**Note:** `fabric_ppv_daily` pipeline extracts `purchase_order_gr_na`; transformations use `ppv_snapshot`. Verify which table is populated in production.
 
 *Document version: 4.0 — Updated 2026-02-11. Fabric PPR deployment complete: hybrid service + Python 64-bit + Task Scheduler via consolidated Setup-FabricExtractors.ps1. DB naming resolved. OOM resolved with custom 64-bit Python extractor. Proficy owned by Max Tollefsen.*

@@ -1,3 +1,5 @@
+> **Note:** These materials were prepared for the Sprint 2 demo (Feb 2026) and may contain outdated statistics. Verify current data in CDF.
+
 # Sylvamo CDF Data Model - Presentation Materials
 
 **Presentation Title:** Sylvamo Manufacturing Data Model  
@@ -247,7 +249,8 @@ When presenting, emphasize:
 
 ### Sprint Planning
 - [Sprint 3 Plan](../../internal/sprint-planning/SPRINT_3_PLAN.md) - Current sprint work
-- [Sprint 2 Plan (Archived)](../../deprecated/sprint-planning/SPRINT_2_PLAN.md)
+- [Sprint 2 Plan](../../archive/2026-02-sprint2-completed/SPRINT_2_PLAN.md) - Archived Sprint 2 (Feb 2–13, 2026)
+- [Story Mapping](../../archive/2026-02-sprint2-completed/SPRINT_2_STORY_MAPPING.md) - Jira story mapping
 
 ---
 
