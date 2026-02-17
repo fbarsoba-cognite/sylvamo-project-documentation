@@ -214,39 +214,38 @@ Sprint 2 completed February 13, 2026. See [archive](docs/archive/2026-02-sprint2
 
 **[Full Documentation Index →](docs/README.md)**
 
-### Reference Documentation
+### Reference Documentation (by topic)
 
-| Document | Description |
-|----------|-------------|
-| [**MFG Core Data Model**](docs/reference/data-model/MFG_CORE_DATA_MODEL.md) | 7 core views, Quality Traceability use case |
-| [**MFG Core + PPV (Proposed)**](docs/reference/data-model/MFG_CORE_WITH_PPV.md) | Proposed PPV integration into mfg_core |
-| [**MFG Extended Data Model**](docs/reference/data-model/MFG_EXTENDED_DATA_MODEL.md) | 8 extended views, PPV/Cost Analysis use case |
-| [**CDF Pipeline Overview**](docs/reference/CDF_PIPELINE_OVERVIEW.md) | End-to-end: extractors, RAW, transformations, CDF functions |
-| [**Data Model Specification**](docs/reference/data-model/DATA_MODEL_SPECIFICATION.md) | Complete spec with all containers, properties, and examples |
-| [**Guide for Stakeholders**](docs/reference/data-model/DATA_MODEL_FOR_STAKEHOLDERS.md) | Non-technical overview with flow diagrams and business examples |
-| [**Transformations**](docs/reference/data-model/TRANSFORMATIONS.md) | SQL transformations, data flow, examples |
-| [**Architecture Decisions & Roadmap**](docs/reference/data-model/ARCHITECTURE_DECISIONS_AND_ROADMAP.md) | ISA-95 alignment, ADRs, roadmap |
-| [**Extractors**](docs/reference/extractors/EXTRACTORS.md) | Extractor configurations and status |
-| [**CI/CD Overview**](docs/reference/cicd/CICD_OVERVIEW.md) | CI/CD pipeline setup for CDF deployments |
-| [**Data Pipeline & Sources**](docs/reference/extractors/DATA_PIPELINE_AND_SOURCES.md) | Data sources, transformations, refresh schedules |
-| [**Code Change Workflow**](docs/reference/workflows/CODE_CHANGE_WORKFLOW.md) | End-to-end workflow: code changes, validation, Jira, changelog |
-| [**Use Cases & Queries**](docs/reference/use-cases/USE_CASES_AND_QUERIES.md) | Verified use case scenarios with real data |
+**📊 Data & Pipeline**
+- [**CDF Pipeline Overview**](docs/reference/CDF_PIPELINE_OVERVIEW.md) — End-to-end: extractors, RAW, transformations, CDF functions
+- **Data Model**
+  - [MFG Core Data Model](docs/reference/data-model/MFG_CORE_DATA_MODEL.md) — 7 core views, Quality Traceability use case
+  - [MFG Core + PPV (Proposed)](docs/reference/data-model/MFG_CORE_WITH_PPV.md) — Proposed PPV integration into mfg_core
+  - [MFG Extended Data Model](docs/reference/data-model/MFG_EXTENDED_DATA_MODEL.md) — 8 extended views, PPV/Cost Analysis use case
+  - [Data Model Specification](docs/reference/data-model/DATA_MODEL_SPECIFICATION.md) — Complete spec with all containers, properties, and examples
+  - [Guide for Stakeholders](docs/reference/data-model/DATA_MODEL_FOR_STAKEHOLDERS.md) — Non-technical overview with flow diagrams and business examples
+  - [Transformations](docs/reference/data-model/TRANSFORMATIONS.md) — SQL transformations, data flow, examples
+- **Extractors & Sources**
+  - [Extractors](docs/reference/extractors/EXTRACTORS.md) — Extractor configurations and status
+  - [Data Pipeline & Sources](docs/reference/extractors/DATA_PIPELINE_AND_SOURCES.md) — Data sources, transformations, refresh schedules
 
-### Architecture Decisions & Changelog
+**🏗️ Architecture & Governance**
+- [Architecture Decisions & Roadmap](docs/reference/data-model/ARCHITECTURE_DECISIONS_AND_ROADMAP.md) — ISA-95 alignment, ADRs, roadmap
+- [ADR-001: Asset/Equipment](docs/reference/data-model/decisions/ADR-001-ASSET-EQUIPMENT.md) — ISA-95 Equipment modeling as Asset subtypes
+- [Changelog](docs/reference/data-model/changelog/CHANGELOG-0001.md) — Chronological record of data model changes
 
-| Document | Description |
-|----------|-------------|
-| [**ADR-001: Asset/Equipment**](docs/reference/data-model/decisions/ADR-001-ASSET-EQUIPMENT.md) | ISA-95 Equipment modeling as Asset subtypes |
-| [**Changelog**](docs/reference/data-model/changelog/CHANGELOG-0001.md) | Chronological record of data model changes |
+**🔧 Operations**
+- [CI/CD Overview](docs/reference/cicd/CICD_OVERVIEW.md) — CI/CD pipeline setup for CDF deployments
+- [Code Change Workflow](docs/reference/workflows/CODE_CHANGE_WORKFLOW.md) — End-to-end: code changes, validation, Jira, changelog
 
-### Historical/Reference Documents
+**📋 Use Cases**
+- [Use Cases & Queries](docs/reference/use-cases/USE_CASES_AND_QUERIES.md) — Verified use case scenarios with real data
 
-| Document | Description |
-|----------|-------------|
-| [**Sprint 3 Plan**](docs/internal/sprint-planning/SPRINT_3_PLAN.md) | Current sprint - Contextualization, demos, data quality |
-| [ISA Alignment](docs/reference/data-model/COGNITE_ISA_EXTENSION_AND_SYLVAMO_ALIGNMENT.md) | ISA-95/88 alignment analysis |
-| [Johan's Guidance](docs/reference/data-model/JOHAN_ISA95_GUIDANCE_SUMMARY.md) | Expert recommendations from Cognite |
-| [Sprint 2 Archive](docs/archive/2026-02-sprint2-completed/) | Completed sprint artifacts |
+**📚 Planning & Reference**
+- [Sprint 3 Plan](docs/internal/sprint-planning/SPRINT_3_PLAN.md) — Current sprint - Contextualization, demos, data quality
+- [Sprint 2 Archive](docs/archive/2026-02-sprint2-completed/) — Completed sprint artifacts
+- [ISA Alignment](docs/reference/data-model/COGNITE_ISA_EXTENSION_AND_SYLVAMO_ALIGNMENT.md) — ISA-95/88 alignment analysis
+- [Johan's Guidance](docs/reference/data-model/JOHAN_ISA95_GUIDANCE_SUMMARY.md) — Expert recommendations from Cognite
 
 ## Extractors
 
