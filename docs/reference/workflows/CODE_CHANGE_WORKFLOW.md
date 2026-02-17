@@ -221,6 +221,30 @@ For changes involving **data model decisions, architectural choices, or design p
    - Add ADR link to Jira ticket description
    - Reference ADR in PR description
 
+### 7.3 Sprint Documentation (when closing a Jira ticket)
+
+**When closing a Jira ticket (status → Done), update the sprint documentation** in sylvamo-project-documentation. The location depends on the **Jira Sprint** the ticket belongs to:
+
+| Jira Sprint | Documentation Location |
+|-------------|------------------------|
+| **Current sprint** (e.g., Sprint 3) | `docs/internal/sprint-planning/SPRINT_N_PLAN.md` — Update story status in the plan |
+| **Completed sprint** (e.g., Sprint 2) | `docs/archive/YYYY-MM-sprintN-completed/` — Add/update in COMPLETED_STORIES.md, SPRINT_N_STORY_MAPPING.md |
+
+**Steps when closing a ticket:**
+1. **Get the Jira Sprint** from the ticket (e.g., "Sprint 2", "Sprint 3")
+2. **Determine the folder:**
+   - Current sprint → `docs/internal/sprint-planning/SPRINT_N_PLAN.md`
+   - Completed sprint → `docs/archive/YYYY-MM-sprintN-completed/` (e.g., `2026-02-sprint2-completed`)
+3. **Update the right files:**
+   - Add the story to COMPLETED_STORIES.md (if archive exists)
+   - Update SPRINT_N_STORY_MAPPING.md status to Done
+   - Update README.md completed stories table if present
+4. **Archive folder naming:** `docs/archive/YYYY-MM-sprintN-completed` — e.g., Sprint 3 completed in Mar 2026 → `docs/archive/2026-03-sprint3-completed`
+
+**Sprint mapping (reference):**
+- Sprint 2 (Feb 2–13, 2026) → `docs/archive/2026-02-sprint2-completed/`
+- Sprint 3 (Feb 16 – Mar 2, 2026) → `docs/internal/sprint-planning/SPRINT_3_PLAN.md` (current) or `docs/archive/2026-03-sprint3-completed/` when done
+
 ## Jira API Details
 - Base URL: https://cognitedata.atlassian.net
 - Project Key: SVQS
