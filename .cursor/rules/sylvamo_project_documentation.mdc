@@ -1,0 +1,60 @@
+---
+title: Sylvamo Project Documentation
+description: Canonical docs rule — where to edit, what to avoid, content routing, ALWAYS push
+type: Always
+globs: 
+alwaysApply: true
+---
+
+# Sylvamo Project Documentation (Canonical Rule)
+
+> **This is the canonical rule set.** All Sylvamo projects share rules from sylvamo-project-documentation/.cursor/rules/.  
+> **Related:** [@code_change_workflow](.cursor/rules/code_change_workflow.mdc) | [@git-workflow](.cursor/rules/git-workflow.mdc)
+
+## Canonical Location
+
+**All docs must be edited in sylvamo-project-documentation:**
+
+- **Repo:** https://github.com/fbarsoba-cognite/sylvamo-project-documentation
+- **Path:** ../sylvamo-project-documentation (sibling to sylvamo workspace)
+
+## Do NOT Edit
+
+- github-docs-clone/ (inside the sylvamo ADO repo)
+- Any other clone or copy of the docs repo
+
+## Content Routing
+
+When adding or updating docs, use this mapping:
+
+| Content Type | Destination |
+|--------------|-------------|
+| Data model, transformations, PPV | docs/reference/data-model/ |
+| Extractors, data sources | docs/reference/extractors/ |
+| Architecture, ADRs, changelog | docs/reference/data-model/decisions/, changelog/ |
+| CI/CD | docs/reference/cicd/ |
+| Files, P&ID, contextualization | docs/reference/files/ |
+| Use cases, workflows | docs/reference/use-cases/, docs/reference/workflows/ |
+| Current sprint plans | docs/internal/sprint-planning/ |
+| Completed sprints | docs/archive/YYYY-MM-sprintN-completed/ |
+| Deprecated designs | docs/archive/YYYY-MM-deprecated/ |
+| Presentations | docs/presentations/ |
+
+## Workflow
+
+1. Choose the destination from the table above.
+2. Update docs/README.md and the root README.md in the matching topic group.
+3. Edit only in the sylvamo-project-documentation worktree.
+4. If edits were made in github-docs-clone or elsewhere, revert them.
+
+## ALWAYS Push After Making Changes
+
+**After editing any file in sylvamo-project-documentation, commit and push to GitHub.**
+
+```bash
+cd ../sylvamo-project-documentation
+git add <changed-files>
+git commit -m "SVQS-XXX: Brief description"
+git pull --rebase
+git push
+```

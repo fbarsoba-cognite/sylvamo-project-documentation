@@ -1,0 +1,72 @@
+---
+title: Cognite Data Fusion Client Usage
+description: Always use the reusable Cognite client utility when working with Cognite Data Fusion
+alwaysApply: true
+---
+
+# Cognite Data Fusion Client Usage
+
+> **Related rules:** [@code_change_workflow](.cursor/rules/code_change_workflow.mdc) (credentials, env)
+
+## Credentials Location
+
+**All CDF and project credentials are stored in the main worktree `.env` file:**
+
+```
+/Users/fernando.barsoba/Library/CloudStorage/OneDrive-CogniteAS/Sylvamo-Code/sylvamo/.env
+```
+
+**ALWAYS check this file FIRST** before writing any script that connects to CDF, Jira, or any external service. The `.env` contains:
+- `CDF_PROJECT`, `CDF_CLUSTER`, `CDF_URL` -- CDF connection
+- `IDP_CLIENT_ID`, `IDP_CLIENT_SECRET`, `IDP_TENANT_ID`, `IDP_TOKEN_URL` -- OAuth credentials
+- `JIRA_EMAIL`, `JIRA_API_TOKEN` -- Jira API access
+- `SHAREPOINT_*` -- SharePoint credentials
+
+**Do NOT hardcode credentials in scripts.** Read them from the `.env` file or pass them as environment variables.
+
+## Client Creation
+
+When writing Python scripts that interact with CDF:
+
+```python
+import os
+
+# Load credentials from the main worktree .env
+ENV_PATH = "/Users/fernando.barsoba/Library/CloudStorage/OneDrive-CogniteAS/Sylvamo-Code/sylvamo/.env"
+
+def load_env(path=ENV_PATH):
+    """Load .env file into os.environ."""
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, _, val = line.partition("=")
+                os.environ[key.strip()] = val.strip()
+
+load_env()
+
+from cognite.client import CogniteClient, ClientConfig
+from cognite.client.credentials import OAuthClientCredentials
+
+creds = OAuthClientCredentials(
+    token_url=os.environ["IDP_TOKEN_URL"],
+    client_id=os.environ["IDP_CLIENT_ID"],
+    client_secret=os.environ["IDP_CLIENT_SECRET"],
+    scopes=[f'{os.environ["CDF_URL"]}/.default'],
+)
+client = CogniteClient(ClientConfig(
+    client_name="my-script",
+    project=os.environ["CDF_PROJECT"],
+    credentials=creds,
+    base_url=os.environ["CDF_URL"],
+))
+```
+
+## If `sylvamo.cdf_client` utility exists
+
+Prefer importing and using `get_cognite_client()` from `sylvamo.cdf_client` instead of creating clients directly. The utility handles OAuth, configuration, and caching automatically.
+
+```python
+from sylvamo.cdf_client import get_cognite_client
+client = get_cognite_client(service_name="my-service")
+```

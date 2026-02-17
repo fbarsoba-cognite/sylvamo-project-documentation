@@ -1,0 +1,25 @@
+---
+title: Project Scope - mfg_core Default
+description: All changes target sylvamo mfg_core model unless explicitly stated otherwise
+type: Always
+globs: 
+alwaysApply: true
+---
+
+# Default Scope: mfg_core
+
+> **Related rules:** [@code_change_workflow](.cursor/rules/code_change_workflow.mdc) | [@sylvamo_project_documentation](.cursor/rules/sylvamo_project_documentation.mdc)
+
+All code changes, transformations, schedules, and data model modifications
+target the **sylvamo_mfg_core** model by default.
+
+- Schema space: `sylvamo_mfg_core_schema`
+- Instance space: `sylvamo_mfg_core_instances`
+- Module path: `sylvamo/modules/mfg_core/`
+- Jira project: SVQS
+
+Do NOT modify files under `sylvamo/modules/mfg_extended/` unless the user
+explicitly requests work on the extended model.
+
+When the user says "transformation," "schedule," "view," or "data model"
+without specifying a module, assume **mfg_core**.

@@ -1,0 +1,31 @@
+---
+description: Git commit and push conventions for this project
+alwaysApply: true
+---
+
+# Git Workflow
+
+> **Related rules:** [@code_change_workflow](.cursor/rules/code_change_workflow.mdc) | [@sylvamo_project_documentation](.cursor/rules/sylvamo_project_documentation.mdc)
+
+# Git Workflow
+
+## Prefer separate commits over amending
+
+- Always create **new, separate commits** for follow-up fixes or iterations.
+- Do NOT use `git commit --amend` or `git push --force` unless the user explicitly asks for it.
+- This preserves a full audit trail of what was tried and why.
+
+## Example
+
+If a CI pipeline fails after a push:
+
+```bash
+# GOOD: new commit with the fix
+git add .
+git commit -m "fix(module): correct the X issue from previous commit"
+git push
+
+# BAD: amend + force push (loses history)
+git commit --amend
+git push --force-with-lease
+```
