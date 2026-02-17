@@ -17,8 +17,8 @@ alwaysApply: true
 ```
 
 **ALWAYS check this file FIRST** before writing any script that connects to CDF, Jira, or any external service. The `.env` contains:
-- `CDF_PROJECT`, `CDF_CLUSTER`, `CDF_URL` -- CDF connection
-- `IDP_CLIENT_ID`, `IDP_CLIENT_SECRET`, `IDP_TENANT_ID`, `IDP_TOKEN_URL` -- OAuth credentials
+- `CDF_PROJECT`, `CDF_CLUSTER` -- CDF connection (derive `CDF_URL` as `https://{CDF_CLUSTER}.cognitedata.com` if not set)
+- `IDP_CLIENT_ID`, `IDP_CLIENT_SECRET`, `IDP_TENANT_ID` -- OAuth (derive `IDP_TOKEN_URL` as `https://login.microsoftonline.com/{IDP_TENANT_ID}/oauth2/v2.0/token` if not set)
 - `JIRA_EMAIL`, `JIRA_API_TOKEN` -- Jira API access
 - `SHAREPOINT_*` -- SharePoint credentials
 
@@ -45,20 +45,26 @@ def load_env(path=ENV_PATH):
 
 load_env()
 
+# Derive CDF_URL and IDP_TOKEN_URL from .env if not set
+cdf_cluster = os.environ.get("CDF_CLUSTER", "az-eastus-1")
+tenant_id = os.environ.get("IDP_TENANT_ID", "")
+cdf_url = os.environ.get("CDF_URL") or f"https://{cdf_cluster}.cognitedata.com"
+token_url = os.environ.get("IDP_TOKEN_URL") or f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
+
 from cognite.client import CogniteClient, ClientConfig
 from cognite.client.credentials import OAuthClientCredentials
 
 creds = OAuthClientCredentials(
-    token_url=os.environ["IDP_TOKEN_URL"],
+    token_url=token_url,
     client_id=os.environ["IDP_CLIENT_ID"],
     client_secret=os.environ["IDP_CLIENT_SECRET"],
-    scopes=[f'{os.environ["CDF_URL"]}/.default'],
+    scopes=[f"{cdf_url}/.default"],
 )
 client = CogniteClient(ClientConfig(
     client_name="my-script",
     project=os.environ["CDF_PROJECT"],
     credentials=creds,
-    base_url=os.environ["CDF_URL"],
+    base_url=cdf_url,
 ))
 ```
 
