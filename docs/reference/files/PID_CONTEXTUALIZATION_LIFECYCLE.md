@@ -2,7 +2,6 @@
 
 > End-to-end lifecycle of how Cognite CDF ingests, parses, annotates, and maintains P&ID documents.
 
-**Last updated:** February 17, 2026 (rev 3 - aligned with codebase)
 
 ---
 
@@ -55,9 +54,9 @@ graph TB
     end
 
     subgraph "Phase 3: Detection"
-        D1["OCR / Text recognition"]
-        D2["Symbol detection<br/>(vectorized only)"]
-        D3["Connection tracing<br/>(vectorized only)"]
+        D1["Text extraction<br/>(SHX / embedded / OCR)"]
+        D2["Symbol detection"]
+        D3["Connection tracing"]
     end
 
     subgraph "Phase 4: Matching"
@@ -184,7 +183,7 @@ graph TB
     CHECK -->|"Rasterized / Scanned"| RAS
 
     subgraph VEC["Vectorized — Full Pipeline"]
-        V1["1. Tag Detection<br/>OCR + text extraction"]
+        V1["1. Text Extraction<br/>SHX / Embedded text<br/>(fallback: OCR)"]
         V2["2. Symbol Detection<br/>Match vectors to library"]
         V3["3. Connection Tracing<br/>Follow lines between symbols"]
         V4["4. Merge<br/>Link tags to their symbols"]
@@ -192,31 +191,38 @@ graph TB
     end
 
     subgraph RAS["Rasterized — Limited Pipeline"]
-        R1["1. Tag Detection<br/>OCR + text recognition"]
-        R2["2. Tag Mapping<br/>Match text to entities"]
-        R1 --> R2
+        R1["1. Tag Detection<br/>OCR text recognition"]
+        R2["2. Symbol Detection<br/>(Advanced model only)"]
+        R3["3. Tag Mapping<br/>Match text to entities"]
+        R1 --> R2 --> R3
     end
 ```
 
 ### Tag Detection
 
-The Diagrams API performs OCR to find text on the drawing. For each detected text region, it records:
+The Diagrams API uses a multi-step approach to find text on the drawing. For vectorized PDFs renditioned from CAD (e.g., DWG files), CDF first attempts to extract **SHX embedded annotations** and **embedded text** directly from the file — these are the most accurate sources, as they preserve the original CAD text exactly. Only when embedded text is not available does CDF fall back to **OCR** (optical character recognition).
+
+> **Note:** Both SHX and embedded text are generally available when DWG drawings are properly renditioned from CAD. This means most well-prepared vectorized P&IDs benefit from direct text extraction rather than OCR, resulting in higher accuracy.
+
+For each detected text region (regardless of extraction method), CDF records:
 
 - **Text content** — what was read (e.g., "OIL TANK 471-5-8157")
 - **Bounding box** — exact coordinates on the page (x, y, width, height)
 - **Page number** — which page of the PDF
 
-### Symbol Detection (Vectorized Only)
+### Symbol Detection
 
-For vectorized PDFs, CDF can also detect **symbols** — standardized shapes representing equipment types (valves, pumps, instruments, etc.):
+CDF can detect **symbols** — standardized shapes representing equipment types (valves, pumps, instruments, etc.):
 
 - Symbols are matched against a **symbol library** (project-specific or template)
 - Each symbol has one or more **geometries** (visual variations)
 - Detected symbols are classified by **asset class** and **asset type**
 
-### Connection Tracing (Vectorized Only)
+Symbol detection works best with **vectorized PDFs**, where precise vector data enables accurate matching. However, symbol detection and connection tracing are also **available to an extent for rasterized/scanned files** when using the **advanced diagram parsing model**. The accuracy for rasterized files depends on scan quality and resolution.
 
-CDF traces lines and pipes between detected symbols to determine how equipment is connected in the process flow.
+### Connection Tracing
+
+CDF traces lines and pipes between detected symbols to determine how equipment is connected in the process flow. Like symbol detection, connection tracing is primarily designed for vectorized files but is available to an extent through the advanced diagram parsing model for rasterized inputs.
 
 > **Limitation:** For vectorized files, only the **first page** is parsed. Multi-page PDFs should be split before parsing.
 
@@ -320,6 +326,8 @@ graph LR
 ```
 
 > **Note:** These thresholds are configurable. The recommended best practice is a two-threshold system (reject/review/approve). A single low threshold (e.g., 0.20) will produce many false positives.
+
+> **Platform caveat:** The auto-approve / review / reject threshold UI is currently only available within the **built-in CDF annotation pipeline**, which is not widely used. This feature was previously accessible from the viewer in the classic CDF interface. This has been raised as an issue for the current platform. In practice, when using the **Deployment Pack workflow** or the **Diagrams API**, confidence thresholds are configured programmatically (in workflow config or code) rather than through the UI.
 
 ---
 
@@ -496,7 +504,7 @@ sequenceDiagram
 
 A common question is: *"Why doesn't CDF just keep the old annotations and update them automatically when the document changes?"*
 
-This is a **deliberate design choice**, not a limitation. Here's why:
+This is a **deliberate design choice**, not a limitation — and it is the **industry-standard approach**. Most solutions that handle document contextualization will discard existing annotations, replace the current file, and recontextualize in its entirety. Here's why:
 
 ### The Core Problem: Annotations Are Tied to Pixel Coordinates
 
@@ -635,6 +643,8 @@ graph TB
 | **Review threshold** | >= 70% | Catches plausible matches for expert validation |
 | **Reject threshold** | < 70% | Avoids cluttering the review queue with bad matches |
 | **Run mode** | Incremental | Only processes changed files (efficient) |
+
+> **Note on thresholds:** The review and auto-approve threshold settings described above are configured programmatically in the Deployment Pack workflow or via the Diagrams API. The threshold UI in the CDF built-in annotation pipeline is not widely used; this has been raised as a platform issue.
 
 ---
 
@@ -872,13 +882,14 @@ graph TB
 
 | Capability | Vectorized PDF | Rasterized / Scanned |
 |-----------|---------------|---------------------|
-| Tag detection (OCR) | Yes | Yes |
-| Symbol detection | Yes | No |
-| Symbol library matching | Yes | No |
-| Connection tracing | Yes | No |
-| Tag-symbol merge | Yes | No |
+| Text extraction (SHX / embedded) | Yes (primary method) | No |
+| Tag detection (OCR fallback) | Yes (fallback) | Yes (primary method) |
+| Symbol detection | Yes | Partial (advanced model only) |
+| Symbol library matching | Yes | Partial (advanced model only) |
+| Connection tracing | Yes | Partial (advanced model only) |
+| Tag-symbol merge | Yes | Limited |
 | Multi-page support | First page only | All pages (tag detection) |
-| Output quality | High (precise vectors) | Medium (depends on scan quality) |
+| Output quality | High (precise vectors + embedded text) | Medium (depends on scan quality) |
 
 ---
 
@@ -932,7 +943,7 @@ graph LR
 | **Auto-approval** | No (all manual) | Custom | Threshold-based |
 | **Cleanup** | Manual | Custom | `cleanOldAnnotations` flag |
 | **Scheduling** | Manual | Cron / external | CDF Workflows |
-| **Symbol detection** | Yes | No (tags only) | No (tags only) |
+| **Symbol detection** | Yes | No (tags only) | No (tags only; advanced model extends to rasterized) |
 
 ### Sylvamo Implementation (Approach 3)
 
@@ -965,7 +976,8 @@ These are platform characteristics to be aware of when planning your P&ID contex
 | **Annotations reset on re-detection** | New annotations go through confidence scoring again | High-confidence matches auto-approve; only edge cases need review |
 | **Manual annotations preserved** | Only workflow-owned annotations are cleaned | Use manual tags for equipment that OCR consistently misses |
 | **Symbol libraries are project-specific** | Must build/maintain library per project | Start with CDF templates; refine over time |
-| **OCR quality depends on source** | Scanned/rasterized documents have lower accuracy | Use vectorized PDFs where possible; set lower auto-approve thresholds for scans |
+| **OCR quality depends on source** | Scanned/rasterized documents have lower accuracy; vectorized PDFs use SHX/embedded text extraction (higher accuracy) with OCR as fallback | Use vectorized PDFs renditioned from CAD where possible; set lower auto-approve thresholds for scans |
+| **Threshold UI limitation** | The auto-approve/review/reject threshold UI is only available in the built-in CDF annotation pipeline (not widely used); previously available in the classic viewer | Configure thresholds programmatically via Deployment Pack workflow config or Diagrams API |
 | **Entity list must be current** | Matches depend on what's in the entity list | Keep asset/time series lists in sync with source systems (SAP, PI, etc.) |
 
 ---

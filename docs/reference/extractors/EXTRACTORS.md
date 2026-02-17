@@ -72,6 +72,7 @@ raw_ext_<extractor_type>_<source>
 | RAW Tables | **126** | Across all databases |
 | Time Series | **3,606 tags** | PI Server (primary) + Proficy + Other |
 | Files | 1,000+ | SharePoint, P&IDs |
+<<<<<<< HEAD
 | Total Model Nodes | 500,000+ | mfg_core (primary) |
 
 
@@ -108,6 +109,9 @@ raw_ext_<extractor_type>_<source>
 | `de_proficy_datapoints_ingest` | `0 * * * *` (hourly) | Writes Proficy datapoints to CDF TimeSeries |
 
 > **Note:** RollQuality is populated by both `tr_populate_RollQuality` (from RAW) and `de_sharepoint_list_to_data_model`. See [CDF_PIPELINE_OVERVIEW.md](../CDF_PIPELINE_OVERVIEW.md).
+=======
+| Total Model Nodes | 2.8M+ | mfg_core (~2.8M) + mfg_extended |
+>>>>>>> 164422a (docs: add presentation guides, pipeline overview, scenario validation)
 
 ---
 
