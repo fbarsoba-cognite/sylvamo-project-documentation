@@ -181,7 +181,7 @@ For architecture discussions and stakeholder meetings, follow this recommended o
 |----------|----------|-------------|
 | Extractors | [../extractors/EXTRACTORS.md](../extractors/EXTRACTORS.md) | Extractor configurations and status |
 | Use Cases | [../use-cases/USE_CASES_AND_QUERIES.md](../use-cases/USE_CASES_AND_QUERIES.md) | Verified use case scenarios |
-| Sprint 2 Plan | [../../internal/sprint-planning/SPRINT_2_PLAN.md](../../internal/sprint-planning/SPRINT_2_PLAN.md) | Current sprint implementation plan |
+| Sprint 3 Plan | [../../internal/sprint-planning/SPRINT_3_PLAN.md](../../internal/sprint-planning/SPRINT_3_PLAN.md) | Current sprint implementation plan |
 
 ---
 

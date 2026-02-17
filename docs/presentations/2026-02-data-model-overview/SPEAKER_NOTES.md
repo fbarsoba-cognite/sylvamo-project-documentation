@@ -893,8 +893,8 @@ Use this GraphQL query to demonstrate full end-to-end traceability:
 - [CI/CD Overview](../../../reference/cicd/CICD_OVERVIEW.md)
 
 **Internal Working Documents:**
-- [Sprint 2 Plan](../../../internal/sprint-planning/SPRINT_2_PLAN.md)
-- [Sprint 2 Story Mapping](../../../internal/sprint-planning/SPRINT_2_STORY_MAPPING.md)
+- [Sprint 3 Plan](../../../internal/sprint-planning/SPRINT_3_PLAN.md)
+- [Sprint 2 Plan (Archived)](../../../deprecated/sprint-planning/SPRINT_2_PLAN.md)
 
 ---
 

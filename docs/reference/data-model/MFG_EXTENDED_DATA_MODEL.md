@@ -4,6 +4,8 @@
 
 This document describes the `sylvamo_mfg_extended` data model, which extends `sylvamo_mfg_core` with cost analysis and activity tracking capabilities.
 
+> **Note (ADR-001):** The Equipment view has 0 instances. Equipment is modeled as Asset subtypes with `assetType='Equipment'` in mfg_core. See [ADR-001-ASSET-EQUIPMENT.md](decisions/ADR-001-ASSET-EQUIPMENT.md).
+
 ---
 
 ## Overview
@@ -38,6 +40,7 @@ erDiagram
     CostEvent }o--|| Asset : "plant (from mfg_core)"
     
     Equipment }o--|| Asset : "asset (from mfg_core)"
+    note right of Equipment : Deprecated - Equipment modeled as Asset subtypes (ADR-001)
     
     MaintenanceActivity }o--|| Asset : "asset (from mfg_core)"
     MaintenanceActivity }o--|| WorkOrder : "workOrder"

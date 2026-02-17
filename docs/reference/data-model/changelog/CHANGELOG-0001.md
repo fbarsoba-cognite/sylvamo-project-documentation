@@ -45,3 +45,22 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 
 ---
 
+### [Documentation] Documentation tree review and reorganization
+**Date:** 2026-02-02
+**Repo:** [sylvamo-project-documentation](https://github.com/fbarsoba-cognite/sylvamo-project-documentation)
+
+**Changes:**
+- Created `docs/deprecated/` folder for superseded content
+- Moved `MFG_CORE_WITH_EQUIPMENT.md` to deprecated (superseded by ADR-001)
+- Moved `SPRINT_2_PLAN.md` and `SPRINT_2_STORY_MAPPING.md` to deprecated (Sprint 2 completed)
+- Added `SPRINT_3_PLAN.md` (Feb 16–Mar 2, 2026)
+- Updated README: Sprint 3, Asset 45,900+, RollQuality 750+, Equipment as Asset subtypes
+- Updated data-model, extractors, presentations with current stats and links
+- Reorganized docs/README.md structure and deprecated section
+
+**Why:**
+- Keep documentation current with model, extractors, and sprint status
+- Archive superseded content for reference without confusion
+
+---
+

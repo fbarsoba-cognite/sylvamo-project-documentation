@@ -60,11 +60,11 @@ raw_ext_<extractor_type>_<source>
 | **Fabric Connector** | Fabric PPV | ✅ Running | `raw_ext_fabric_ppv` | 716 rows | UC1 (Costs) |
 | **Fabric Connector** | Fabric SAP ECC | ✅ Running | `raw_ext_fabric_sapecc` | **97 tables** | Work Orders, Notifications |
 | **PI Extractor** | PI Server (3 servers) | ✅ Running | Time Series | **3,864 tags** | Process Data |
-| **SharePoint Extractor** | SharePoint Online | ✅ Running | `raw_ext_sharepoint` | 180 records | UC2 (Quality) |
+| **SharePoint Extractor** | SharePoint Online | ✅ Running | `raw_ext_sharepoint` | 180 records | UC2 (Quality) — RollQuality also populated via CDF Function |
 | **SAP OData Extractor** | SAP Gateway | ✅ Running | `raw_ext_sap` | 5 tables | Functional Locations |
 | **SQL Extractor** | Proficy GBDB | ✅ Running | `raw_ext_sql_proficy` | 10,000+ rows | UC2 (Lab) |
 
-### Current Volumes (Verified Feb 13, 2026)
+### Current Volumes (Verified Feb 2026)
 
 | Resource | Count | Source |
 |----------|-------|--------|

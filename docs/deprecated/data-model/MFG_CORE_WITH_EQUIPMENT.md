@@ -3,7 +3,7 @@
 > **⚠️ SUPERSEDED:** This document proposed a separate Equipment entity. 
 > We adopted a different approach: **Equipment as Asset subtypes** (QuickStart Pattern).
 > 
-> See **[ADR-001-ASSET-EQUIPMENT.md](decisions/ADR-001-ASSET-EQUIPMENT.md)** for the architectural decision.
+> See **[ADR-001-ASSET-EQUIPMENT.md](../../reference/data-model/decisions/ADR-001-ASSET-EQUIPMENT.md)** for the architectural decision.
 
 ---
 
@@ -34,7 +34,7 @@ Based on ISA-95 and Cognite QuickStart recommendations, we model Equipment as **
 ### Related
 
 - **Jira:** [SVQS-243](https://cognitedata.atlassian.net/browse/SVQS-243), [SVQS-244](https://cognitedata.atlassian.net/browse/SVQS-244)
-- **ADR:** [ADR-001-ASSET-EQUIPMENT.md](decisions/ADR-001-ASSET-EQUIPMENT.md)
+- **ADR:** [ADR-001-ASSET-EQUIPMENT.md](../../reference/data-model/decisions/ADR-001-ASSET-EQUIPMENT.md)
 
 ---
 

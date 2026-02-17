@@ -246,8 +246,8 @@ When presenting, emphasize:
 - [Complete Setup Guide](../../reference/cicd/CICD_COMPLETE_SETUP_GUIDE.md) - Step-by-step guide
 
 ### Sprint Planning
-- [Sprint 2 Plan](../../internal/sprint-planning/SPRINT_2_PLAN.md) - Current sprint work
-- [Story Mapping](../../internal/sprint-planning/SPRINT_2_STORY_MAPPING.md) - Jira story mapping
+- [Sprint 3 Plan](../../internal/sprint-planning/SPRINT_3_PLAN.md) - Current sprint work
+- [Sprint 2 Plan (Archived)](../../deprecated/sprint-planning/SPRINT_2_PLAN.md)
 
 ---
 

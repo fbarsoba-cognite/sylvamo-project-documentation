@@ -25,18 +25,19 @@
 
 ### Internal Working Documents
 - **Sprint Planning**
-  - [Sprint 2 Plan](internal/sprint-planning/SPRINT_2_PLAN.md)
-  - [Sprint 2 Story Mapping](internal/sprint-planning/SPRINT_2_STORY_MAPPING.md)
+  - [Sprint 3 Plan](internal/sprint-planning/SPRINT_3_PLAN.md) — Current sprint (Feb 16–Mar 2, 2026)
+  - [Sprint 2 Plan (Archived)](deprecated/sprint-planning/SPRINT_2_PLAN.md)
+  - [Sprint 2 Story Mapping (Archived)](deprecated/sprint-planning/SPRINT_2_STORY_MAPPING.md)
 - **Plans & Alignment**
- - [**Architecture Decisions & Roadmap**](internal/plans/ARCHITECTURE_DECISIONS_AND_ROADMAP.md) – Meeting prep: model comparison, ISA-95 alignment, roadmap
- - [ISA Extension & Sylvamo Alignment](internal/plans/COGNITE_ISA_EXTENSION_AND_SYLVAMO_ALIGNMENT.md)
- - [Johan ISA95 Guidance Summary](internal/plans/JOHAN_ISA95_GUIDANCE_SUMMARY.md)
+  - [**Architecture Decisions & Roadmap**](reference/data-model/ARCHITECTURE_DECISIONS_AND_ROADMAP.md) — Model comparison, ISA-95 alignment, roadmap
+  - [ISA Extension & Sylvamo Alignment](reference/data-model/COGNITE_ISA_EXTENSION_AND_SYLVAMO_ALIGNMENT.md)
+  - [Johan ISA95 Guidance Summary](reference/data-model/JOHAN_ISA95_GUIDANCE_SUMMARY.md)
 
 ### Project Documents
 - Coming soon
 
-### Archive
-- Historical/deprecated content
+### Deprecated
+- [Deprecated Documentation](deprecated/README.md) — Superseded content (Equipment proposal, Sprint 2 plans)
 
 ---
 
@@ -45,21 +46,23 @@
 ```
 docs/
 ├── reference/              # Polished, customer-ready documentation
-│   ├── data-model/         # Data model specifications
+│   ├── data-model/         # Data model specifications, ADRs, changelog
 │   ├── extractors/         # Extractor and pipeline docs
+│   ├── cicd/               # CI/CD setup and troubleshooting
 │   ├── files/              # CDF file management, P&ID lifecycle, annotations
 │   ├── use-cases/          # Use case documentation
-│   └── getting-started/    # Onboarding guides
+│   └── workflows/           # Code change workflow, etc.
 │
 ├── internal/               # Working documents (internal use)
-│   ├── sprint-planning/    # Sprint planning artifacts
-│   └── plans/              # Active project plans
+│   └── sprint-planning/    # Sprint planning artifacts
 │
-├── project-docs/           # Official project artifacts
+├── presentations/          # Slide decks and demo scripts
 │
-└── archive/                # Deprecated/historical content
+└── deprecated/             # Superseded content (Equipment proposal, Sprint 2)
+    ├── data-model/
+    └── sprint-planning/
 ```
 
 ---
 
-*Last updated: February 10, 2026*
+*Last updated: February 2026*

@@ -228,13 +228,13 @@ erDiagram
 ```mermaid
 flowchart TB
     subgraph Core["📦 sylvamo_mfg_core (Production Model)"]
-        Asset["Asset<br/>44,000+ nodes<br/>SAP Functional Locations"]
+        Asset["Asset<br/>45,900+ nodes<br/>SAP Functional Locations<br/>(33K Equipment via assetType)"]
         Event["Event<br/>92,000+ nodes<br/>SAP, Proficy, PPV"]
         Material["Material<br/>58,000+ nodes<br/>SAP Materials"]
         MfgTimeSeries["MfgTimeSeries<br/>3,500+ tags<br/>PI Server"]
         Reel["Reel<br/>83,600+ batches<br/>Fabric PPR"]
         Roll["Roll<br/>2,300,000+ lots<br/>Fabric PPR"]
-        RollQuality["RollQuality<br/>580 tests<br/>SharePoint"]
+        RollQuality["RollQuality<br/>750+ tests<br/>SharePoint/CDF Function"]
         CogniteFile["CogniteFile<br/>CDM Files"]
     end
 
@@ -243,7 +243,7 @@ flowchart TB
         ProductionOrder["ProductionOrder<br/>SAP Production"]
         ProductionEvent["ProductionEvent<br/>Proficy Events"]
         CostEvent["CostEvent<br/>716 PPV records"]
-        Equipment["Equipment<br/>(pending)"]
+        Equipment["Equipment<br/>(as Asset subtypes)"]
     end
 
     Asset --> Reel
@@ -293,37 +293,26 @@ flowchart TB
 
 Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 
-1. **CDM Asset + Equipment** instead of ISA Site/Unit hierarchy
+1. **CDM Asset with Equipment as subtypes** (assetType='Equipment') - no separate Equipment entity (ADR-001)
 2. **Reel** as ISA Batch (paper reel = batch)
 3. **Roll** as ISA MaterialLot (sellable unit)
 4. **Package** entity for inter-plant traceability (Sylvamo extension)
 5. **Recipe** entity following ISA-88 (general, site, master, control types)
 
-## Sprint 2 Plan (Current)
+## Sprint 3 Plan (Current)
 
-**Sprint Duration:** February 2 - February 13, 2026
+**Sprint Duration:** February 16 - March 2, 2026
 
 | Workstream | Focus | Status |
 |------------|-------|--------|
-| Search Experience | Link Events, Files, TimeSeries to Assets | **6/9 Done** |
-| UC2 Data Quality | Reel/Roll scheduling, turnupTime, quality data | Investigation |
-| Data Completeness | PPR limits, Sumter assets, PPV source | Blocked (SAP freeze) |
+| Contextualization | P&ID, PPR, PPV, Work Orders | In Progress |
+| Search Experience | End-to-end validation demo | Pending |
+| Data Quality | PI tags, Work Order ingestion | Pending |
+| Data Completeness | PPR tables, Fabric extractor | Pending |
 
-### Search Experience Progress
+**Sprint 2 completed** February 13, 2026. Search Experience 6/9 done; UC2 Data Quality in investigation.
 
-| Task | Story | Status | Result |
-|------|-------|--------|--------|
-| Proficy Events → Assets | SVQS-148 | Done | PM1/PM2 linked via PU_Id |
-| Work Orders → Assets | SVQS-146 | Done | Linked via FUNCTIONAL_LOCATION |
-| Time Series → Assets | SVQS-143 | Done | 3,390 linked (1,695 PM1 + 1,695 PM2) |
-| Files → Assets | SVQS-152 | Done | 45 linked to Eastover Mill |
-| Files reverse relation | SVQS-151 | Done | Asset.files enabled |
-| ProductionEvent | SVQS-150 | Closed | Duplicate of SVQS-148 |
-| P&ID Contextualization | SVQS-144 | Pending | - |
-| Event Type Field | SVQS-145 | Pending | - |
-| Validation Demo | SVQS-159 | Pending | - |
-
-**[See Full Sprint 2 Plan →](docs/internal/sprint-planning/SPRINT_2_PLAN.md)** | **[Story Mapping →](docs/internal/sprint-planning/SPRINT_2_STORY_MAPPING.md)**
+**[See Full Sprint 3 Plan →](docs/internal/sprint-planning/SPRINT_3_PLAN.md)** | **[Sprint 2 (Archived) →](docs/deprecated/sprint-planning/SPRINT_2_PLAN.md)**
 
 ## Documentation
 
@@ -335,6 +324,7 @@ Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 |----------|-------------|
 | [**MFG Core Data Model**](docs/reference/data-model/MFG_CORE_DATA_MODEL.md) | **CORRECTED** - 7 core views only, Quality Traceability use case |
 | [**MFG Core + PPV (Proposed)**](docs/reference/data-model/MFG_CORE_WITH_PPV.md) | **FOR ANVAR** - Proposed PPV integration into mfg_core |
+| [**Deprecated: MFG Core + Equipment**](docs/deprecated/data-model/MFG_CORE_WITH_EQUIPMENT.md) | Superseded by ADR-001 (Equipment as Asset subtypes) |
 | [**MFG Extended Data Model**](docs/reference/data-model/MFG_EXTENDED_DATA_MODEL.md) | 8 extended views, PPV/Cost Analysis use case |
 | [**Data Model Specification**](docs/reference/data-model/DATA_MODEL_SPECIFICATION.md) | Complete spec with all containers, properties, and examples |
 | [**Guide for Stakeholders**](docs/reference/data-model/DATA_MODEL_FOR_STAKEHOLDERS.md) | Non-technical overview with flow diagrams and business examples |
@@ -353,8 +343,8 @@ Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 
 | Document | Description |
 |----------|-------------|
-| [**Sprint 2 Plan**](docs/internal/sprint-planning/SPRINT_2_PLAN.md) | Current sprint implementation plan with contextualization roadmap |
-| [**Sprint 2 Story Mapping**](docs/internal/sprint-planning/SPRINT_2_STORY_MAPPING.md) | Mapping between plan phases and Jira stories (17 active) |
+| [**Sprint 3 Plan**](docs/internal/sprint-planning/SPRINT_3_PLAN.md) | Current sprint - Contextualization, demos, data quality |
+| [Sprint 2 Plan (Archived)](docs/deprecated/sprint-planning/SPRINT_2_PLAN.md) | Sprint 2 completed Feb 13, 2026 |
 | [ISA Alignment](docs/reference/data-model/COGNITE_ISA_EXTENSION_AND_SYLVAMO_ALIGNMENT.md) | ISA-95/88 alignment analysis |
 | [Johan's Guidance](docs/reference/data-model/JOHAN_ISA95_GUIDANCE_SUMMARY.md) | Expert recommendations from Cognite |
 
@@ -363,10 +353,10 @@ Based on guidance from Johan Stabekk (Cognite ISA Expert, Jan 28, 2026):
 | Extractor | Source | Status | Data Target |
 |-----------|--------|--------|-------------|
 | **Fabric Connector** | Microsoft Fabric Lakehouse | ✅ Running | `raw_ext_fabric_ppr`, `raw_ext_fabric_ppv` |
-| **PI Extractor** | PI Server (75 tags) | ✅ Running | Time Series, `raw_ext_pi` |
+| **PI Extractor** | PI Server (3,500+ tags) | ✅ Running | Time Series, `raw_ext_pi` |
 | **SharePoint Extractor** | SharePoint Online | ✅ Running | `raw_ext_sharepoint` |
 | **SAP OData Extractor** | SAP Gateway | ✅ Running | `raw_ext_sap` |
-| **SQL Extractor** | Proficy GBDB | ⏳ Configured | `raw_ext_sql_proficy` |
+| **SQL Extractor** | Proficy GBDB | ✅ Running | `raw_ext_sql_proficy` |
 
 ### RAW Database Naming Convention
 
@@ -515,7 +505,7 @@ Secrets stored in **project-level Variable Groups** in the SylvamoCorp ADO proje
 | MfgTimeSeries | 3,500+ | PI Server (3 servers) | ✅ |
 | Reel | 83,600+ | `raw_ext_fabric_ppr/ppr_hist_reel` | ✅ |
 | Roll | 2,300,000+ | `raw_ext_fabric_ppr/ppr_hist_roll` | ✅ |
-| RollQuality | 580 | `raw_ext_sharepoint/roll_quality` | ✅ |
+| RollQuality | 750+ | SharePoint + CDF Function (349+ linked to Asset) | ✅ |
 | CogniteFile | 97+ | CDF Files (P&IDs, drawings) | ✅ |
 | **TOTAL** | **450,000+** | Real production data | |
 
@@ -620,5 +610,5 @@ Internal use only - Cognite/Sylvamo
 
 ---
 
-*Updated: February 13, 2026*  
+*Updated: February 2026*  
 *Verified against CDF sylvamo-dev project*
