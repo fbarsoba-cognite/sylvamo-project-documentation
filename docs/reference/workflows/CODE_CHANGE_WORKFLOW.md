@@ -136,7 +136,8 @@ client.data_modeling.instances.list(sources=[view_id], limit=10)
 
 Every code change MUST be logged in the change log:
 
-1. **Location:** `docs/reference/data-model/changelog/CHANGELOG-XXXX.md`
+1. **Location:** sylvamo-project-documentation (GitHub) — **NOT ADO**
+   - Path: `docs/reference/data-model/changelog/CHANGELOG-XXXX.md`
 2. **Format:** ~10 entries per page, then start new page (CHANGELOG-0001.md, CHANGELOG-0002.md, etc.)
 3. **Entry format:**
    ```markdown
