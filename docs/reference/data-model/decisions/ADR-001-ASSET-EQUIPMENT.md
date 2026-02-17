@@ -126,3 +126,20 @@ After (QuickStart pattern):
 ---
 
 *Decision documented: February 17, 2026*
+
+## Additional References
+
+### Sylvamo Project Documentation
+- **Cognite ISA Extension & Sylvamo Alignment**: [COGNITE_ISA_EXTENSION_AND_SYLVAMO_ALIGNMENT.md](https://github.com/fbarsoba-cognite/sylvamo-project-documentation/blob/main/docs/reference/data-model/COGNITE_ISA_EXTENSION_AND_SYLVAMO_ALIGNMENT.md)
+  - Comprehensive alignment analysis with Johan Stabekk guidance (Jan 28, 2026)
+  - Key Decision: "Use CDM Asset + Equipment instead of ISA Site/Unit for organizational hierarchy"
+  - Deployed model details and entity mappings
+
+### Cognite Reference Implementations
+- **QuickStart Module Foundation**: [github.com/cognitedata/quickstart-module-foundation](https://github.com/cognitedata/quickstart-module-foundation)
+  - Cognite's reference implementation for industrial data models
+  - Demonstrates Asset hierarchy patterns for manufacturing
+  
+- **ISA Manufacturing Extension**: [github.com/cognitedata/library/modules/models/isa_manufacturing_extension](https://github.com/cognitedata/library/tree/main/modules/models/isa_manufacturing_extension)
+  - Cognite's ISA-95/ISA-88 extension specification
+  - Used as basis for Sylvamo data model design
