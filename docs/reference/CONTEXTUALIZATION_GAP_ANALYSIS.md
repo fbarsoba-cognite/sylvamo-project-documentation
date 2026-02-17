@@ -92,22 +92,19 @@ FROM `raw_ext_sap`.`sap_floc_eastover`
 **What We Implemented:**
 
 - All contextualization targets functional location assets (`floc:*` external IDs), which is the correct approach -- these represent asset tags, not physical equipment.
-- The data model defines equipment types:
-  - `sylvamo/modules/mfg_extended/data_modeling/containers/MfgEquipment.Container.yaml`
-  - `sylvamo/modules/mfg_extended/data_modeling/views/Equipment.View.yaml`
-- However, no equipment records are populated. No transformation creates equipment instances.
+- **Per ADR-001 (Feb 2026):** Equipment is modeled as Asset nodes with `assetType='Equipment'` (33,072 assets). The separate Equipment view/container has been removed.
+- Work orders link to assets via FUNCTIONAL_LOCATION.
 
 **Status: Partial**
 
 | What's Working | What's Missing |
 |---|---|
-| Contextualization targets `floc:*` assets (the "socket") -- correct | Equipment entity is defined but never populated |
-| SAP functional locations form the hierarchy backbone | No serial-number-level associations possible |
-| Work orders link to assets via FUNCTIONAL_LOCATION | Work orders cannot link to specific equipment instances |
+| Contextualization targets `floc:*` assets (the "socket") -- correct | N/A — ADR-001 resolved Equipment modeling |
+| SAP functional locations form the hierarchy backbone | No serial-number-level associations (CogniteEquipment) |
+| Work orders link to assets via FUNCTIONAL_LOCATION | Work orders link to Asset (assetType=Equipment) |
 
 **Recommendation:**
-- This is acceptable for the quick start phase. Equipment population can be deferred.
-- When work order accuracy matters, populate equipment from SAP equipment master data and associate to asset tags.
+- Current model follows ADR-001: Equipment = Asset with assetType classification. No separate Equipment entity.
 - Document that the current model follows the "always contextualize to asset tag" principle.
 
 ---

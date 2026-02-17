@@ -135,4 +135,4 @@ EOF
 3. Create pipelines in ADO UI pointing to the YAML files
 4. Configure variable groups and environments
 
-See `docs/ADO_PIPELINE_SETUP.md` for complete setup instructions.
+See `ADO_PIPELINE_SETUP.md` for complete setup instructions.

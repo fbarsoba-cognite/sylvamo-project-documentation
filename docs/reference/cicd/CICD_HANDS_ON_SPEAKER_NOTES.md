@@ -1,5 +1,8 @@
 # CI/CD Hands-On Speaker Notes
 
+> **Training materials:** Session materials from Sprint 2 (February 2026). Content remains relevant for hands-on sessions.
+
+
 **Second Presentation: Hands-On Session for Sylvamo Platform Team**
 
 **Audience:** Platform Teams, DevOps Engineers, Technical Leads  

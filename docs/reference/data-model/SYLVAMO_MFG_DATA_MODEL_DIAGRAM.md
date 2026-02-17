@@ -4,6 +4,8 @@
 **Data Model:** `sylvamo_manufacturing/v7`  
 **Date:** 2026-01-28
 
+> **Note (ADR-001):** This diagram shows Equipment as a separate entity. In **sylvamo_mfg_core** (current focus), Equipment is modeled as Asset nodes with `assetType='Equipment'`. See [ADR-001](decisions/ADR-001-ASSET-EQUIPMENT.md).
+
 ---
 
 ## Entity Relationship Diagram

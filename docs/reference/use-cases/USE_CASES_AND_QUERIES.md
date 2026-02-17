@@ -122,7 +122,7 @@ Total Current Standard Cost:  $12,169.44
 
 | Requirement | Model Entity | Relationship |
 |-------------|--------------|--------------|
-| Track paper reels | `Reel` | Links to ProductDefinition, Equipment |
+| Track paper reels | `Reel` | Links to ProductDefinition, Asset |
 | Track cut rolls | `Roll` | Links to source Reel |
 | Track quality tests | `QualityResult` | Links to Reel and Roll |
 | Track inter-plant packages | `Package` | Contains rolls, tracks status |
@@ -278,7 +278,7 @@ All data is sourced from actual Sylvamo production systems:
 | Entity | Count | Data Source |
 |--------|-------|-------------|
 | Asset | 2 | Eastover Mill, Sumpter Facility |
-| Equipment | 3 | EMP01 (Paper Machine), EMW01 (Winder), Sheeter 1 |
+| Asset (assetType=Equipment) | 33,072+ | Leaf-level assets in hierarchy |
 | ProductDefinition | 2 | Wove Paper 20lb, Wove Paper 24lb |
 | Reel | 50 | `raw_sylvamo_fabric/ppr_hist_reel` |
 | Roll | 19 | `raw_sylvamo_fabric/ppr_hist_roll` |

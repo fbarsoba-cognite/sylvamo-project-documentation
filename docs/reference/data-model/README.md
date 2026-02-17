@@ -47,6 +47,8 @@ All data model documentation is now consolidated in this folder.
 | Document | Description | Size |
 |----------|-------------|------|
 | [DATA_MODEL_SPECIFICATION.md](DATA_MODEL_SPECIFICATION.md) | Complete technical spec with containers, properties, relationships, and examples | 19KB |
+| [MFG_CORE_DATA_MODEL.md](MFG_CORE_DATA_MODEL.md) | sylvamo_mfg_core - Asset with assetType (ADR-001), 7 views | 10KB |
+| [MFG_EXTENDED_DATA_MODEL.md](MFG_EXTENDED_DATA_MODEL.md) | sylvamo_mfg_extended - WorkOrder, CostEvent, Equipment (CogniteEquipment) | 9KB |
 | [DATA_MODEL_FOR_STAKEHOLDERS.md](DATA_MODEL_FOR_STAKEHOLDERS.md) | Non-technical overview with flow diagrams and business examples | 8KB |
 | [DATA_MODEL_WALKTHROUGH.md](DATA_MODEL_WALKTHROUGH.md) | Step-by-step traceability example from production to delivery | 16KB |
 
@@ -181,9 +183,15 @@ For architecture discussions and stakeholder meetings, follow this recommended o
 |----------|----------|-------------|
 | Extractors | [../extractors/EXTRACTORS.md](../extractors/EXTRACTORS.md) | Extractor configurations and status |
 | Use Cases | [../use-cases/USE_CASES_AND_QUERIES.md](../use-cases/USE_CASES_AND_QUERIES.md) | Verified use case scenarios |
-| Sprint 2 Plan | [../../internal/sprint-planning/SPRINT_2_PLAN.md](../../internal/sprint-planning/SPRINT_2_PLAN.md) | Current sprint implementation plan |
+| Sprint 2 Plan | [../../archive/2026-02-sprint2-completed/SPRINT_2_PLAN.md](../../archive/2026-02-sprint2-completed/SPRINT_2_PLAN.md) | Completed |
+| Sprint 3 Plan | [../../internal/sprint-planning/SPRINT_3_PLAN.md](../../internal/sprint-planning/SPRINT_3_PLAN.md) | Current sprint (Feb 16 - Mar 2, 2026) |
 
 ---
 
 *For questions, contact the Cognite implementation team.*  
 *Last updated: February 2026*
+
+## Deprecated (Archived)
+
+- **MFG_CORE_WITH_EQUIPMENT.md** — Superseded by [ADR-001](decisions/ADR-001-ASSET-EQUIPMENT.md). Equipment is now modeled as Asset subtypes.
+

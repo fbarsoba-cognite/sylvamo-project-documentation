@@ -1,10 +1,7 @@
----
-title: Code Change Workflow
-description: Standard workflow for making code changes - Jira, ADO branch, PR, documentation, and linking
-type: Always
-globs: 
-alwaysApply: true
----
+# Code Change Workflow
+
+> **Source:** This is a copy of `.cursor/rules/code_change_workflow.mdc` for accessibility outside Cursor.
+
 
 # Code Change Workflow
 
@@ -47,36 +44,12 @@ Do NOT hardcode credentials. Read them from this `.env` file.
   - Operations not supported by CLI (e.g., deleting specific instances)
   - When user explicitly asks to use SDK
 
-### Orphaned CDF Resources (Views, Containers, Instances)
-
-**`cdf deploy` does NOT automatically delete** orphaned resources from CDF.
-
-**SDK cleanup is acceptable ONLY when:**
-1. The code change (removing YAML files) has already gone through a PR and been merged
-2. `cdf deploy` has been run but orphaned resources remain in CDF
-3. `cdf clean` is not available or doesn't work for the resource type
-
-**SDK cleanup is NOT acceptable for:**
-- Deleting resources that still have YAML definitions in the codebase
-- Making schema changes that should go through PR review
-- Any change that could be done via `cdf deploy` or `cdf clean`
-
-**When using SDK cleanup:**
-- Document in the changelog what was deleted
-- Reference the original PR that removed the code
-- Add a note like "SDK cleanup of orphaned resources (Feb 17, 2026)"
-
-**Example workflow:**
-1. PR #896 removes `Equipment.View.yaml` from codebase ✓
-2. `cdf deploy` runs, but Equipment view still exists in CDF
-3. SDK cleanup deletes orphaned view → document in changelog under SVQS-244
-
 ## 1. Jira Ticket
 - Check if an existing Jira ticket covers the change
 - If not, create a new Jira ticket in SVQS project
 - Assign to the requesting user
 - Move to "In Progress"
-- Add to current sprint (Sprint 2)
+- Add to current sprint (Sprint 3)
 
 ## 2. ADO Branch
 - Create a feature branch in ADO: `feature/SVQS-XXX-short-description`
@@ -121,10 +94,68 @@ Example validation script:
 client.data_modeling.instances.list(sources=[view_id], limit=10)
 ```
 
+### 4.4 Transformation Preview (Dry Run)
+
+Before running transformations that modify data:
+
+```python
+# Preview transformation output WITHOUT modifying data
+t = client.transformations.retrieve(external_id="tr_xxx")
+preview = client.transformations.preview(
+    query=t.query,
+    source_limit=10,
+    convert_to_string=True
+)
+print(f"Preview: {len(preview.results)} rows")
+```
+
+- Verify output looks correct before running
+- Check relations are populated (asset, roll, etc.)
+- Only run transformation after preview confirms expected results
+
 ## 5. Pull Request
-- Push branch to ADO
-- Create PR targeting `main`
+- Push branch to ADO: `git push -u ado <branch-name>`
+- Create PR targeting `main` via the **ADO REST API** (do NOT generate manual links)
+- Authentication: use `git credential fill` to retrieve stored ADO credentials
+- API endpoint: `https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_apis/git/repositories/Industrial-Data-Landscape-IDL/pullrequests?api-version=7.1`
 - Include summary of changes and test plan in PR description
+
+### How to create the PR programmatically
+
+```python
+import subprocess, json, urllib.request, base64
+
+# Get credentials from git credential helper
+proc = subprocess.run(
+    ['git', 'credential', 'fill'],
+    input='protocol=https\nhost=dev.azure.com\n\n',
+    capture_output=True, text=True, timeout=5
+)
+creds = {}
+for line in proc.stdout.strip().split('\n'):
+    if '=' in line:
+        k, v = line.split('=', 1)
+        creds[k] = v
+
+auth = base64.b64encode(f"{creds['username']}:{creds['password']}".encode()).decode()
+
+pr_body = {
+    "sourceRefName": "refs/heads/<branch-name>",
+    "targetRefName": "refs/heads/main",
+    "title": "SVQS-XXX: Short description",
+    "description": "## Summary\n- ..."
+}
+
+url = "https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_apis/git/repositories/Industrial-Data-Landscape-IDL/pullrequests?api-version=7.1"
+req = urllib.request.Request(url, data=json.dumps(pr_body).encode(), method="POST")
+req.add_header("Authorization", f"Basic {auth}")
+req.add_header("Content-Type", "application/json")
+
+with urllib.request.urlopen(req) as resp:
+    result = json.loads(resp.read().decode())
+    pr_id = result["pullRequestId"]
+    # PR URL: https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/{pr_id}
+```
 
 ## 6. Cross-Linking
 - Add ADO branch/PR link to Jira ticket
@@ -193,13 +224,50 @@ For changes involving **data model decisions, architectural choices, or design p
 - Base URL: https://cognitedata.atlassian.net
 - Project Key: SVQS
 - Credentials: `JIRA_EMAIL` and `JIRA_API_TOKEN` from the `.env` file (see "Environment & Credentials" above)
+- **Comment Style:** Always write Jira comments in first person singular ("I updated...", "I found..."), NOT plural ("We updated...", "We found...").
+- **Links in ADF:** Do NOT use wiki markup `[text|url]`. Use proper ADF link format:
+  ```python
+  {"type": "text", "text": "Link Text", "marks": [{"type": "link", "attrs": {"href": "https://..."}}]}
+  ```
+  Always verify links render correctly after posting.
+- **Changelog Link (REQUIRED):** When closing a Jira ticket that involved code changes or SDK operations, add a comment linking to the changelog entry:
+  ```python
+  {
+      "type": "paragraph",
+      "content": [
+          {"type": "text", "text": "Changelog: "},
+          {"type": "text", "text": "CHANGELOG-0001.md#svqs-xxx", "marks": [
+              {"type": "link", "attrs": {"href": "https://github.com/fbarsoba-cognite/sylvamo-project-documentation/blob/main/docs/reference/data-model/changelog/CHANGELOG-0001.md"}}
+          ]}
+      ]
+  }
+  ```
+  This ensures traceability between Jira tickets and documented changes.
 
 ## ADO Details
 - Repo: Industrial-Data-Landscape-IDL
 - Organization: SylvamoCorp
+- Project: Industrial-Data-Landscape-IDL
 - Remote name: `ado`
+- Authentication: `git credential fill` (uses stored credentials from git pushes — no PAT needed)
 
 ## Documentation Repo Details
 - GitHub: https://github.com/fbarsoba-cognite/sylvamo-project-documentation
 - Clone to: `../sylvamo-project-documentation` (sibling folder)
 - ADRs go in: `docs/reference/data-model/decisions/`
+
+## Team Jira Accounts
+
+For tagging team members in Jira comments, use these account IDs:
+
+| Name | Account ID | Email |
+|------|------------|-------|
+| Fernando Barsoba | `712020:d931a401-d119-4163-8741-19e05ac78283` | fernando.barsoba@cognite.com |
+| Anvar Akhiiartdinov | `5e158015b783d60db0a06e9b` | anvar.akhiiartdinov@cognite.com |
+| Max Tollefsen | `712020:23ec21ff-46ea-46dd-bdc3-af285ed7f5c3` | max.tollefsen@cognite.com |
+| Santiago Espinosa | `712020:2060fa8d-7601-42f3-bf3d-0ca96ee8dec3` | santiago.espinosa@cognite.com |
+
+**Usage in Jira API (ADF format):**
+```python
+{"type": "mention", "attrs": {"id": "ACCOUNT_ID", "text": "@Name"}}
+```

@@ -67,7 +67,7 @@ CDF is an **external SaaS endpoint**:
 └─────────────────┘                       └─────────────────┘
 ```
 
-- CDF is hosted in Cognite-managed cloud clusters (e.g., `westeurope-1`)
+- CDF is hosted in Cognite-managed cloud clusters (e.g., `az-eastus-1`)
 - Pipelines connect via **HTTPS** using **OAuth2 client credentials**
 - Treat it like any external API with a CLI deploy tool
 
@@ -188,7 +188,7 @@ flowchart LR
 | Environment Variable | Description |
 |---------------------|-------------|
 | `LOGIN_FLOW` | `client_credentials` |
-| `CDF_CLUSTER` | e.g., `westeurope-1` |
+| `CDF_CLUSTER` | e.g., `az-eastus-1` |
 | `CDF_PROJECT` | e.g., `sylvamo-dev` |
 | `IDP_CLIENT_ID` | Service Principal App ID |
 | `IDP_CLIENT_SECRET` | Service Principal Secret |
@@ -330,6 +330,8 @@ steps:
 ## Additional Documentation
 
 For more detailed information, see:
+
+- **[Code Change Workflow](../workflows/CODE_CHANGE_WORKFLOW.md)** - Governing process for code changes (branching, PRs, reviews)
 
 - **[CI/CD Hands-On Learnings](CICD_HANDS_ON_LEARNINGS.md)** - Real-world learnings from Sylvamo pipeline setup (branch strategy, pipeline architecture, CDF IAM, etc.)
 - **[CI/CD System Explanation](CICD_SYSTEM_EXPLANATION.md)** - Comprehensive guide on how the CI/CD system works, use case, code flow, and pipeline details

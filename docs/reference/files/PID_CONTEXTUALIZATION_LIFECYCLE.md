@@ -2,7 +2,7 @@
 
 > End-to-end lifecycle of how Cognite CDF ingests, parses, annotates, and maintains P&ID documents.
 
-**Last updated:** February 10, 2026 (rev 2)
+**Last updated:** February 17, 2026 (rev 3 - aligned with codebase)
 
 ---
 
@@ -22,6 +22,7 @@
 - [Cross-Document References](#cross-document-references)
 - [Detection Capabilities by File Type](#detection-capabilities-by-file-type)
 - [Three Approaches to P&ID Contextualization](#three-approaches-to-pid-contextualization)
+- [Sylvamo Implementation (Approach 3)](#sylvamo-implementation-approach-3)
 - [Why Annotations Are Not Auto-Updated (Design Rationale)](#why-annotations-are-not-auto-updated-design-rationale)
 - [What Customers Should Do: Operational Playbook](#what-customers-should-do-operational-playbook)
 - [Real-World Scenarios Explained Simply](#real-world-scenarios-explained-simply)
@@ -932,6 +933,23 @@ graph LR
 | **Cleanup** | Manual | Custom | `cleanOldAnnotations` flag |
 | **Scheduling** | Manual | Cron / external | CDF Workflows |
 | **Symbol detection** | Yes | No (tags only) | No (tags only) |
+
+### Sylvamo Implementation (Approach 3)
+
+The Sylvamo codebase implements the automated workflow via:
+
+| Component | Value |
+|-----------|-------|
+| **Extraction pipeline** | `ctx_files_pandid_annotater` |
+| **CDF Function** | `contextualization_p_and_id_annotater` |
+| **Module** | `cdf_p_and_id_parser` (Cognite Toolkit `tk:contextualization`) |
+| **Entity views** | CogniteFile, CogniteEquipment, CogniteAsset, CogniteTimeSeries |
+| **Search property** | `name` |
+| **Supported mime types** | `application/pdf`, `image/jpeg`, `image/png`, `image/tiff` |
+| **Auto-approval threshold** | 0.85 (configurable) |
+| **Auto-reject threshold** | 0.25 (configurable) |
+
+The pipeline uses the Cognite Diagrams API (`client.diagrams.detect`) and writes annotations to the data model. A separate **Direct Relation Writer** (`ctx_files_direct_relation_write`) syncs approved annotations to direct relations (e.g., `CogniteFile.assets`, `CogniteEquipment.files`).
 
 ---
 

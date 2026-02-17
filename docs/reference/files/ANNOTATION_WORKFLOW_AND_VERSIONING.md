@@ -2,7 +2,7 @@
 
 > How CDF manages annotations on engineering diagrams: creation, scoring, approval, and behavior across file revisions.
 
-**Last updated:** February 10, 2026
+**Last updated:** February 17, 2026 (aligned with codebase)
 
 ---
 
@@ -191,6 +191,8 @@ graph TB
 | **70% — 85%** | Queue for review | Plausible but needs human confirmation |
 | **>= 85%** | Auto-approve | High confidence; reliable for production use |
 
+**Sylvamo implementation:** The `ctx_files_pandid_annotater` pipeline uses configurable thresholds: `autoApprovalThreshold: 0.85`, `autoRejectThreshold: 0.25`. Annotations with confidence ≤ 0.25 are rejected; 0.25–0.85 go to review; ≥ 0.85 are auto-approved. The recommended 70% reject threshold can be applied by setting `autoRejectThreshold: 0.70` in the pipeline config.
+
 > **Anti-pattern:** Using a single low threshold (e.g., 0.20) for auto-approval produces many false positives and undermines trust in the interactive diagrams.
 
 ### Quality Metric
@@ -233,6 +235,10 @@ graph TB
 ```
 
 ### Via the Automated Workflow (Deployment Pack)
+
+**Sylvamo pipelines:**
+- **P&ID Annotator**: `ctx_files_pandid_annotater` (CDF Function: `contextualization_p_and_id_annotater`) — creates annotations from diagram detection
+- **Direct Relation Writer**: `ctx_files_direct_relation_write` — syncs approved annotations to direct relations (e.g., `CogniteFile.assets`, `CogniteEquipment.files`)
 
 ```mermaid
 graph TB

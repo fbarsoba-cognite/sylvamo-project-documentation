@@ -42,13 +42,13 @@ raw_ext_<extractor_type>_<source>
 
 | Database | Extractor | Tables | Description |
 |----------|-----------|--------|-------------|
-| `raw_ext_fabric_ppr` | Fabric Connector | **19+** | PPR: hist_reel, hist_roll, hist_package, ppr_gr, ppr_ll, ppr_mill, ppr_production_total (hourly) + 14 daily tables |
-| `raw_ext_fabric_ppv` | Fabric Connector | 1–2 | PPV: purchase_order_gr_na (daily); transformations use ppv_snapshot |
-| `raw_ext_fabric_sapecc` | Fabric Connector | **324** | SAP ECC: 4 Gold (lh_gold_pm) + 320 Silver (LH_SILVER_sapecc) tables |
-| `raw_ext_sap` | DB Extractor (OData) | 5 | SAP Gateway (Functional Locations, Materials, etc.) |
-| `raw_ext_sql_proficy` | DB Extractor | 6 | Proficy lab test results |
-| `raw_ext_pi` | PI Extractor | 1 | timeseries_metadata (per PI server) |
-| `raw_ext_sharepoint` | File Extractor | 2+ | documents, roll_quality, files_metadata (PDFs → CogniteFile) |
+| `raw_ext_fabric_ppr` | Fabric Connector | **16** | Paper Production Reporting (Reels, Rolls, Packages, Blends, etc.) |
+| `raw_ext_fabric_ppv` | Fabric Connector | 2 | Purchase Price Variance / Cost data |
+| `raw_ext_fabric_sapecc` | Fabric Connector | **97** | SAP ECC tables (Work Orders, Notifications, Operations, Materials) |
+| `raw_ext_sap` | SAP OData | 5 | SAP Gateway (Functional Locations, Materials) |
+| `raw_ext_pi` | PI Extractor | 2 | Time series metadata |
+| `raw_ext_sql_proficy` | SQL Extractor | 2 | Proficy lab test results |
+| `raw_ext_sharepoint` | SharePoint Extractor | 2 | Documents and quality reports |
 
 ---
 
@@ -59,7 +59,7 @@ raw_ext_<extractor_type>_<source>
 | **Fabric Connector** | Fabric PPR | ✅ Running | `raw_ext_fabric_ppr` | 16 tables | UC1, UC2 (Reels, Rolls) |
 | **Fabric Connector** | Fabric PPV | ✅ Running | `raw_ext_fabric_ppv` | 716 rows | UC1 (Costs) |
 | **Fabric Connector** | Fabric SAP ECC | ✅ Running | `raw_ext_fabric_sapecc` | **97 tables** | Work Orders, Notifications |
-| **PI Extractor** | PI Server (3 servers) | ✅ Running | Time Series | **3,606 tags** | Process Data |
+| **PI Extractor** | PI Server (3 servers) | ✅ Running | Time Series | **3,500+ tags** | Process Data |
 | **SharePoint Extractor** | SharePoint Online | ✅ Running | `raw_ext_sharepoint` | 180 records | UC2 (Quality) |
 | **SAP OData Extractor** | SAP Gateway | ✅ Running | `raw_ext_sap` | 5 tables | Functional Locations |
 | **SQL Extractor** | Proficy GBDB | ⚠️ Configured (status uncertain) | `raw_ext_sql_proficy` | 10,000+ rows | UC2 (Lab) |
@@ -70,32 +70,9 @@ raw_ext_<extractor_type>_<source>
 |----------|-------|--------|
 | RAW Databases | 7 | All extractors |
 | RAW Tables | **126** | Across all databases |
-| Time Series | **3,606 tags** | PI Server (primary) + Proficy + Other |
+| Time Series | **3,500+** | PI Server (primary) + Proficy + Other |
 | Files | 1,000+ | SharePoint, P&IDs |
 | Total Model Nodes | 500,000+ | mfg_core (primary) |
-
-
-
----
-
-## CDF Extraction Pipelines (from Codebase)
-
-> **Source:** `sylvamo/modules/sourcesystem/cdf_extractor_pipelines/extraction_pipelines/`
-
-| Pipeline externalId | Name | Schedule | RAW Database | Source |
-|---------------------|------|---------|--------------|--------|
-| `ep_pi_s769pi03` | PI Extractor - S769PI03 (PM) | Continuous | raw_ext_pi | pi-extractor-pm |
-| `ep_pi_s769pi01` | PI Extractor - S769PI01 (Eastover) | Continuous | raw_ext_pi | pi-extractor-eastover |
-| `ep_pi_s519pip1` | PI Extractor - S519PIP1 (Sumter) | Continuous | raw_ext_pi | pi-extractor-sumter |
-| `ep_fabric_sapecc_daily` | Fabric Extractor - SAP ECC Daily (324 tables) | 0 2 * * * | raw_ext_fabric_sapecc | fabric-connector-sapecc |
-| `ep_fabric_ppv_daily` | Fabric Extractor - PPV Daily (1 table) | 0 2 * * * | raw_ext_fabric_ppv | fabric-connector-ppv |
-| `ep_fabric_ppr_hourly` | Fabric Extractor - PPR Hourly (4 tables) | 0 * * * * | raw_ext_fabric_ppr | fabric-connector-ppr |
-| `ep_fabric_ppr_hist_reel` | Fabric Extractor - PPR Hist Reel (continuous) | Continuous | raw_ext_fabric_ppr | fabric-connector-ppr |
-| `ep_fabric_ppr_daily` | Fabric Extractor - PPR Daily (14 tables) | 0 2 * * * | raw_ext_fabric_ppr | fabric-connector-ppr |
-| `ep_file_extractor` | File Extractor - SharePoint Documents | Continuous | raw_ext_sharepoint | sharepoint-extractor |
-| `ep_db_extractor` | DB Extractor - SAP OData & Proficy | Continuous | raw_ext_sap, raw_ext_sql_proficy | db-extractor |
-
-**PI Tag Counts (from pipeline docs):** S769PI03: 3,390 | S769PI01: 210 | S519PIP1: 6 → **3,606 total**
 
 ---
 
@@ -243,7 +220,7 @@ backfill:
 | O2 Reactor | 401AB148, 401AC146, 401FC105 | 45 |
 | Temperature | 401TC125, 401TC126, 401TI143 | 10 |
 | Calculated | Combined TRP Production Rate | 8 |
-| **Total** | | **3,606 tags** (across 3 PI servers) |
+| **Total** | | **3,500+ tags** (across 3 PI servers) |
 
 ### Service Principal
 
@@ -556,7 +533,7 @@ SAP OData Extractor →     raw_ext_sap
                             └── work_orders          →    (Work Orders)
 
 PI Extractor        →     Time Series (sylvamo_assets)
-                            └── 3,606 tags         →    Process monitoring
+                            └── 3,500+ tags         →    Process monitoring
                     →     raw_ext_pi
                             └── *_metadata           →    Tag metadata
 ```

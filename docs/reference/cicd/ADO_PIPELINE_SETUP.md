@@ -32,7 +32,7 @@ This document summarizes the CI/CD pipeline implementation for SVQS-171.
    # Or clone to specific location
    uv run python scripts/05-utilities/ado_clone_repo.py --target-dir ~/workspace/ado-repo
    ```
-   See `docs/ADO_CLONE_REPO.md` for detailed instructions.
+   See `ADO_CLONE_REPO.md` for detailed instructions.
 
 2. **Copy Pipeline Files to ADO Repo**
    - The pipeline files are in `.devops/` folder in this workspace
@@ -120,7 +120,7 @@ All pipeline files are located in `.devops/` folder:
 
 For a comprehensive explanation of how the CI/CD system works, its use case, code flow, and pipeline details, see:
 
-**`docs/CICD_SYSTEM_EXPLANATION.md`**
+**`CICD_SYSTEM_EXPLANATION.md`**
 
 This document covers:
 - Use case and business context
@@ -154,8 +154,8 @@ This document covers:
 ## References
 
 - Plan document: `.cursor/plans/svqs-171_ci_cd_pipeline_setup_7e57fcc5.plan.md`
-- System explanation: `docs/CICD_SYSTEM_EXPLANATION.md` (comprehensive guide)
+- System explanation: `CICD_SYSTEM_EXPLANATION.md` (comprehensive guide)
 - Clone repo script: `scripts/05-utilities/ado_clone_repo.py`
-- Clone repo guide: `docs/ADO_CLONE_REPO.md`
+- Clone repo guide: `ADO_CLONE_REPO.md`
 - Official Cognite docs: https://docs.cognite.com/cdf/deploy/cdf_toolkit/guides/cicd/ado_setup
 - ADO repo: https://dev.azure.com/SylvamoCorp/_git/Industrial-Data-Landscape-IDL

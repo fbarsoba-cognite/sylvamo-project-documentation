@@ -449,7 +449,7 @@ stages:
   - stage: DeployDev
     displayName: 'Deploy to Dev'
     variables:
-      - group: dev-toolkit-credentials-fernando
+      - group: dev-toolkit-credentials
     jobs:
       - job: Deploy
         container:
@@ -572,7 +572,7 @@ stages:
 Before running pipelines, verify:
 
 - [ ] **Variable Groups Created:**
-  - [ ] `dev-toolkit-credentials` (or `dev-toolkit-credentials-fernando`)
+  - [ ] `dev-toolkit-credentials` (or `dev-toolkit-credentials`)
   - [ ] `staging-toolkit-credentials`
   - [ ] `prod-toolkit-credentials`
 

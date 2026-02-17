@@ -1,5 +1,8 @@
 # CI/CD Complete Setup Guide - Speaker Notes
 
+> **Training materials:** Session materials from Sprint 2 (February 2026). Content remains relevant for CI/CD setup.
+
+
 **Phase 2: Hands-On Setup Session**  
 **Audience**: Platform Teams, DevOps Engineers, Technical Leads  
 **Duration**: 60-90 minutes (hands-on setup session)  

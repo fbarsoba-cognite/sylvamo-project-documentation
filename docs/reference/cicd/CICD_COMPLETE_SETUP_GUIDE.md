@@ -1013,7 +1013,7 @@ Use this checklist to verify your setup is complete:
 - **[CI/CD Testing Guide](CICD_TESTING_GUIDE.md)** - Detailed testing procedures
 - **[CI/CD Pipeline Troubleshooting Guide](CICD_PIPELINE_TROUBLESHOOTING.md)** - Comprehensive troubleshooting
 - **[CI/CD Overview](CICD_OVERVIEW.md)** - High-level concepts and architecture
-- **[ADO Pipelines Setup Steps](ADO_PIPELINES_SETUP_STEPS.md)** - Original setup guide
+- **[ADO Pipelines Setup Steps](ADO_PIPELINE_SETUP.md)** - Original setup guide
 
 ---
 

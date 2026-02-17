@@ -1,6 +1,6 @@
 # Sylvamo MFG Core Data Model
 
-> **Note:** This document describes the **sylvamo_mfg_core** model only. The extended model (sylvamo_mfg_extended) with WorkOrder, CostEvent, Equipment, etc. will be covered separately.
+> **Note:** This document describes the **sylvamo_mfg_core** model only. Equipment is modeled as Asset nodes with `assetType='Equipment'` (see ADR-001). The extended model (sylvamo_mfg_extended) exists but is not the current focus.
 
 ## Model Overview
 
@@ -9,14 +9,14 @@
 | **Space (Schema)** | sylvamo_mfg_core_schema |
 | **Space (Instances)** | sylvamo_mfg_core_instances |
 | **Data Model** | SylvamoMfgCore |
-| **Version** | v1 |
+| **Version** | v2 |
 | **Views** | 7 |
 
 ## Views in sylvamo_mfg_core
 
 | View | Description | Key Relationships |
 |------|-------------|-------------------|
-| **Asset** | Mills, plants, equipment (with ISA-95 assetType classification) | parent, children, reels, events, timeSeries |
+| **Asset** | Mills, plants, equipment (with ISA-95 assetType classification) | parent, children, reels, events, timeSeries, files, qualityReports |
 | **Material** | Raw materials, products | source |
 | **Reel** | Paper reels (production batches) | asset, rolls, events |
 | **Roll** | Paper rolls (material lots) | reel, events, qualityResults |
@@ -38,7 +38,7 @@
 │    │ description │         │ description │         │ unit        │         │
 │    │ assetType   │         │ materialType│         │ isStep      │         │
 │    │ plantCode   │         │             │         │             │         │
-│    │ assetPath   │         │             │         │             │         │
+│    │ mfgPath   │         │             │         │             │         │
 │    └──────┬──────┘         └─────────────┘         └──────┬──────┘         │
 │           │                                                │                │
 │           │ reels                                   assets │                │
@@ -107,7 +107,9 @@ erDiagram
         string description
         string assetType
         string plantCode
-        string assetPath
+        string mfgPath
+        string equipmentType
+        string equipmentNumber
         relation parent
     }
     
@@ -165,7 +167,7 @@ Asset (Eastover Mill)
 ```
 RollQuality
   ├── roll → Roll (which roll was tested)
-  ├── asset → Asset (which equipment/location)
+  ├── asset → Asset (Equipment-level asset, e.g. Sheeter No.2)
   └── defectCode, isRejected, minutesLost (quality data)
 ```
 
@@ -183,7 +185,7 @@ This enables queries like:
 | Asset | 45,900+ | Includes 33,072 with `assetType='Equipment'` |
 | Reel | 83,600+ | |
 | Roll | 2,300,000+ | |
-| RollQuality | 580 | SharePoint roll quality reports |
+| RollQuality | ~750 | SharePoint roll quality reports (with asset links) |
 | MfgTimeSeries | 3,500+ | |
 | Event | 92,000+ | SAP Work Orders, Proficy, PPV |
 | Material | 58,000+ | |
@@ -203,15 +205,14 @@ Assets are classified by `assetType` based on hierarchy level:
 
 See [ADR-001-ASSET-EQUIPMENT.md](decisions/ADR-001-ASSET-EQUIPMENT.md) for details.
 
-## What's NOT in mfg_core (Coming in mfg_extended)
+## What's NOT in mfg_core (mfg_extended - de-emphasized)
 
-The following entities are in **sylvamo_mfg_extended**, not mfg_core:
+Equipment is **not** a separate entity—it is modeled as Asset nodes with `assetType='Equipment'` (see ADR-001). The following entities are in **sylvamo_mfg_extended** (exists in CDF but not current focus):
 
 | Entity | Description | Model |
 |--------|-------------|-------|
 | CostEvent | PPV/cost variance | mfg_extended |
 | WorkOrder | SAP maintenance orders | mfg_extended |
-| Equipment | CogniteEquipment (not used - see ADR-001) | mfg_extended |
 | ProductionOrder | SAP production orders | mfg_extended |
 | ProductionEvent | Proficy events | mfg_extended |
 | Notification | SAP notifications | mfg_extended |

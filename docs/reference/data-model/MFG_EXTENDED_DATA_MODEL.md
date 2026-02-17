@@ -1,5 +1,7 @@
 # sylvamo_mfg_extended Data Model
 
+> **De-emphasized:** This model exists in CDF but is not the current focus. Sprint 3 priorities are on mfg_core.
+
 > **Extended Model for PPV/Cost Analysis and Maintenance Activities**
 
 This document describes the `sylvamo_mfg_extended` data model, which extends `sylvamo_mfg_core` with cost analysis and activity tracking capabilities.
@@ -16,6 +18,9 @@ This document describes the `sylvamo_mfg_extended` data model, which extends `sy
 | **Views** | 8 custom views |
 | **Instances** | 50,000+ nodes |
 | **Primary Use Case** | **PPV/Cost Analysis** |
+
+
+> **Equipment (ADR-001):** Equipment-level hierarchy items are Asset with assetType=Equipment in mfg_core. The Equipment view here implements CogniteEquipment for SAP equipment (serial numbers, manufacturer) when physical asset tracking is needed. Currently 0 instances. See [ADR-001](decisions/ADR-001-ASSET-EQUIPMENT.md).
 
 ---
 
@@ -127,7 +132,7 @@ erDiagram
 | **ProductionOrder** | SAP production orders | `raw_ext_fabric_ppr/*` | ✅ 10,000+ |
 | **ProductionEvent** | Proficy production events | `raw_ext_sql_proficy/*` | ✅ 10,000+ |
 | **CostEvent** | PPV/cost variance records | `raw_ext_fabric_ppv/ppv_snapshot` | ✅ 716 |
-| **Equipment** | Plant equipment | (pending source) | ❌ 0 |
+| **Equipment** | CogniteEquipment for SAP equipment (serial numbers, manufacturer) | SAP Equipment table (pending) | ❌ 0 |
 | **MaintenanceActivity** | Derived maintenance activities | WorkOrder derivation | ✅ 10,000+ |
 | **Notification** | SAP notifications | (pending SAP IW29) | ❌ 0 |
 | **Operation** | Work order operations | (pending AFKO join) | ❌ 0 |
