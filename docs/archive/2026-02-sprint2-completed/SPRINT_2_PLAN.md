@@ -7,6 +7,20 @@
 
 ---
 
+## Completion Summary (from changelogs)
+
+| Workstream | Outcome |
+|------------|---------|
+| **Search Experience** | ✅ Events, Time Series, Files linked to Assets; Asset.files reverse relation |
+| **Reel/Roll Scheduling** | ✅ populate_Reel.Schedule.yaml, populate_Roll.Schedule.yaml (CHANGELOG-0003) |
+| **Data Completeness** | ✅ SVQS-245: Fabric extractors revamped (17 tables); SVQS-239: transformation schedules |
+| **Sumter Assets** | ✅ SVQS-244: RollQuality linked to Sumter FLOCs (0519-07-05-*) |
+| **P&ID / Validation** | Carried to Sprint 3 (SVQS-144, SVQS-159) |
+
+*Verify current Jira status: [SVQS project](https://cognitedata.atlassian.net/browse/SVQS)*
+
+---
+
 ## Executive Summary
 
 Sprint 2 focuses on completing the contextualization gaps to enable Elise's search experience vision, while also addressing UC2 data quality issues raised by Anvar and data completeness gaps identified by Cam/Valmir/Max.
