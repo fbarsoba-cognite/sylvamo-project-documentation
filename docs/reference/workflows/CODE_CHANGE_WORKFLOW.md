@@ -49,17 +49,27 @@ Do NOT hardcode credentials. Read them from this `.env` file.
 
 ### Orphaned CDF Resources (Views, Containers, Instances)
 
-When removing views/containers/instances from the codebase:
-1. **`cdf deploy` does NOT automatically delete** orphaned resources from CDF
-2. **Preferred approach:** Use `cdf clean` if available, or create a cleanup script in a PR
-3. **If SDK cleanup is required:**
-   - Document in the changelog what was deleted and why
-   - Reference the original PR that removed the code
-   - Only use SDK for resources that cannot be deleted via CLI
+**`cdf deploy` does NOT automatically delete** orphaned resources from CDF.
 
-**Example:** If you remove `Equipment.View.yaml` from codebase and deploy, the view may still exist in CDF. Either:
-- Run `cdf clean --env dev` to remove orphaned resources
-- Or use SDK to delete, documenting in changelog under the original ticket
+**SDK cleanup is acceptable ONLY when:**
+1. The code change (removing YAML files) has already gone through a PR and been merged
+2. `cdf deploy` has been run but orphaned resources remain in CDF
+3. `cdf clean` is not available or doesn't work for the resource type
+
+**SDK cleanup is NOT acceptable for:**
+- Deleting resources that still have YAML definitions in the codebase
+- Making schema changes that should go through PR review
+- Any change that could be done via `cdf deploy` or `cdf clean`
+
+**When using SDK cleanup:**
+- Document in the changelog what was deleted
+- Reference the original PR that removed the code
+- Add a note like "SDK cleanup of orphaned resources (Feb 17, 2026)"
+
+**Example workflow:**
+1. PR #896 removes `Equipment.View.yaml` from codebase ✓
+2. `cdf deploy` runs, but Equipment view still exists in CDF
+3. SDK cleanup deletes orphaned view → document in changelog under SVQS-244
 
 ## 1. Jira Ticket
 - Check if an existing Jira ticket covers the change
