@@ -36,4 +36,14 @@ Sprint 3 focuses on:
 
 ---
 
+## Completed Stories
+
+| Jira | Summary | ADO PR | Date Completed |
+|------|---------|--------|----------------|
+| [SVQS-239](https://cognitedata.atlassian.net/browse/SVQS-239) | Transformation fixes, schedules, CDF alignment | [PR #899](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/899) | 2026-02-17 |
+| [SVQS-229](https://cognitedata.atlassian.net/browse/SVQS-229) | Add CDF Extraction Pipelines for all VM extractors | [PR #883](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/883) | 2026-02-16 |
+| [SVQS-245](https://cognitedata.atlassian.net/browse/SVQS-245) | Revamp Fabric SAP extractors to match IDL Pilot table list | VM-only / [PR #899](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/899) | 2026-02-17 |
+
+---
+
 *Sprint 3 started February 16, 2026*
