@@ -26,7 +26,7 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 ### [SVQS-244] Cleanup legacy Equipment instances and fix RollQuality asset links
 **Date:** 2026-02-17 08:15 UTC
 **Jira:** [SVQS-244](https://cognitedata.atlassian.net/browse/SVQS-244)
-**ADO PR:** [feature/SVQS-244-cleanup-legacy-equipment](https://dev.azure.com/SylvamoCorp/_git/Industrial-Data-Landscape-IDL/pullrequestcreate?sourceRef=feature%2FSVQS-244-cleanup-legacy-equipment&targetRef=main)
+**ADO PR:** [PR #896](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/896)
 
 **Changes:**
 - Updated `populate_RollQuality.Transformation.sql` to link to SAP FLOC Asset nodes:
