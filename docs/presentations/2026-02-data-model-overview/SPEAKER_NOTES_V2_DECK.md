@@ -159,6 +159,30 @@
 
 **Backup:** For validation methodology and CDF numbers (e.g. RollQuality at Sheeter No.2, Baggy Edges counts), see scenario validation docs in this folder or the main repo [presentations/2026-02-data-model-overview](https://github.com/fbarsoba-cognite/sylvamo-project-documentation/tree/main/docs/presentations/2026-02-data-model-overview).
 
+#### Explaining the query result table (if you show the rendered table or GraphQL output)
+
+When you show the table from the Roll Quality GraphQL query (e.g. from [roll-quality-query-viewer.html](https://github.com/fbarsoba-cognite/sylvamo-project-documentation/tree/main/docs/presentations/2026-02-data-model-overview) or the raw JSON):
+
+- **What the table is (one sentence):** "This is the result of a single GraphQL query on our manufacturing data model. Each row is one quality report: when it was reported, which equipment, what defect, how much time we lost, and—because the model is connected—which roll and reel it came from."
+
+- **The Real Discovery story (30–60 sec):** "Look at the pattern. Most rows are **Sheeter No.2** and the defect is **006 - Curl**. Several rows show **60 minutes lost** per incident. So we’re not guessing—we see exactly which machine, which defect, and how much time it cost. Before the data model, this would have meant pulling quality data from SharePoint, matching equipment names by hand, and then trying to link to production rolls and reels in another system. Here it’s **one query**: we get quality report → equipment → roll → reel and production date in one place. That’s the connected data model in action."
+
+- **How to read one row (for the slide):** Pick one row (e.g. first Sheeter No.2 row): "This row is one quality event: **December 2, 2025**, at **Sheeter No.2**, defect **006 - Curl**, **60 minutes** lost. The **roll** is [e.g. EME25M01183B] and it came from **reel** [e.g. EM0021201018_2025] produced **December 1**. So from one quality report we can trace straight back to the reel and production date—no switching systems."
+
+- **Optional so-what:** "We can now prioritize: focus on **Sheeter No.2** and **Curl** first—that’s where the data points." / "The **Reel** column shows we have traceability from quality event all the way back to production batch."
+
+#### How we came to the table results
+
+1. **Run the query in CDF.** In Fusion, go to **Data** → **Data modeling** → open **Sylvamo MFG Core** (v2) → **Explore** (GraphQL). Run:  
+   `listRollQuality(first: 20)` with fields: `reportDate`, `defectNonDamage`, `defectDescription`, `minutesLost`, `equipment`, `asset { externalId, name }`, `roll { rollNumber, reel { reelNumber, productionDate } }`.  
+   (Use `first`, not `limit`—CDF GraphQL uses `first` for list queries.)
+
+2. **Copy the full JSON response.** The response has the shape `{ "data": { "listRollQuality": { "items": [ ... ] } } }`. Copy the entire JSON (including the outer `data` and `listRollQuality`).
+
+3. **Render the table.** Open **roll-quality-query-viewer.html** (in this folder in the sylvamo repo, or the same path in docs). Paste the JSON into the text area and click **Render**. The viewer reads `data.listRollQuality.items`, then builds a table with columns: Report date, Equipment, Defect, Description, Min lost, Asset, Roll, Reel (reel number + production date). You can switch to the **Mini graph** tab to see the first 5 rows as defect → equipment → roll → reel.
+
+4. **Why it works.** The data model links **RollQuality** to **Asset** (equipment) and **Roll**, and **Roll** to **Reel**. So one query returns quality events plus their equipment, roll, and reel in one response. The viewer just formats that JSON into a table for the presentation.
+
 **Transition:** "There are more discoveries when we query across the whole dataset."
 
 ---
