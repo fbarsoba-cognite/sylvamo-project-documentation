@@ -186,3 +186,20 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 
 **Why:**
 - 14,441 legacy PI time series (no externalId, 329 unique names duplicated ~44x each, zero datapoints) were being ingested into the CDM, inflating the count from 3.5K to 17.9K
+
+---
+
+### [SVQS-251] Add Package SearchConfig for Industrial Tools search
+**Date:** 2026-02-18 21:45 (EST)
+**Jira:** [SVQS-251](https://cognitedata.atlassian.net/browse/SVQS-251)
+**ADO PR:** [PR #909](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/909)
+
+**Changes:**
+- Added `Package.SearchConfig.yaml` to `mfg_core/cdf_applications/`
+- Configured columns: packageNumber, status, numberOfRolls, shipDate, deliveryNumber
+- Configured filters: status, shipDate, inventoryPoint
+- Full properties layout: all 11 Package properties
+
+**Why:**
+- Package entity (1.4M+ nodes) was deployed but not visible in CDF Industrial Tools search sidebar
+- SearchConfig makes it discoverable alongside other entities (Roll, Reel, Asset, etc.)
