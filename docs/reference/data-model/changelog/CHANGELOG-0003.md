@@ -170,3 +170,19 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 - Drift analysis revealed 7 transformations deployed from feature branches that were never merged to `main`
 - RollQuality view was deployed as v2 but data model still referenced v1, causing inconsistency
 - Legacy transformations from past experiments cluttered the CDF project
+
+---
+
+### [SVQS-253] Cleanup 14K duplicate legacy time series and fix populate_TimeSeries filter
+**Date:** 2026-02-18 19:30 (EST)
+**Jira:** [SVQS-253](https://cognitedata.atlassian.net/browse/SVQS-253)
+**ADO PR:** [PR #908](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/908)
+
+**Changes:**
+- Updated `populate_TimeSeries.Transformation.sql`: require `externalId IS NOT NULL AND externalId != ''`
+- Removed synthetic `ts:` prefix fallback for time series without externalId
+- Deleted 14,147 orphaned `ts:` prefix MfgTimeSeries CDM nodes from CDF
+- MfgTimeSeries node count reduced from ~17.9K to ~3.7K
+
+**Why:**
+- 14,441 legacy PI time series (no externalId, 329 unique names duplicated ~44x each, zero datapoints) were being ingested into the CDM, inflating the count from 3.5K to 17.9K
