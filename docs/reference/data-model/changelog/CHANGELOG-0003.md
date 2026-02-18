@@ -203,3 +203,17 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 **Why:**
 - Package entity (1.4M+ nodes) was deployed but not visible in CDF Industrial Tools search sidebar
 - SearchConfig makes it discoverable alongside other entities (Roll, Reel, Asset, etc.)
+
+---
+
+### [SVQS-251] Fix location filter version for Package visibility in Industrial Tools
+**Date:** 2026-02-18 22:00 (EST)
+**Jira:** [SVQS-251](https://cognitedata.atlassian.net/browse/SVQS-251)
+**ADO PR:** [PR #910](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/910)
+
+**Changes:**
+- Updated `sylvamo_mfg_core.LocationFilter.yaml` data model version from `v1` to `v3`
+- Root cause: location filter referenced `SylvamoMfgCore:v1` which predates the Package view (added in v2) and RollQuality:v2 (added in v3)
+
+**Why:**
+- Package entity (1.4M+ nodes) and its SearchConfig were deployed but invisible in Industrial Tools because the location filter pointed to an older data model version
