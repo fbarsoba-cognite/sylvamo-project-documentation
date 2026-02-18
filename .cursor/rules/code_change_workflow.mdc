@@ -174,7 +174,32 @@ The changelog file MUST be staged and included in the commit — never left as a
    
    > **IMPORTANT:** Always link to the **Pull Request URL** (e.g., `/pullrequest/893`), NOT the branch URL. Branches are deleted after merge, but PR URLs persist.
 
-### 7.2 ADRs (for architectural/design decisions)
+### 7.2 Documentation Sync (REQUIRED for model/pipeline/config changes)
+
+Beyond the changelog, when a code change affects any documented area, the corresponding documentation section(s) in the **sylvamo-project-documentation** repo MUST be reviewed and updated.
+
+- **Repo:** https://github.com/fbarsoba-cognite/sylvamo-project-documentation
+- **Local path:** `../sylvamo-project-documentation` (sibling folder)
+
+**Mapping of change types to documentation files:**
+
+| Change Type | Documentation to Review/Update |
+|---|---|
+| New/modified views, containers, data model versions | `docs/reference/data-model/MFG_CORE_DATA_MODEL.md`, `DATA_MODEL_SPECIFICATION.md`, `DATA_MODEL_WALKTHROUGH.md`, root `README.md` (entity counts, ERD, flow diagram, statistics tables) |
+| New/modified transformations or schedules | `docs/reference/data-model/TRANSFORMATIONS.md`, root `README.md` (RAW-to-model mapping table) |
+| Extractor or data source changes | `docs/reference/extractors/EXTRACTORS.md`, `DATA_PIPELINE_AND_SOURCES.md`, `DATA_SOURCE_REGISTRY.md` |
+| CI/CD pipeline changes | `docs/reference/cicd/CICD_OVERVIEW.md` |
+| File or contextualization changes | `docs/reference/files/` |
+| Use case additions or changes | `docs/reference/use-cases/USE_CASES_AND_QUERIES.md` |
+| Workflow changes | `docs/reference/workflows/CODE_CHANGE_WORKFLOW.md` |
+
+**Checklist (follow for every change):**
+1. Identify which documentation sections are affected by the current change
+2. Review the current content of those sections
+3. Update entity counts, view lists, ERD diagrams, flow diagrams, property tables, statistics, etc. as needed
+4. Commit and push documentation updates to GitHub (per `@sylvamo_project_documentation` rule)
+
+### 7.3 ADRs (for architectural/design decisions)
 
 For changes involving **data model decisions, architectural choices, or design patterns**:
 

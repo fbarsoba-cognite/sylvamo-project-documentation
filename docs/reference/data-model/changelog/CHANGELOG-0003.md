@@ -217,3 +217,22 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 
 **Why:**
 - Package entity (1.4M+ nodes) and its SearchConfig were deployed but invisible in Industrial Tools because the location filter pointed to an older data model version
+
+---
+
+### [SVQS-186] Phase 1: Alias generation pipeline for contextualization
+**Date:** 2026-02-18 23:00 (EST)
+**Jira:** [SVQS-186](https://cognitedata.atlassian.net/browse/SVQS-186)
+**ADO PR:** [PR #911](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/911)
+
+**Changes:**
+- Added `aliases` text[] property to `MfgAsset` and `MfgTimeSeries` containers
+- Exposed `aliases` in `Asset` and `MfgTimeSeries` views
+- New `generate_Asset_Aliases` transformation: extracts 5 alias variants per asset (sortField cleaned, FLOC, last segment, hyphen-stripped, space-stripped)
+- New `generate_TimeSeries_Aliases` transformation: extracts 5 alias variants per time series (cleaned PI tag, tag prefix, full ID, name, prefix without underscores)
+- Both transformations scheduled every 6h (30min offset after populate transformations)
+
+**Why:**
+- Foundation for Phase 1 of contextualization improvement (SVQS-186)
+- Aliases enable entity matching between time series and assets at equipment/sensor level
+- Current contextualization only maps to Paper Machine level; aliases support deeper matching
