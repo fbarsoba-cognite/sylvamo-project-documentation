@@ -148,3 +148,25 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 - Of 18 PPR tables in raw_ext_fabric_ppr, only ppr_hist_reel (→ Reel) and ppr_hist_roll (→ Roll) had transformations
 - Package entity is documented in Use Case 2 (Paper Quality Association) and Phase 2 roadmap
 - Order items enable tracking customer order fulfillment alongside manufacturing events
+
+---
+
+### [SVQS-252] CDF-Local Alignment: Add missing transformations, fix RollQuality version
+**Date:** 2026-02-18 18:00 (EST)
+**Jira:** [SVQS-252](https://cognitedata.atlassian.net/browse/SVQS-252)
+**ADO PR:** [PR #907](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/907)
+
+**Changes:**
+- Added 7 active transformations to `ado/main` that were running in CDF but missing from version control:
+  - `create_ProficyTimeSeries_CDF` / `create_ProficyEventIdTimeSeries_CDF` (Proficy classic time series)
+  - `populate_ProficyTimeSeries` / `populate_ProficyEventIdTimeSeries` (MfgTimeSeries CDM nodes)
+  - `populate_ProficyReelsDatapoints` (string datapoints for reel event IDs)
+  - `populate_Files` (CogniteFile nodes from CDF Files API)
+  - `populate_RollQuality` (RollQuality v2 nodes from SharePoint)
+- Fixed RollQuality version reference in `SylvamoMfgCore` DataModel: `v1` → `v2` (matching deployed view)
+- Cleaned up 71 inactive legacy transformations from CDF (backed up SQL before deletion)
+
+**Why:**
+- Drift analysis revealed 7 transformations deployed from feature branches that were never merged to `main`
+- RollQuality view was deployed as v2 but data model still referenced v1, causing inconsistency
+- Legacy transformations from past experiments cluttered the CDF project
