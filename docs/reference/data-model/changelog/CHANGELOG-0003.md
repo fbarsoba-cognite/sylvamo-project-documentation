@@ -129,3 +129,22 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 **Why:**
 - Foundational deployment of the complete Sylvamo manufacturing data model to CDF
 - Enables all subsequent transformations, extraction pipelines, and data ingestion
+
+---
+
+### [SVQS-251] Add Package entity and OrderItem transformation from PPR tables
+**Date:** 2026-02-18 16:00 (EST)
+**Jira:** [SVQS-251](https://cognitedata.atlassian.net/browse/SVQS-251)
+**ADO PR:** [PR #906](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/906)
+
+**Changes:**
+- New `MfgPackage` container with 11 properties (packageNumber, numberOfRolls, assembledDate, shipDate, loadDate, grossWeight, netWeight, inventoryPoint, deliveryNumber, orderItem, status)
+- New `Package` view (v1) implementing CogniteDescribable + CogniteSourceable
+- Updated `SylvamoMfgCore` DataModel to include Package view (7 → 8 entities)
+- New `populate_Package` transformation: `raw_ext_fabric_ppr.ppr_hist_package` → Package view (hourly schedule)
+- New `populate_Event_OrderItems` transformation: `raw_ext_fabric_ppr.ppr_hist_order_item` → Event view with eventType=OrderItem (daily at 03:00)
+
+**Why:**
+- Of 18 PPR tables in raw_ext_fabric_ppr, only ppr_hist_reel (→ Reel) and ppr_hist_roll (→ Roll) had transformations
+- Package entity is documented in Use Case 2 (Paper Quality Association) and Phase 2 roadmap
+- Order items enable tracking customer order fulfillment alongside manufacturing events
