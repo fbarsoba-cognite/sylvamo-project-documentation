@@ -250,3 +250,18 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 
 **Why:**
 - Enable MaterialValuation transformation to run against Fabric MBEW source
+
+---
+
+### [SVQS-244] Fix LocationFilter version so Equipment and MaterialValuation show in Industrial Tools search
+**Date:** 2026-02-19 (EST)
+**Jira:** [SVQS-244](https://cognitedata.atlassian.net/browse/SVQS-244)
+**ADO PR:** [PR #937](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/937)
+
+**Changes:**
+- Updated `sylvamo_mfg_core.LocationFilter.yaml`: use `{{ mfgCoreModelVersion }}` instead of hardcoded `v6`
+- LocationFilter now resolves to v10 (dev/staging) or v7 (prod) per config
+
+**Why:**
+- Equipment and MaterialValuation were not appearing in Industrial Tools search sidebar
+- Root cause: LocationFilter pointed to SylvamoMfgCore:v6, which does not include these views. Industrial Tools only shows views that exist in the data model version referenced by the location filter.
