@@ -236,3 +236,17 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 - Foundation for Phase 1 of contextualization improvement (SVQS-186)
 - Aliases enable entity matching between time series and assets at equipment/sensor level
 - Current contextualization only maps to Paper Machine level; aliases support deeper matching
+
+---
+
+### [SVQS-244] Fix MaterialValuation transformation - use null for currency (Fabric MBEW has no WAERS)
+**Date:** 2026-02-19 (EST)
+**Jira:** [SVQS-244](https://cognitedata.atlassian.net/browse/SVQS-244)
+**ADO PR:** [PR #936](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/936)
+
+**Changes:**
+- Updated `populate_MaterialValuation.Transformation.sql`: replace `cast(WAERS as STRING)` with `cast(null as STRING)` for currency
+- Fabric MBEW table does not have WAERS column; transformation was failing with "Column 'WAERS' does not exist"
+
+**Why:**
+- Enable MaterialValuation transformation to run against Fabric MBEW source
