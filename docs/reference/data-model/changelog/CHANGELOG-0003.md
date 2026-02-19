@@ -265,3 +265,18 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 **Why:**
 - Equipment and MaterialValuation were not appearing in Industrial Tools search sidebar
 - Root cause: LocationFilter pointed to SylvamoMfgCore:v6, which does not include these views. Industrial Tools only shows views that exist in the data model version referenced by the location filter.
+
+---
+
+### [SVQS-266] Remove mfg_extended module to reduce instance count
+**Date:** 2026-02-19 (EST)
+**Jira:** [SVQS-266](https://cognitedata.atlassian.net/browse/SVQS-266)
+**ADO PR:** [PR #938](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/938)
+
+**Changes:**
+- Removed `modules/mfg_extended/` (WorkOrder, Operation, ProductionOrder, ProductionEvent, CostEvent, Notification, MaintenanceActivity, Equipment)
+- Removed mfg_extended from selected modules in dev, staging, prod configs
+- Removed mfgExtended* variables from configs
+
+**Why:**
+- Project hit 5M instance limit; mfg_extended removal frees capacity for mfg_core entities (Equipment, MaterialValuation, etc.)
