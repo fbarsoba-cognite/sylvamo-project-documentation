@@ -4,6 +4,23 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 
 ---
 
+### [SVQS-266] Apply LVORM filter to MaterialValuation and re-enable schedule
+**Date:** 2026-02-20 09:26 (EST)
+**Jira:** [SVQS-266](https://cognitedata.atlassian.net/browse/SVQS-266)
+**ADO PR:** [PR #943](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/943)
+
+**Changes:**
+- Added LVORM filter to `populate_MaterialValuation.Transformation.sql`: `AND (LVORM IS NULL OR LVORM = '')`
+- Re-enabled `populate_MaterialValuation` schedule (isPaused: false)
+- Started one-off deletion of old Roll nodes (cutDate < 2024-01-01) via SDK (~1.03M instances)
+
+**Why:**
+- MaterialValuation is SAP master data; date cutoff inappropriate — LVORM (deletion flag) is the correct signal
+- 56.8% of MBEW records are deletion-flagged → ~630K instances freed
+- Roll deletions free ~1.03M instances from 2022-2023 data no longer needed
+
+---
+
 ### [SVQS-266] Pause Package/MaterialValuation schedules, add Roll date filter for instance limit
 **Date:** 2026-02-20 09:03 (EST)
 **Jira:** [SVQS-266](https://cognitedata.atlassian.net/browse/SVQS-266)
