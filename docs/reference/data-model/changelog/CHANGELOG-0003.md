@@ -4,6 +4,22 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 
 ---
 
+### [SVQS-266] Pause Package/MaterialValuation schedules, add Roll date filter for instance limit
+**Date:** 2026-02-20 09:03 (EST)
+**Jira:** [SVQS-266](https://cognitedata.atlassian.net/browse/SVQS-266)
+**ADO PR:** [PR #943](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/943)
+
+**Changes:**
+- Paused `populate_Package` schedule (isPaused: true)
+- Paused `populate_MaterialValuation` schedule (isPaused: true)
+- Added date filter to `populate_Roll`: keep only rolls from 2024-01-01 onward
+
+**Why:**
+- CDF instance limit (5M) causing space pressure
+- Package (~927K) and MaterialValuation (1M+) paused to free capacity
+- Roll date filter frees ~1.03M instances when old rolls (cutDate < 2024) are deleted
+
+---
 
 ### [SVQS-267] Enable search-config alpha flag for SearchConfig deployment
 **Date:** 2026-02-19 22:15 (EST)
