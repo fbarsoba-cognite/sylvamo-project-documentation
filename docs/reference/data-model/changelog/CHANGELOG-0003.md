@@ -5,6 +5,20 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 ---
 
 
+### [SVQS-267] Enable search-config alpha flag for SearchConfig deployment
+**Date:** 2026-02-19 22:15 (EST)
+**Jira:** [SVQS-267](https://cognitedata.atlassian.net/browse/SVQS-267)
+**ADO PR:** [PR #941](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/941)
+
+**Changes:**
+- Added `search-config = true` to `[alpha_flags]` in cdf.toml
+
+**Why:**
+- SearchConfig resources require the search-config alpha flag to be deployed by the toolkit
+- Enables Equipment and MaterialValuation to appear as search categories in Industrial Tools (with PR #939)
+
+---
+
 ### [SVQS-267] Add view version to Equipment and MaterialValuation SearchConfig for Industrial Tools search
 **Date:** 2026-02-19 21:55 (EST)
 **Jira:** [SVQS-267](https://cognitedata.atlassian.net/browse/SVQS-267)
