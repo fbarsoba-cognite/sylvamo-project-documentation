@@ -295,3 +295,21 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 
 **Why:**
 - Project hit 5M instance limit; mfg_extended removal frees capacity for mfg_core entities (Equipment, MaterialValuation, etc.)
+
+---
+
+### [SVQS-261] Virtual Instrumentation Tags for Time Series Contextualization
+**Date:** 2026-02-19 23:30 (EST)
+**Jira:** [SVQS-261](https://cognitedata.atlassian.net/browse/SVQS-261)
+**ADO PR:** [PR #940](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/940)
+
+**Changes:**
+- New transformation `populate_VirtualInstrumentationTags` creates a virtual asset node (vtag:) for each of ~3,468 PI time series tags, placed under the appropriate functional location based on prefix mapping
+- Modified `populate_TimeSeries` to reference vtag: assets instead of coarse PM-level FLOCs, enabling discrete tag-level contextualization
+- Added 7 validation tests verifying virtual tag creation, parent references, aliases, TS mapping, orphan detection, diagram detection compatibility, and entity matching compatibility
+- ADR-002 documenting the architectural decision
+- Implementation guide for data engineers
+
+**Why:**
+- SAP does not track instrumentation (transmitters, sensors, control valves), leaving PI time series with no discrete asset to contextualize against
+- Per Darren Downtain (SA Lead, Americas) Feb 19 review: virtual tags give ~100% discrete TS match rate, become P&ID annotation candidates, and enable gap analysis for the client
