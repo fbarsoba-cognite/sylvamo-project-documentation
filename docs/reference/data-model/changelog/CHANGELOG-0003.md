@@ -4,6 +4,21 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 
 ---
 
+
+### [SVQS-267] Add view version to Equipment and MaterialValuation SearchConfig for Industrial Tools search
+**Date:** 2026-02-19 21:55 (EST)
+**Jira:** [SVQS-267](https://cognitedata.atlassian.net/browse/SVQS-267)
+**ADO PR:** [PR #939](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/939)
+
+**Changes:**
+- Added `version: "{{ mfgCoreModelVersion }}"` to Equipment.SearchConfig.yaml view reference
+- Added `version: "{{ mfgCoreModelVersion }}"` to MaterialValuation.SearchConfig.yaml view reference
+
+**Why:**
+- Equipment (136K) and MaterialValuation (1M+) were not appearing as search categories in Industrial Tools
+- SearchConfig view references lacked explicit version, preventing correct resolution against LocationFilter data model (v10)
+
+---
 ### Adjust PPR transformations and add Roll/Reel schedules
 **Date:** 2026-02-12
 **ADO PR:** [PR #866](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/866)
