@@ -1,0 +1,16 @@
+{
+  "generated_at_utc": "2026-02-20T200445Z",
+  "cdf_project": "sylvamo-dev",
+  "cdf_cluster": "az-eastus-1",
+  "source_file_id": 2567708783152315,
+  "source_external_id": "contextualization_quality_metrics",
+  "source_name": "contextualization_quality_metrics.json",
+  "notes": "Generated via context_quality_handler in batch mode (5k increments to 50k) then aggregation.",
+  "run_details": {
+    "target_total": 50000,
+    "step": 5000,
+    "elapsed_seconds": 196,
+    "batches_completed": 10,
+    "aggregation": "completed"
+  }
+}
