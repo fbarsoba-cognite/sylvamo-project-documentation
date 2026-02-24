@@ -4,6 +4,21 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 
 ---
 
+### [SVQS-256] Document Streamlit Context Quality Dashboard deployment via CI/CD
+**Date:** 2026-02-23
+**Jira:** [SVQS-256](https://cognitedata.atlassian.net/browse/SVQS-256)
+**ADO PR:** [PR #975](https://dev.azure.com/SylvamoCorp/_git/Industrial-Data-Landscape-IDL/pullrequest/975)
+
+**Changes:**
+- Add "Deployment via CI/CD (Sylvamo)" section to Context Quality Dashboard README.
+- Documents that Streamlit app deploys when code is merged to main.
+- Confirms config.dev.yaml and deploy pipeline include context_quality / streamlit.
+
+**Why:**
+- Enable Streamlit dashboard via PR workflow; clarify deployment path for team.
+
+---
+
 ### [SVQS-254] Fix Time Series alias gap for equipment-level contextualization
 **Date:** 2026-02-19 (EST)
 **Jira:** [SVQS-254](https://cognitedata.atlassian.net/browse/SVQS-254)
