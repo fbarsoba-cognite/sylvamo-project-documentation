@@ -4,6 +4,22 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 
 ---
 
+### [SVQS-256] Point gp_file_annotation to cognite_toolkit_service_principal for extractionConfigsAcl
+**Date:** 2026-02-23
+**Jira:** [SVQS-256](https://cognitedata.atlassian.net/browse/SVQS-256)
+**ADO PR:** [PR #983](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/983)
+
+**Changes:**
+- Set `groupSourceId` for cdf_file_annotation module to `cogniteToolkitServicePrincipalSourceId` (94188b6a-9bf6-4550-a649-47597db59e66) instead of `${adminToolkitSourceId}`
+- Added `cogniteToolkitServicePrincipalSourceId` variable in config.dev.yaml
+
+**Why:**
+- Prepare step failed with "Failed (4xx): [ep_file_annotation, _]" because gp_file_annotation used unresolved `${adminToolkitSourceId}`, so the group had no Azure AD link and no members
+- Workflow service principal could not read extraction pipeline config without extractionConfigsAcl
+- cognite_toolkit_service_principal group has extractionConfigsAcl; reusing it allows Prepare to succeed
+
+---
+
 ### [SVQS-256] Add sp_file_annotation_functions space for File Annotation function deploy
 **Date:** 2026-02-24
 **Jira:** [SVQS-256](https://cognitedata.atlassian.net/browse/SVQS-256)
