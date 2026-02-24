@@ -4,6 +4,21 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 
 ---
 
+### [SVQS-256] Fix tr_file_to_asset_from_annotations - use cdf_raw for RAW table schema
+**Date:** 2026-02-24
+**Jira:** [SVQS-256](https://cognitedata.atlassian.net/browse/SVQS-256)
+**ADO PR:** [PR #985](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/985)
+
+**Changes:**
+- Updated `file_to_asset.Transformation.sql` to use `cdf_raw()` and `get_json_object(columns, '$.field')` instead of direct column access
+- CDF RAW tables use schema (key, lastUpdatedTime, columns) where columns is JSON
+
+**Why:**
+- Link Files to Assets step failed with "Column 'status' does not exist"
+- Transformation assumed flat columns; RAW tables store data in `columns` JSON string
+
+---
+
 ### [SVQS-256] Point gp_file_annotation to cognite_toolkit_service_principal for extractionConfigsAcl
 **Date:** 2026-02-23
 **Jira:** [SVQS-256](https://cognitedata.atlassian.net/browse/SVQS-256)
