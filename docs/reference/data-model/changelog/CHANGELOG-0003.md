@@ -4,6 +4,70 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 
 ---
 
+### [SVQS-256] Add sp_file_annotation_functions space for File Annotation function deploy
+**Date:** 2026-02-24
+**Jira:** [SVQS-256](https://cognitedata.atlassian.net/browse/SVQS-256)
+**ADO PR:** [PR #982](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/982)
+
+**Changes:**
+- Added `sp_file_annotation_functions` space definition to `hdm.space.yaml` in cdf_file_annotation module
+- Space is used for File Annotation function code storage (Prepare, Launch, Finalize, Promote)
+
+**Why:**
+- Function deploy failed with "One or more spaces do not exist: sp_file_annotation_functions"
+- Deploy pipeline uses continueOnError for functions, so the failure was silent
+- Adding the space to the data model ensures it is created before function deploy runs
+
+---
+
+### [SVQS-256] Align file annotation fileInstanceSpace to sylvamo_mfg_core_instances
+**Date:** 2026-02-24
+**Jira:** [SVQS-256](https://cognitedata.atlassian.net/browse/SVQS-256)
+**ADO PR:** [PR #978](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/978)
+
+**Changes:**
+- Set fileInstanceSpace from cdf_cdm to sylvamo_mfg_core_instances in config.dev.yaml
+- Pipeline Prepare step now queries the space where populate_Files writes file nodes
+
+**Why:**
+- Pipeline was selecting zero files because it queried cdf_cdm; files live in sylvamo_mfg_core_instances
+- Enables File Annotation dashboard to show non-zero KPIs when files are tagged ToAnnotate
+
+---
+
+### [SVQS-256] Fix File Annotation Streamlit system/user space error
+**Date:** 2026-02-24
+**Jira:** [SVQS-256](https://cognitedata.atlassian.net/browse/SVQS-256)
+**ADO PR:** [PR #977](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/977)
+
+**Changes:**
+- Use `annotationStateInstanceSpace` (sp_hdm_file_annotation) for annotation state view instead of `fileInstanceSpace` (cdf_cdm)
+- Added `annotationStateInstanceSpace` to ep_file_annotation.config.yaml, config.dev.yaml, default.config.yaml
+
+**Why:**
+- Resolves CogniteAPIError: "Query is targeting both system spaces and user spaces"
+- Annotation states live in user space; files (CogniteFile) in system space cdf_cdm — mixing them in one query was not allowed
+
+---
+
+### [SVQS-256] Add File Annotation pipeline and Streamlit dashboard (Darren recommendation)
+**Date:** 2026-02-23
+**Jira:** [SVQS-256](https://cognitedata.atlassian.net/browse/SVQS-256)
+**ADO PR:** [PR #976](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/976)
+
+**Changes:**
+- Added File Annotation accelerator module (`cdf_file_annotation`) from Cognite library
+- Annotation execution pipeline: prepare, launch, finalize, promote functions; extraction pipelines; workflows
+- Streamlit dashboard for monitoring annotation runs and quality metrics
+- Config wired for dev environment with required variables (file schema, target entity Asset, raw DB, etc.)
+- Excluded vendored module from ruff in pyproject.toml
+
+**Why:**
+- Per Darren Downtain (SA Lead) Feb 19 review: File Annotation pipeline with Streamlit dashboard enables progress tracking and quality scoring for contextualization
+- Enables pilot subset runs (3 → 20 → full) with validation of annotations and deduplication behavior
+
+---
+
 ### [SVQS-266] Apply LVORM filter to MaterialValuation and re-enable schedule
 **Date:** 2026-02-20 09:26 (EST)
 **Jira:** [SVQS-266](https://cognitedata.atlassian.net/browse/SVQS-266)
