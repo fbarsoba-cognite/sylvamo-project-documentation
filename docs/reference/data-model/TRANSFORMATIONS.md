@@ -358,43 +358,69 @@ flowchart LR
     Internal --> Transform[populate_TimeSeries]
     Transform --> Model[MfgTimeSeries - 3,532 nodes]
     Transform -.->|asset relation| Asset[Asset nodes]
+    Model -.->|self-join for existing assets| Transform
 ```
 
-**SQL Example:**
+**SQL Example (PI tags with array_union):**
 
 ```sql
 SELECT
-    CASE 
-        WHEN `externalId` IS NOT NULL THEN cast(`externalId` as STRING)
-        ELSE concat('ts:', cast(`id` as STRING))
-    END as externalId,
+    cast(src.`externalId` as STRING) as externalId,
     'sylvamo_mfg_core_instances' as space,
-    
-    -- CDM CogniteTimeSeries properties
-    CASE WHEN `isString` = true THEN 'string' ELSE 'numeric' END as type,
-    coalesce(`isStep`, false) as isStep,
-    
-    -- Reference to CDF Time Series for preview/sparkline
-    CASE 
-        WHEN `externalId` IS NOT NULL THEN cast(`externalId` as STRING)
-        ELSE cast(`id` as STRING)
-    END as timeSeries,
-    
-    -- Asset relation based on PI tag prefix
+    cast(src.`name` as STRING) as name,
+    coalesce(cast(src.`description` as STRING), concat('Proficy time series: ', cast(src.`name` as STRING))) as description,
+    cast(src.`externalId` as STRING) as sourceId,
+    CASE WHEN src.`isString` = true THEN 'string' ELSE 'numeric' END as type,
+    coalesce(src.`isStep`, false) as isStep,
+    cast(src.`externalId` as STRING) as timeSeries,
+    -- measurementType, piTagName (omitted for brevity)
+
+    -- Asset relation: PI tags get vtag + PM FLOC, MERGED with existing assets.
+    -- SVQS-282: array_union preserves FLOC links from entity matching / manual mappings.
     CASE
-        WHEN `externalId` LIKE 'pi:471%'
+        WHEN src.`externalId` LIKE 'pi:471%'
+        THEN array_union(
+            coalesce(mts.`assets`, array()),
+            array(
+                node_reference('sylvamo_mfg_core_instances', concat('vtag:', substring(src.`externalId`, 4))),
+                node_reference('sylvamo_mfg_core_instances', 'floc:0769-06-01-010')
+            )
+        )
+        WHEN src.`externalId` LIKE 'pi:472%'
+        THEN array_union(
+            coalesce(mts.`assets`, array()),
+            array(
+                node_reference('sylvamo_mfg_core_instances', concat('vtag:', substring(src.`externalId`, 4))),
+                node_reference('sylvamo_mfg_core_instances', 'floc:0769-06-01-020')
+            )
+        )
+        WHEN src.`externalId` LIKE 'pi:%'
+        THEN array_union(
+            coalesce(mts.`assets`, array()),
+            array(node_reference('sylvamo_mfg_core_instances', concat('vtag:', substring(src.`externalId`, 4))))
+        )
+        WHEN src.`name` LIKE '%Paper Machine 1%'
         THEN array(node_reference('sylvamo_mfg_core_instances', 'floc:0769-06-01-010'))
-        WHEN `externalId` LIKE 'pi:472%'
+        WHEN src.`name` LIKE '%Paper Machine 2%'
         THEN array(node_reference('sylvamo_mfg_core_instances', 'floc:0769-06-01-020'))
         ELSE array()
     END as assets
-FROM `_cdf`.`timeseries`
+
+FROM `_cdf`.`timeseries` src
+LEFT JOIN cdf_nodes('sylvamo_mfg_core_schema', 'MfgTimeSeries', 'v11') mts
+    ON src.`externalId` = mts.`externalId`
+WHERE src.`externalId` IS NOT NULL AND src.`externalId` != ''
 ```
 
 **Key Patterns:**
 - Uses `_cdf.timeseries` to access CDF classic time series
 - `timeSeries` property enables sparkline preview in UI
-- Asset linking based on PI tag prefix (471* = PM1, 472* = PM2)
+- **Self-join** to `cdf_nodes('sylvamo_mfg_core_schema', 'MfgTimeSeries', 'v11')` to read existing `assets`
+- **array_union** merges new links (vtag + PM FLOC) with existing assets instead of overwriting
+- Preserves FLOC links from entity matching and manual mappings (e.g. SVQS-283)
+- PI tags: vtag reference + PM-level FLOC (471* = PM1, 472* = PM2)
+
+> **See also:** [VIRTUAL_INSTRUMENTATION_TAGS.md](VIRTUAL_INSTRUMENTATION_TAGS.md) for the full pipeline (populate_VirtualInstrumentationTags → populate_TimeSeries → recontextualize_TimeSeries) and the array_union fix (SVQS-282, PR #992).
 
 ---
 
