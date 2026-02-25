@@ -183,7 +183,6 @@ sylvamo/modules/
 | **populate_Asset** | raw_ext_sap.sap_floc_eastover, sap_floc_sumter | Asset | 44,898 | SAP functional location hierarchy |
 | **populate_Reel** | raw_ext_fabric_ppr.ppr_hist_reel | Reel | 83,600+ | Paper reel production data |
 | **populate_Roll** | raw_ext_fabric_ppr.ppr_hist_roll | Roll | 1,000+ | Cut roll data (limited for demo) |
-| **populate_TimeSeries** | _cdf.timeseries | MfgTimeSeries | 3,532 | PI time series with asset links |
 | **populate_Event_WorkOrders** | raw_ext_fabric_sapecc.sapecc_work_orders | Event | ~223 | SAP work orders |
 | **populate_Event_PPV** | raw_ext_fabric_ppv.ppv_snapshot | Event | ~716 | Purchase price variance events |
 | **populate_Event_ProductionOrders** | raw_ext_sap.production_orders | Event | ~50,000 | SAP production orders |
@@ -195,6 +194,7 @@ sylvamo/modules/
 | **create_ProficyTimeSeries_CDF** | raw_ext_sql_proficy | CDF TimeSeries | - | Create classic TS resources |
 | **create_ProficyEventIdTimeSeries_CDF** | raw_ext_sql_proficy | CDF TimeSeries | - | Create event-linked TS |
 
+> **MfgTimeSeries:** Populated by extractor/connector or RAW-based transformation. We no longer use classic time series (`_cdf.timeseries`). SVQS-282 virtual-tag transformations (populate_VirtualInstrumentationTags, recontextualize_TimeSeries, etc.) source from MfgTimeSeries (cdf_nodes).
 > **Proficy datapoints:** Ingested by CDF Function `de_proficy_datapoints_ingest` (hourly), not SQL transformation.
 
 ### mfg_extended Module (5 transformations)
@@ -344,83 +344,15 @@ WHERE `REEL_NUMBER` IS NOT NULL
 
 ### 4.3 TimeSeries Transformation
 
-**Transformation:** `populate_TimeSeries`  
-**Source:** `_cdf.timeseries` (CDF internal table)  
-**Target:** MfgTimeSeries view
+**Assumption:** We no longer use classic time series (`_cdf.timeseries`). MfgTimeSeries is populated by an extractor, connector, or RAW-based transformation.
 
-**Data Flow:**
+**Transformations that source from MfgTimeSeries:**
+- `populate_VirtualInstrumentationTags` — creates vtag assets per PI time series
+- `generate_VirtualTag_Aliases` — aliases for P&ID matching
+- `recontextualize_TimeSeries` — adds vtag to Anvar's 210 curated tags (array_union)
+- `generate_TimeSeries_Aliases` — aliases for entity matching
 
-```mermaid
-flowchart LR
-    PI[PI Server] --> Extractor[PI Extractor]
-    Extractor --> TS[CDF Time Series]
-    TS --> Internal[_cdf.timeseries]
-    Internal --> Transform[populate_TimeSeries]
-    Transform --> Model[MfgTimeSeries - 3,532 nodes]
-    Transform -.->|asset relation| Asset[Asset nodes]
-    Model -.->|self-join for existing assets| Transform
-```
-
-**SQL Example (PI tags with array_union):**
-
-```sql
-SELECT
-    cast(src.`externalId` as STRING) as externalId,
-    'sylvamo_mfg_core_instances' as space,
-    cast(src.`name` as STRING) as name,
-    coalesce(cast(src.`description` as STRING), concat('Proficy time series: ', cast(src.`name` as STRING))) as description,
-    cast(src.`externalId` as STRING) as sourceId,
-    CASE WHEN src.`isString` = true THEN 'string' ELSE 'numeric' END as type,
-    coalesce(src.`isStep`, false) as isStep,
-    cast(src.`externalId` as STRING) as timeSeries,
-    -- measurementType, piTagName (omitted for brevity)
-
-    -- Asset relation: PI tags get vtag + PM FLOC, MERGED with existing assets.
-    -- SVQS-282: array_union preserves FLOC links from entity matching / manual mappings.
-    CASE
-        WHEN src.`externalId` LIKE 'pi:471%'
-        THEN array_union(
-            coalesce(mts.`assets`, array()),
-            array(
-                node_reference('sylvamo_mfg_core_instances', concat('vtag:', substring(src.`externalId`, 4))),
-                node_reference('sylvamo_mfg_core_instances', 'floc:0769-06-01-010')
-            )
-        )
-        WHEN src.`externalId` LIKE 'pi:472%'
-        THEN array_union(
-            coalesce(mts.`assets`, array()),
-            array(
-                node_reference('sylvamo_mfg_core_instances', concat('vtag:', substring(src.`externalId`, 4))),
-                node_reference('sylvamo_mfg_core_instances', 'floc:0769-06-01-020')
-            )
-        )
-        WHEN src.`externalId` LIKE 'pi:%'
-        THEN array_union(
-            coalesce(mts.`assets`, array()),
-            array(node_reference('sylvamo_mfg_core_instances', concat('vtag:', substring(src.`externalId`, 4))))
-        )
-        WHEN src.`name` LIKE '%Paper Machine 1%'
-        THEN array(node_reference('sylvamo_mfg_core_instances', 'floc:0769-06-01-010'))
-        WHEN src.`name` LIKE '%Paper Machine 2%'
-        THEN array(node_reference('sylvamo_mfg_core_instances', 'floc:0769-06-01-020'))
-        ELSE array()
-    END as assets
-
-FROM `_cdf`.`timeseries` src
-LEFT JOIN cdf_nodes('sylvamo_mfg_core_schema', 'MfgTimeSeries', 'v11') mts
-    ON src.`externalId` = mts.`externalId`
-WHERE src.`externalId` IS NOT NULL AND src.`externalId` != ''
-```
-
-**Key Patterns:**
-- Uses `_cdf.timeseries` to access CDF classic time series
-- `timeSeries` property enables sparkline preview in UI
-- **Self-join** to `cdf_nodes('sylvamo_mfg_core_schema', 'MfgTimeSeries', 'v11')` to read existing `assets`
-- **array_union** merges new links (vtag + PM FLOC) with existing assets instead of overwriting
-- Preserves FLOC links from entity matching and manual mappings (e.g. SVQS-283)
-- PI tags: vtag reference + PM-level FLOC (471* = PM1, 472* = PM2)
-
-> **See also:** [VIRTUAL_INSTRUMENTATION_TAGS.md](VIRTUAL_INSTRUMENTATION_TAGS.md) for the full pipeline (populate_VirtualInstrumentationTags → populate_TimeSeries → recontextualize_TimeSeries) and the array_union fix (SVQS-282, PR #992).
+> **See also:** [VIRTUAL_INSTRUMENTATION_TAGS.md](VIRTUAL_INSTRUMENTATION_TAGS.md) for the full pipeline (SVQS-282, PR #992).
 
 ---
 

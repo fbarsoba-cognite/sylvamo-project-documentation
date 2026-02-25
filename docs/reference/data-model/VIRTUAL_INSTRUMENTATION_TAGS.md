@@ -35,87 +35,41 @@ Darren Downtain (SA Lead, Americas) reviewed Sylvamo's contextualization in Febr
 
 ### Transformation Pipeline Flow (SVQS-282)
 
+**Assumption:** We no longer use classic time series (`_cdf.timeseries`). MfgTimeSeries is populated by an extractor, connector, or other transformation that writes directly to the data model.
+
 ```
 1. populate_Asset
    Creates FLOC hierarchy from SAP (functional locations, equipment)
                     |
                     v
-2. populate_VirtualInstrumentationTags  (SVQS-282)
-   Creates one vtag: asset per PI time series
+2. MfgTimeSeries population  (external)
+   Populated by extractor/connector or RAW-based transformation — NOT from _cdf.timeseries
+                    |
+                    v
+3. populate_VirtualInstrumentationTags  (SVQS-282)
+   Creates one vtag: asset per PI time series. Source: MfgTimeSeries (cdf_nodes)
    Parent: Anvar's curated FLOC > prefix mapping > floc:0769
    All get tags: ['DetectInDiagrams'] for file annotation
                     |
                     v
-3. generate_VirtualTag_Aliases  (SVQS-282)
-   Populates aliases on vtag assets (PI tag name, uppercase, hyphen/underscore stripped)
-   Enables P&ID diagram text to match vtag assets
-                    |
-                    v
-4. populate_TimeSeries  (SVQS-282 - MODIFIED)
-   Creates MfgTimeSeries nodes; sets assets = array_union(existing, [vtag + PM FLOC])
-   MERGES new links with existing — does not overwrite
+4. generate_VirtualTag_Aliases  (SVQS-282)
+   Populates aliases on vtag assets. Source: MfgTimeSeries (cdf_nodes)
                     |
                     v
 5. recontextualize_TimeSeries  (SVQS-282)
-   For Anvar's 210 curated PI tags: adds vtag to existing assets (array_union)
+   For Anvar's 210 curated PI tags: adds vtag to existing assets (array_union). Source: MfgTimeSeries
                     |
                     v
 6. Entity Matching / Manual Mappings  (SVQS-283, etc.)
    Adds deeper FLOC links (equipment-level) via manual CSV or ML matching
-   These links are PRESERVED by populate_TimeSeries and recontextualize_TimeSeries
+   These links are PRESERVED by recontextualize_TimeSeries (array_union)
 ```
-
-### What does populate_TimeSeries actually do?
-
-**populate_TimeSeries** is the transformation that creates `MfgTimeSeries` nodes in the data model from CDF's classic time series. It runs on a schedule (every 6 hours) and re-processes **all** time series each time.
-
-| Aspect | Details |
-|--------|---------|
-| **Source** | `_cdf.timeseries` — CDF's internal table of all classic time series (PI, Proficy, lab data) |
-| **Target** | `MfgTimeSeries` view in `sylvamo_mfg_core_schema` |
-| **What it sets** | `name`, `description`, `type` (numeric/string), `isStep`, `timeSeries` (sparkline reference), `piTagName`, `measurementType` (derived from name patterns), and **`assets`** |
-
-**The `assets` property** is the list of Asset nodes this time series belongs to. Multiple pipelines contribute to it:
-
-- **populate_TimeSeries** adds: vtag reference + PM-level FLOC (for PI tags)
-- **Entity Matching** adds: deeper FLOC links from manual mappings or ML (e.g., `floc:0769-06-01-010-015-045`)
-- **recontextualize_TimeSeries** adds: vtag for Anvar's 210 curated tags
-
-**Example: `pi:471BW229`**
-
-1. **Entity Matching** (manual mapping) sets `assets = [floc:0769-06-01-010-015-045]` (equipment-level FLOC)
-2. **populate_TimeSeries** runs next. It must **merge** its links (vtag + PM FLOC) with what already exists, not replace.
-3. **After merge:** `assets = [vtag:471BW229, floc:0769-06-01-010-015-045, floc:0769-06-01-010]`
-
-The `assets` CASE logic in populate_TimeSeries:
-
-- For `pi:471*` tags: adds `vtag:{tag}` + `floc:0769-06-01-010` (PM1)
-- For `pi:472*` tags: adds `vtag:{tag}` + `floc:0769-06-01-020` (PM2)
-- For other `pi:*` tags: adds `vtag:{tag}` only
-- For Proficy/lab (name contains "Paper Machine 1/2"): sets PM-level FLOC only
-- Uses `array_union(coalesce(existing_assets, array()), array(new_refs))` so existing links are preserved
 
 ### The array_union fix (Max's review — PR #992)
 
-**The problem:** The original SVQS-282 PR replaced the entire `assets` array with `array(vtag)`. That would have destroyed:
+**The problem:** Replacing the entire `assets` array with `array(vtag)` would destroy FLOC links from entity matching and manual mappings.
 
-- 15 SVQS-283 manual equipment FLOC mappings (e.g., `471BW229` → `floc:0769-06-01-010-015-045`)
-- 161 deep-linked time series from entity matching
-- Links to descriptive assets like "#2 BLEACH LINE", "#2 WINDER & ROLL HANDLING SYSTEMS"
-
-**The fix:** Both `populate_TimeSeries` and `recontextualize_TimeSeries` now:
-
-1. Self-join to the existing `MfgTimeSeries` view via `cdf_nodes('sylvamo_mfg_core_schema', 'MfgTimeSeries', 'v11')`
-2. Read the current `assets` from the existing node
-3. Use `array_union(coalesce(existing_assets, array()), array(new_refs))` to **merge** new links with existing ones
-
-**Concrete example for `471BW229`:**
-
-| Stage | assets value |
-|-------|--------------|
-| Before PR (manual mapping only) | `[floc:0769-06-01-010-015-045]` |
-| Original PR (broken) | `[vtag:471BW229]` — FLOC link lost |
-| After fix | `[vtag:471BW229, floc:0769-06-01-010-015-045, floc:0769-06-01-010]` — all preserved |
+**The fix:** `recontextualize_TimeSeries` uses `array_union(coalesce(existing_assets, array()), array(new_refs))` to **merge** new links with existing ones instead of overwriting.
 
 ### Prefix → FLOC Mapping Table
 
@@ -141,15 +95,22 @@ The `assets` CASE logic in populate_TimeSeries:
 
 ## 3. Files Changed (SVQS-282 / PR #992)
 
+### Removed (no classic time series)
+
+| File | Reason |
+|------|--------|
+| `sync_TimeSeries_from_CDF.*` | Removed — we no longer use `_cdf.timeseries` |
+| `populate_TimeSeries.*` | Removed — MfgTimeSeries populated by extractor/connector; no separate asset-update step |
+
 ### New Files
 
 | File | Purpose |
 |------|---------|
-| `populate_VirtualInstrumentationTags.Transformation.sql` | Creates one Asset node per PI time series. Parent from Anvar's curated sheet > prefix mapping > floc:0769. All get `tags: ['DetectInDiagrams']`. |
-| `populate_VirtualInstrumentationTags.Transformation.yaml` | Transformation config (destination: Asset view, instance space) |
-| `generate_VirtualTag_Aliases.Transformation.sql` | Populates aliases on vtag assets (PI tag name, uppercase, hyphen/underscore stripped) for P&ID matching |
+| `populate_VirtualInstrumentationTags.Transformation.sql` | Creates one Asset node per PI time series. Source: MfgTimeSeries (cdf_nodes). Parent from Anvar's curated sheet > prefix mapping > floc:0769. |
+| `populate_VirtualInstrumentationTags.Transformation.yaml` | Transformation config |
+| `generate_VirtualTag_Aliases.Transformation.sql` | Populates aliases on vtag assets. Source: MfgTimeSeries (cdf_nodes). |
 | `generate_VirtualTag_Aliases.Transformation.yaml` | Transformation config |
-| `recontextualize_TimeSeries.Transformation.sql` | For Anvar's 210 curated PI tags: **adds** vtag to existing assets via `array_union` |
+| `recontextualize_TimeSeries.Transformation.sql` | For Anvar's 210 curated PI tags: **adds** vtag to existing assets via `array_union`. Source: MfgTimeSeries (cdf_nodes). |
 | `recontextualize_TimeSeries.Transformation.yaml` | Transformation config |
 | `scripts/load_anvar_sheet_to_raw.py` | One-time loader for Anvar's 210 PI-tag-to-FLOC mappings into `raw_ext_pi.pi_tag_to_floc` |
 
@@ -157,14 +118,13 @@ The `assets` CASE logic in populate_TimeSeries:
 
 | File | Change |
 |------|--------|
-| `populate_TimeSeries.Transformation.sql` | PI tags now get `vtag` + PM FLOC; uses `array_union` to **merge** with existing assets instead of overwriting. Preserves FLOC links from entity matching and manual mappings. |
+| `generate_TimeSeries_Aliases.Transformation.sql` | Refactored to source from MfgTimeSeries (cdf_nodes) only. |
 
 ### Why Each Change
 
 - **populate_VirtualInstrumentationTags:** Creates instrument-level assets that don't exist in SAP. Reads `_cdf.timeseries`, filters for `pi:%`, emits one Asset per tag with parent from Anvar's sheet or prefix mapping.
 - **generate_VirtualTag_Aliases:** File annotation needs aliases on assets to match P&ID text. This populates PI tag name variants (uppercase, stripped punctuation) on the vtag assets.
-- **populate_TimeSeries:** Previously wrote `assets = [floc:0769-06-01-010]` or `[floc:0769-06-01-020]` for PI tags. Now **merges** `[vtag:{tag}, PM FLOC]` with existing assets via `array_union` so entity matching and manual mappings are not overwritten.
-- **recontextualize_TimeSeries:** For Anvar's 210 curated tags, adds the vtag reference. Also uses `array_union` to preserve existing links.
+- **recontextualize_TimeSeries:** For Anvar's 210 curated tags, adds the vtag reference. Uses `array_union` to preserve existing links.
 
 ---
 
@@ -189,9 +149,9 @@ THEN node_reference('sylvamo_mfg_core_instances', 'floc:YYYY-...')
 
 Place it **before** the `ELSE` (fallback) clause. Order matters: more specific prefixes should come first.
 
-### Step 3: Add to populate_TimeSeries if needed
+### Step 3: Verify MfgTimeSeries population
 
-`populate_TimeSeries` derives the `vtag:` reference from the PI tag name directly; it does not use the prefix mapping. As long as `populate_VirtualInstrumentationTags` creates the `vtag:` asset, `populate_TimeSeries` will reference it correctly. No change needed unless you have non-PI time series that need special handling.
+MfgTimeSeries is populated by an extractor, connector, or RAW-based transformation. Ensure new PI tags are included in that population. `populate_VirtualInstrumentationTags` creates the `vtag:` asset; `recontextualize_TimeSeries` adds vtag to curated tags. No change needed for standard PI prefixes unless you have non-PI time series that need special handling.
 
 ### Step 4: Deploy and validate
 
@@ -275,7 +235,7 @@ The same principle applies to Sylvamo: virtual tags dramatically improve P&ID an
 If Sylvamo (or another source) begins tracking instrumentation in SAP or another system:
 
 1. Create a transformation to populate Asset nodes from that source.
-2. Update `populate_TimeSeries` to reference the real instrument assets instead of `vtag:`.
+2. Update the transformation that populates MfgTimeSeries to reference the real instrument assets instead of `vtag:`.
 3. Deprecate or remove `populate_VirtualInstrumentationTags` for tags that now have real assets.
 4. Virtual tags can be phased out gradually or kept for tags not yet in the authoritative source.
 
@@ -297,4 +257,4 @@ Virtual tags could be classified by ISA 5.1 instrument type (e.g., PT = pressure
 - **Darren review summary:** `docs/contextualization/2026-02-19-darren-review-summary.md` (sylvamo repo)
 - **Darren review transcript:** `docs/contextualization/2026-02-19-darren-review-transcript.md` (sylvamo repo)
 - **Contextualization next steps:** `docs/contextualization/CONTEXTUALIZATION_NEXT_STEPS.md` (sylvamo repo)
-- **Transformation files:** `sylvamo/modules/mfg_core/transformations/populate_VirtualInstrumentationTags.*`, `populate_TimeSeries.Transformation.sql`, `recontextualize_TimeSeries.Transformation.sql`, `generate_VirtualTag_Aliases.Transformation.sql`
+- **Transformation files:** `sylvamo/modules/mfg_core/transformations/populate_VirtualInstrumentationTags.*`, `recontextualize_TimeSeries.Transformation.sql`, `generate_VirtualTag_Aliases.Transformation.sql`, `generate_TimeSeries_Aliases.Transformation.sql`

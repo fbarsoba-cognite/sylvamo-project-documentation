@@ -8,12 +8,9 @@ This document summarizes the SVQS-282 changes and the **array_union fix** (from 
 
 ---
 
-## What does populate_TimeSeries actually do?
+## Architecture assumption
 
-**populate_TimeSeries** creates `MfgTimeSeries` nodes in the data model from CDF's classic time series (`_cdf.timeseries`). It runs on a schedule and re-processes **all** time series each run.
-
-- **Source:** `_cdf.timeseries` (PI, Proficy, lab, etc.)
-- **Target:** `MfgTimeSeries` view
+We no longer use classic time series (`_cdf.timeseries`). MfgTimeSeries is populated by an extractor, connector, or RAW-based transformation. `sync_TimeSeries_from_CDF` and `populate_TimeSeries` have been removed.
 - **Sets:** name, description, type, isStep, timeSeries (sparkline), piTagName, measurementType, and **assets**
 - **assets logic:** For PI tags, adds vtag reference + PM-level FLOC; uses `array_union` to **merge** with existing assets instead of overwriting
 
@@ -21,9 +18,9 @@ This document summarizes the SVQS-282 changes and the **array_union fix** (from 
 
 ## The array_union fix (Max's review)
 
-**Problem:** The original PR replaced `assets` with `array(vtag)`, wiping out existing FLOC links from entity matching and manual mappings (e.g. SVQS-283).
+**Problem:** Replacing `assets` with `array(vtag)` would wipe out existing FLOC links from entity matching and manual mappings (e.g. SVQS-283).
 
-**Fix:** Both `populate_TimeSeries` and `recontextualize_TimeSeries` now:
+**Fix:** `recontextualize_TimeSeries` now:
 1. Self-join to existing `MfgTimeSeries` via `cdf_nodes()`
 2. Use `array_union(coalesce(existing_assets, array()), array(new_refs))` to merge
 3. Preserve all existing links (FLOC, vtag, manual mappings)
@@ -38,9 +35,9 @@ This document summarizes the SVQS-282 changes and the **array_union fix** (from 
 ## Transformation pipeline (6 steps)
 
 1. **populate_Asset** — SAP FLOCs
-2. **populate_VirtualInstrumentationTags** — vtag assets from PI tags
-3. **generate_VirtualTag_Aliases** — aliases for P&ID matching
-4. **populate_TimeSeries** — MfgTimeSeries with assets = array_union(existing, [vtag + PM FLOC])
+2. **MfgTimeSeries population** — external (extractor/connector or RAW-based)
+3. **populate_VirtualInstrumentationTags** — vtag assets from PI tags (source: MfgTimeSeries)
+4. **generate_VirtualTag_Aliases** — aliases for P&ID matching (source: MfgTimeSeries)
 5. **recontextualize_TimeSeries** — adds vtag to Anvar's 210 curated tags (array_union)
 6. **Entity Matching / Manual Mappings** — deeper FLOC links (preserved)
 
