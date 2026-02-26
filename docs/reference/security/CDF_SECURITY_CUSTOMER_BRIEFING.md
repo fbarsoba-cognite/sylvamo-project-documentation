@@ -1,8 +1,8 @@
-# CDF Security Briefing (Customer-Facing)
+# CDF Security Briefing
 
 **Meeting version for customer discussions on identity, access, and controls in Cognite Data Fusion (CDF).**
 
-> **Use this document during live meetings.** It is intentionally concise, uses plain language, and includes “detail boxes” you can expand on when needed.
+> **This document is designed for live meetings.** It is intentionally concise, uses plain language, and includes optional detail boxes for deeper discussion when needed.
 
 ---
 
@@ -90,7 +90,7 @@ flowchart TB
 
 ---
 
-## 5) Validation Plan You Can Present
+## 5) Validation Approach
 
 ```mermaid
 flowchart TD
@@ -117,7 +117,7 @@ flowchart TD
 
 ## 6) Live Demo Walkthrough (CDF Security Screens)
 
-Use this walkthrough when you need to demonstrate security controls directly in CDF and related identity tooling.
+This walkthrough demonstrates security controls directly in CDF and related identity tooling.
 
 ### Demo objective
 
@@ -137,7 +137,7 @@ flowchart LR
 
 ### Screen-by-screen script
 
-| Step | Screen to show | What to say | Evidence to capture |
+| Step | Screen to show | Presenter narrative | Evidence to capture |
 |------|----------------|-------------|---------------------|
 | 1 | **IdP / Entra Conditional Access** | “This is where device compliance and MFA are enforced for Cognite sign-in.” | Policy name, assignments, grant controls |
 | 2 | **CDF Access Management - Groups** | “CDF authorization is group-based; identities inherit capabilities from groups.” | Group names and linked source IDs |
@@ -149,7 +149,7 @@ flowchart LR
 > **Detail Box E: keep the demo safe**
 > Use pre-created test identities (e.g., `read_only_user`, `restricted_user`) to avoid changing production roles live.
 
-### Suggested 10-12 minute run-of-show
+### 10-12 minute run-of-show
 
 - **Minute 0-2:** Brief model recap (IdP for auth, CDF for authz).
 - **Minute 2-5:** Show Conditional Access and MFA policy.
@@ -171,7 +171,7 @@ flowchart LR
 
 ---
 
-## 7) Customer-Facing Control Recommendations
+## 7) Control Recommendations
 
 1. Enforce managed-device and MFA policies for all CDF access paths.
 2. Separate human and machine identities; avoid shared credentials.
@@ -181,7 +181,7 @@ flowchart LR
 
 ---
 
-## 8) Meeting Slide Outline (ready to copy)
+## 8) Meeting Slide Outline
 
 1. **Why we’re discussing security now**
 2. **How CDF security works (simple architecture)**
@@ -192,7 +192,7 @@ flowchart LR
 
 ---
 
-## 9) Suggested Closing Statement
+## 9) Closing Statement
 
 “We treat these concerns seriously and transparently. Our approach is to validate identity policy, effective access, and CDF scoping together, then close any gaps with clear owners and timelines.”
 
