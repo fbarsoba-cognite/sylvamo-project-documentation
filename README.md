@@ -229,6 +229,9 @@ Sprint 2 completed February 13, 2026. See [archive](docs/archive/2026-02-sprint2
   - [Extractors](docs/reference/extractors/EXTRACTORS.md) — Extractor configurations and status
   - [Data Pipeline & Sources](docs/reference/extractors/DATA_PIPELINE_AND_SOURCES.md) — Data sources, transformations, refresh schedules
 
+**🔒 Security**
+- [CDF Security Briefing](docs/reference/security/CDF_SECURITY_BRIEFING.md) — Identity, access, responsibility split; meeting-ready with diagrams
+
 **🏗️ Architecture & Governance**
 - [Architecture Decisions & Roadmap](docs/reference/data-model/ARCHITECTURE_DECISIONS_AND_ROADMAP.md) — ISA-95 alignment, ADRs, roadmap
 - [ADR-001: Asset/Equipment](docs/reference/data-model/decisions/ADR-001-ASSET-EQUIPMENT.md) — ISA-95 Equipment modeling as Asset subtypes

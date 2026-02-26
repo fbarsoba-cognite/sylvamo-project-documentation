@@ -25,6 +25,9 @@
 - [ADR-001: Asset/Equipment Modeling](reference/data-model/decisions/ADR-001-ASSET-EQUIPMENT.md) — Equipment as Asset subtypes
 - [Changelog](reference/data-model/changelog/CHANGELOG-0001.md) — Chronological record of changes
 
+### 🔒 Security
+- [CDF Security Briefing](reference/security/CDF_SECURITY_BRIEFING.md) — Identity, access, responsibility split; meeting-ready with diagrams
+
 ### 🔧 Operations & CI/CD
 - [CI/CD Overview](reference/cicd/CICD_OVERVIEW.md) — Pipeline setup for CDF deployments
 - [ADO Clone Repo](reference/cicd/ADO_CLONE_REPO.md) — How to clone the ADO repository
@@ -75,6 +78,7 @@ docs/
 │   │   ├── decisions/              # Architecture Decision Records (ADRs)
 │   │   └── archive/               # Superseded model docs
 │   ├── extractors/                 # Extractor and pipeline docs
+│   ├── security/                   # CDF security, identity, access management
 │   ├── cicd/                       # CI/CD pipeline setup and guides
 │   ├── files/                      # CDF file management, P&ID lifecycle
 │   ├── use-cases/                  # Use case documentation
