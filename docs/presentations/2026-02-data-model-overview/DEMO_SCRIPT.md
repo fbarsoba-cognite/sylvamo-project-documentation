@@ -316,7 +316,7 @@ Open the GraphQL Explorer in CDF Fusion (separate tab recommended).
 
 **Step 2: Show views**
 
-> "Here are our 9 views."
+> "Here are our 7 core views."
 
 1. Expand the views list
 2. Click on **Reel** view

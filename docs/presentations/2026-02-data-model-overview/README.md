@@ -1,4 +1,4 @@
-> **Note:** These materials were prepared for the Sprint 2 demo (Feb 2026) and may contain outdated statistics. Verify current data in CDF.
+> **Note:** These materials were prepared for the Sprint 2 demo (Feb 2026). **Instance counts** are from [MFG_CORE_NODE_DISTRIBUTION.md](MFG_CORE_NODE_DISTRIBUTION.md) (live CDF). Slide numbers (e.g. 180 quality records) may reflect subsets; full CDF has 750 RollQuality, 346.6 hrs time lost. Run `python scripts/mfg_core_node_distribution.py` to refresh.
 
 # Sylvamo CDF Data Model - Presentation Materials
 
@@ -29,6 +29,7 @@ By the end of this presentation, attendees will understand:
 
 | File | Description |
 |------|-------------|
+| **[INDEX.md](INDEX.md)** | **Start here** – 30 min deep dive index, flow, document map |
 | [SLIDES_OUTLINE.md](SLIDES_OUTLINE.md) | Detailed slide-by-slide outline with content |
 | [SPEAKER_NOTES.md](SPEAKER_NOTES.md) | Full speaker notes for each slide (~3 min per slide) |
 | [DEMO_SCRIPT.md](DEMO_SCRIPT.md) | Step-by-step demo walkthrough for CDF Fusion |
@@ -69,16 +70,18 @@ By the end of this presentation, attendees will understand:
 
 ### Live Instance Counts (Verified)
 
+> **Source:** [MFG_CORE_NODE_DISTRIBUTION.md](MFG_CORE_NODE_DISTRIBUTION.md) – run `python scripts/mfg_core_node_distribution.py` to refresh.
+
 **Core Model (`sylvamo_mfg_core_schema`):**
 | View | Instance Count | Description |
 |------|----------------|-------------|
-| Asset | 1,000+ | From SAP Functional Locations |
-| Event | 1,000+ | Proficy events, SAP activities |
-| Material | 1,000+ | SAP materials master |
-| MfgTimeSeries | 1,000+ | PI Server time series metadata |
-| Reel | 1,000+ | Paper machine production runs |
-| Roll | 1,000+ | Individual rolls cut from reels |
-| RollQuality | 580 | SharePoint quality reports |
+| Roll | 2,361,739 | Individual rolls cut from reels |
+| Event | 224,961 | Proficy events, SAP activities |
+| Reel | 62,436 | Paper machine production runs |
+| Material | 58,342 | SAP materials master |
+| Asset | 45,953 | From SAP Functional Locations |
+| MfgTimeSeries | 6,260 | PI Server time series metadata |
+| RollQuality | 750 | SharePoint quality reports |
 
 **Extended Model (`sylvamo_mfg_ext_schema`):**
 | View | Instance Count | Description |

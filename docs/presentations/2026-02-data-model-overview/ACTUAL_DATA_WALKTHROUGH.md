@@ -1,4 +1,4 @@
-> **Note:** These materials were prepared for the Sprint 2 demo (Feb 2026) and may contain outdated statistics. Verify current data in CDF.
+> **Note:** These materials were prepared for the Sprint 2 demo (Feb 2026). For **current instance counts**, see [MFG_CORE_NODE_DISTRIBUTION.md](MFG_CORE_NODE_DISTRIBUTION.md). Numbers in this doc (e.g. 180 quality records) may reflect a subset; full CDF has 750 RollQuality.
 
 # Actual Data Walkthrough - Step by Step
 
@@ -69,7 +69,7 @@ Spaces:
 │  SAP PPV          │  Cost variance snapshots                     │
 │  PI Server        │  Process time series (3,864 tags)           │
 │  Proficy          │  Production events, lab tests                │
-│  SharePoint       │  Quality reports (180 records)               │
+│  SharePoint       │  Quality reports (750+ records; 180 = subset)│
 └─────────────────────────────────────────────────────────────────┘
 ```
 
