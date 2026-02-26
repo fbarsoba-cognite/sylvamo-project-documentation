@@ -27,6 +27,7 @@
 
 ### 🔒 Security
 - [CDF Security Briefing](reference/security/CDF_SECURITY_BRIEFING.md) — Identity, access, responsibility split; meeting-ready with diagrams
+- [CDF Security Briefing (Customer-Facing)](reference/security/CDF_SECURITY_CUSTOMER_BRIEFING.md) — Shareable meeting version with visual aids and detail callout boxes
 
 ### 🔧 Operations & CI/CD
 - [CI/CD Overview](reference/cicd/CICD_OVERVIEW.md) — Pipeline setup for CDF deployments

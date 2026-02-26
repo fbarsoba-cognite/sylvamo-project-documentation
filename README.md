@@ -231,6 +231,7 @@ Sprint 2 completed February 13, 2026. See [archive](docs/archive/2026-02-sprint2
 
 **🔒 Security**
 - [CDF Security Briefing](docs/reference/security/CDF_SECURITY_BRIEFING.md) — Identity, access, responsibility split; meeting-ready with diagrams
+- [CDF Security Briefing (Customer-Facing)](docs/reference/security/CDF_SECURITY_CUSTOMER_BRIEFING.md) — Shareable meeting version with visual aids and detail callout boxes
 
 **🏗️ Architecture & Governance**
 - [Architecture Decisions & Roadmap](docs/reference/data-model/ARCHITECTURE_DECISIONS_AND_ROADMAP.md) — ISA-95 alignment, ADRs, roadmap
