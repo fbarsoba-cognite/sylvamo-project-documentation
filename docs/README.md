@@ -2,6 +2,12 @@
 
 > CDF implementation for Sylvamo paper manufacturing operations
 
+## Shareable Content Tree
+
+**[→ Content Tree (for screenshare)](CONTENT_TREE_SHAREABLE.md)** – Clean hierarchy to share with customers.
+
+---
+
 ## Quick Navigation (by topic)
 
 ### 📊 Data & Pipeline
@@ -60,7 +66,8 @@
 - [Johan ISA95 Guidance Summary](reference/data-model/JOHAN_ISA95_GUIDANCE_SUMMARY.md) — Expert recommendations
 - [SortField Analysis Report](reference/SORTFIELD_ANALYSIS_REPORT.md) — SAP sortField mapping
 - [MFG Extended Data Model](reference/data-model/MFG_EXTENDED_DATA_MODEL.md) — Secondary model (de-emphasized)
-- [Sprint 2 Data Model Overview](presentations/2026-02-data-model-overview/) — Feb 2026 demo materials
+- [Presentations](presentations/README.md) — Demo materials index
+- [2026-02 Data Model Overview](presentations/2026-02-data-model-overview/INDEX.md) — Feb 2026 deep dive
 
 ### 📦 Archive
 - [Archive Index](archive/README.md) — Deprecated docs, completed sprint artifacts
@@ -89,7 +96,8 @@ docs/
 │   └── sprint-planning/            # Current sprint planning
 │
 ├── presentations/                  # Demo and presentation materials
-│   └── 2026-02-data-model-overview/  # Sprint 2 demo (historical)
+│   ├── README.md                  # Section index (start here)
+│   └── 2026-02-data-model-overview/  # Sprint 2 demo (Feb 2026)
 │
 └── archive/                        # Deprecated/historical content
     ├── 2026-02-deprecated/         # Superseded design docs
