@@ -135,7 +135,24 @@ This keeps the main briefing concise and easy to share with customers while pres
 
 ---
 
-## 8) Meeting Slide Outline
+## 8) Security Questions to Confirm
+
+| Question | Why it matters | Owner |
+|----------|----------------|-------|
+| Which controls are enforced by IdP (MFA, Conditional Access, device compliance) vs by CDF authorization? | Prevents control gaps and clarifies accountability. | Shared |
+| How is tenant/project isolation enforced in CDF? | Confirms boundaries between environments and organizations. | Cognite |
+| Where is data stored and processed, and what region controls apply? | Addresses data residency and regulatory concerns. | Shared |
+| How is data encrypted in transit and at rest? Who manages keys? | Clarifies cryptographic control model and key ownership. | Cognite |
+| How are service principals governed (scope, secret rotation, monitoring)? | Machine identities are often high-impact and long-lived. | Shared |
+| Where do broad capabilities still exist, and what is the reduction plan? | Drives measurable least-privilege progress. | Shared |
+| What logs are available for access/audit evidence, and can they feed SIEM? | Enables incident response and compliance reporting. | Shared |
+| How is privileged or break-glass access controlled and audited? | Reduces privileged access risk and improves traceability. | Shared |
+| What is the incident response and customer notification model? | Sets expectations for roles, timelines, and evidence sharing. | Shared |
+| Which assurance artifacts are available (e.g., SOC 2, certifications)? | Supports risk and procurement validation activities. | Cognite |
+
+---
+
+## 9) Meeting Slide Outline
 
 1. **Why we’re discussing security now**
 2. **How CDF security works (simple architecture)**
@@ -143,10 +160,11 @@ This keeps the main briefing concise and easy to share with customers while pres
 4. **Likely root causes for reported concerns**
 5. **Validation plan and timeline**
 6. **Controls we recommend implementing next**
+7. **Security questions to confirm and owners**
 
 ---
 
-## 9) Closing Statement
+## 10) Closing Statement
 
 “We treat these concerns seriously and transparently. Our approach is to validate identity policy, effective access, and CDF scoping together, then close any gaps with clear owners and timelines.”
 
