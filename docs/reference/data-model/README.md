@@ -42,6 +42,12 @@ All data model documentation is now consolidated in this folder.
 |----------|-------------|------|
 | [**TRANSFORMATIONS.md**](TRANSFORMATIONS.md) | **Complete transformation documentation** - 24 SQL transformations, data flow diagrams, SQL examples, troubleshooting | 25KB |
 
+### Training
+
+| Document | Description | Size |
+|----------|-------------|------|
+| [**TRAINING_DATA_MODEL_GUIDELINE.md**](TRAINING_DATA_MODEL_GUIDELINE.md) | **Training curriculum** – audience tracks (business, technical, ops, presenters), document order, checklists | 12KB |
+
 ### Data Model Specifications
 
 | Document | Description | Size |

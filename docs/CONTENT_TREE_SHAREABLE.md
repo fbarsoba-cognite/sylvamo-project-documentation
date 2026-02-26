@@ -12,6 +12,7 @@ Sylvamo CDF Documentation
 ├── 📊 Data & Pipeline
 │   ├── CDF Pipeline Overview
 │   ├── Data Model
+│   │   ├── Training Data Model Guideline
 │   │   ├── MFG Core Data Model
 │   │   ├── Data Model Specification
 │   │   ├── Data Model for Stakeholders
@@ -67,7 +68,9 @@ Sylvamo CDF Documentation
 
 | Topic | Document |
 |-------|----------|
+| **Overview & troubleshooting** | [CDF Overview & Troubleshooting Guide](reference/CDF_OVERVIEW_AND_TROUBLESHOOTING_GUIDE.md) |
 | **Pipeline end-to-end** | [CDF Pipeline Overview](reference/CDF_PIPELINE_OVERVIEW.md) |
+| **Training (data model)** | [Training Data Model Guideline](reference/data-model/TRAINING_DATA_MODEL_GUIDELINE.md) |
 | **Data model (technical)** | [MFG Core Data Model](reference/data-model/MFG_CORE_DATA_MODEL.md) |
 | **Data model (stakeholders)** | [Data Model for Stakeholders](reference/data-model/DATA_MODEL_FOR_STAKEHOLDERS.md) |
 | **Security** | [CDF Security Briefing (Customer-Facing)](reference/security/CDF_SECURITY_CUSTOMER_BRIEFING.md) |

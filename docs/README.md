@@ -11,8 +11,10 @@
 ## Quick Navigation (by topic)
 
 ### 📊 Data & Pipeline
+- [**CDF Overview & Troubleshooting Guide**](reference/CDF_OVERVIEW_AND_TROUBLESHOOTING_GUIDE.md) — Components, interactions, troubleshooting, walkthroughs
 - [**CDF Pipeline Overview**](reference/CDF_PIPELINE_OVERVIEW.md) — End-to-end: extractors, RAW, transformations, CDF functions
 - **Data Model**
+  - [Training Data Model Guideline](reference/data-model/TRAINING_DATA_MODEL_GUIDELINE.md) — Curriculum, audience tracks, checklists
   - [MFG Core Data Model](reference/data-model/MFG_CORE_DATA_MODEL.md) — 7 core views, Quality Traceability
   - [Data Model Specification](reference/data-model/DATA_MODEL_SPECIFICATION.md) — Containers, properties, examples
   - [Data Model for Stakeholders](reference/data-model/DATA_MODEL_FOR_STAKEHOLDERS.md) — Non-technical overview
