@@ -4,6 +4,24 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 
 ---
 
+### [SVQS-173] PPV Step 2: Area-level asset linkage via material-to-area mapping
+**Date:** 2026-02-26
+**Jira:** [SVQS-173](https://cognitedata.atlassian.net/browse/SVQS-173)
+**ADO PR:** [PR #1025](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/1025)
+
+**Changes:**
+- New `tr_generate_PPV_Material_Area_Mapping` transformation: RESB + AUFK + FLOC join → `raw_ext_manual.ppv_material_area_mapping` (daily 01:00 UTC)
+- New RAW database `raw_ext_manual` and table `ppv_material_area_mapping`
+- Modified `populate_Event_PPV`: LEFT JOIN mapping table; COALESCE(area_ref, site_ref) for asset linkage
+- Added `scripts/validate_ppv_material_area_mapping.py` for post-deploy validation
+- Updated `docs/contextualization/SVQS-173_STEP2_*.md` with Option B approach
+
+**Why:**
+- Move PPV CostEvent linkage from site-level only to area-level where RESB/AUFK data allows
+- Separate mapping transform enables debugging, performance, and manual overrides
+
+---
+
 ### [SVQS-173] PPV unblocked hardening - transform, validator, search docs
 **Date:** 2026-02-26
 **Jira:** [SVQS-173](https://cognitedata.atlassian.net/browse/SVQS-173)
