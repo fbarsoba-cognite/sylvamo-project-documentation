@@ -4,6 +4,38 @@ Data model changes for Sylvamo MFG Core. ~10 entries per page.
 
 ---
 
+### [SVQS-173] PPV unblocked hardening - transform, validator, search docs
+**Date:** 2026-02-26
+**Jira:** [SVQS-173](https://cognitedata.atlassian.net/browse/SVQS-173)
+**ADO PR:** [PR #1020](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/1020)
+
+**Changes:**
+- Hardened `populate_Event_PPV.Transformation.sql`: only create asset ref when plant is non-null and non-empty (avoid invalid floc: references)
+- Added `scripts/validate_event_ppv_asset_relation.py` for CostEvent->asset linkage quality validation
+- Added `docs/contextualization/EVENT_PPV_SEARCH_VERIFICATION.md` documenting Event search path for PPV
+- Updated `docs/contextualization/SVQS-173_NEXT_ACTIONS.md` with done-now vs Cam-dependent deferred items
+
+**Why:**
+- SVQS-173 unblocked delivery: PPV CostEvent remains searchable by asset; validator reports linkage confidence; BOM/MB51/railcar/PI completeness deferred on Cam.
+
+---
+
+### [SVQS-282] Virtual Instrumentation Tags + File Annotation Fix
+**Date:** 2026-02-24
+**Jira:** [SVQS-282](https://cognitedata.atlassian.net/browse/SVQS-282) (implements [SVQS-235](https://cognitedata.atlassian.net/browse/SVQS-235))
+**ADO PR:** [PR #992](https://dev.azure.com/SylvamoCorp/Industrial-Data-Landscape-IDL/_git/Industrial-Data-Landscape-IDL/pullrequest/992)
+
+**Changes:**
+- Created ~3,468 virtual instrumentation tag assets (vtag:) from PI time series, each with DetectInDiagrams tag and PI tag name aliases for P&ID matching
+- Fixed file annotation config bug: targetEntityVersion and viewVersion v1 -> v11 (Asset view)
+- New transformations: populate_VirtualInstrumentationTags, generate_VirtualTag_Aliases, recontextualize_TimeSeries (for Anvar's 210 curated tags)
+- Added scripts/load_anvar_sheet_to_raw.py for loading Anvar's 210-row curated PI tag-to-FLOC sheet into raw_ext_pi.pi_tag_to_floc
+
+**Why:**
+- PI and SAP are separate systems with no direct mapping (per Cam/Sylvamo). Prefix-based mapping is the ceiling for automation. Virtual tags enable P&ID diagram matching and search-by-PI-tag-name. Anvar's sheet provides deeper FLOC for 210 curated tags.
+
+---
+
 ### [SVQS-256] Fix tr_file_to_asset_from_annotations - use cdf_raw for RAW table schema
 **Date:** 2026-02-24
 **Jira:** [SVQS-256](https://cognitedata.atlassian.net/browse/SVQS-256)
